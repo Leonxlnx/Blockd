@@ -12,149 +12,144 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../theme';
-import { colors, spacing, borderRadius, shadows, tapTargets } from '../../theme/theme';
-import { Text, GlassCard } from '../../components';
+import { spacing } from '../../theme/theme';
+import { Text } from '../../components';
 import { Permissions } from '../../native/Permissions';
 
 const { width, height } = Dimensions.get('window');
 
 // ============================================
-// ANIMATED ENTRANCE HOOK
+// PROFESSIONAL FLOWING BACKGROUND
 // ============================================
 
-const useEntranceAnimation = (delay: number = 0) => {
-    const opacity = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(30)).current;
-    const scale = useRef(new Animated.Value(0.95)).current;
+const FlowingBackground: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+    const wave1 = useRef(new Animated.Value(0)).current;
+    const wave2 = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(opacity, {
-                toValue: 1,
-                duration: 400,
-                delay,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }),
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 500,
-                delay,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }),
-            Animated.spring(scale, {
-                toValue: 1,
-                tension: 50,
-                friction: 10,
-                delay,
-                useNativeDriver: true,
-            }),
-        ]).start();
+        Animated.loop(Animated.timing(wave1, { toValue: 1, duration: 12000, easing: Easing.linear, useNativeDriver: true })).start();
+        Animated.loop(Animated.timing(wave2, { toValue: 1, duration: 15000, easing: Easing.linear, useNativeDriver: true })).start();
     }, []);
 
-    return { opacity, translateY, scale };
-};
-
-// ============================================
-// PERMISSION STATUS INDICATOR
-// ============================================
-
-interface PermissionStatusProps {
-    granted: boolean;
-}
-
-const PermissionStatus: React.FC<PermissionStatusProps> = ({ granted }) => {
-    const { theme, isDark } = useTheme();
+    const translateX1 = wave1.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.5, width * 0.5] });
+    const translateX2 = wave2.interpolate({ inputRange: [0, 1], outputRange: [width * 0.3, -width * 0.3] });
 
     return (
-        <View style={[
-            styles.statusBadge,
-            {
-                backgroundColor: granted
-                    ? isDark ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.15)'
-                    : isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.15)',
-            }
-        ]}>
-            <Text
-                variant="caption"
-                weight="semibold"
-                color={granted ? colors.success : colors.error}
-            >
-                {granted ? '✓ Granted' : '○ Required'}
-            </Text>
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+            <Animated.View style={[styles.waveBlob, { top: height * 0.1, left: -width * 0.3, width: width * 1.2, height: width * 1.2, borderRadius: width * 0.6, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', transform: [{ translateX: translateX1 }] }]} />
+            <Animated.View style={[styles.waveBlob, { top: height * 0.5, right: -width * 0.4, width: width * 0.9, height: width * 0.9, borderRadius: width * 0.45, backgroundColor: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)', transform: [{ translateX: translateX2 }] }]} />
         </View>
     );
 };
 
 // ============================================
-// PROGRESS RING
+// ENTRANCE ANIMATION
 // ============================================
 
-interface ProgressRingProps {
-    current: number;
-    total: number;
-}
+const useEntranceAnimation = (delay: number = 0) => {
+    const opacity = useRef(new Animated.Value(0)).current;
+    const translateY = useRef(new Animated.Value(35)).current;
 
-const ProgressRing: React.FC<ProgressRingProps> = ({ current, total }) => {
-    const { theme } = useTheme();
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(opacity, { toValue: 1, duration: 400, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            Animated.timing(translateY, { toValue: 0, duration: 500, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        ]).start();
+    }, []);
 
+    return { opacity, translateY };
+};
+
+// ============================================
+// PROGRESS BAR (TOP)
+// ============================================
+
+const ProgressBar: React.FC<{ current: number; total: number }> = ({ current, total }) => {
+    const { isDark } = useTheme();
     return (
-        <View style={styles.progressRingContainer}>
+        <View style={styles.progressBarContainer}>
             {Array.from({ length: total }).map((_, index) => (
-                <View
-                    key={index}
-                    style={[
-                        styles.progressDot,
-                        {
-                            backgroundColor: index < current
-                                ? colors.primary[400]
-                                : theme.colors.border,
-                            width: index === current - 1 ? 24 : 8,
-                        },
-                    ]}
-                />
+                <View key={index} style={[styles.progressSegment, { backgroundColor: index < current ? (isDark ? '#FFFFFF' : '#1A1A1A') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') }]} />
             ))}
         </View>
     );
 };
 
 // ============================================
-// BACK BUTTON
+// STATUS BADGE
 // ============================================
 
-interface BackButtonProps {
-    onPress: () => void;
+const StatusBadge: React.FC<{ granted: boolean; isDark: boolean }> = ({ granted, isDark }) => (
+    <View style={[styles.statusBadge, { backgroundColor: granted ? 'rgba(76, 175, 80, 0.12)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+        <View style={[styles.statusDot, { backgroundColor: granted ? '#4CAF50' : isDark ? '#555' : '#AAA' }]} />
+        <Text variant="caption" weight="semibold" color={granted ? '#4CAF50' : isDark ? '#888' : '#777'}>{granted ? 'Granted' : 'Required'}</Text>
+    </View>
+);
+
+// ============================================
+// PREMIUM BUTTONS
+// ============================================
+
+interface BottomButtonsProps {
+    onBack: () => void;
+    onPrimary: () => void;
+    primaryLabel: string;
     isDark: boolean;
 }
 
-const BackButton: React.FC<BackButtonProps> = ({ onPress, isDark }) => {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-
-    const handlePress = () => {
-        Animated.sequence([
-            Animated.timing(scaleAnim, { toValue: 0.9, duration: 50, useNativeDriver: true }),
-            Animated.spring(scaleAnim, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }),
-        ]).start(() => onPress());
-    };
-
-    return (
-        <TouchableOpacity onPress={handlePress} style={styles.backButton} activeOpacity={1}>
-            <Animated.View style={[
-                styles.backButtonCircle,
-                {
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-                    transform: [{ scale: scaleAnim }],
-                }
-            ]}>
-                <Text variant="body" weight="medium">←</Text>
-            </Animated.View>
+const BottomButtons: React.FC<BottomButtonsProps> = ({ onBack, onPrimary, primaryLabel, isDark }) => (
+    <View style={styles.bottomButtonsContainer}>
+        <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backButtonWrapper}>
+            <LinearGradient colors={isDark ? ['#1A1A1A', '#282828', '#1A1A1A'] : ['#F5F5F5', '#FFFFFF', '#F5F5F5']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[styles.buttonBase, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)' }]}>
+                <Text variant="body" weight="semibold" color={isDark ? '#FFFFFF' : '#1A1A1A'}>Back</Text>
+            </LinearGradient>
         </TouchableOpacity>
+
+        <TouchableOpacity onPress={onPrimary} activeOpacity={0.8} style={styles.nextButtonWrapper}>
+            <LinearGradient colors={isDark ? ['#FFFFFF', '#F0F0F0', '#DFDFDF'] : ['#2A2A2A', '#1A1A1A', '#0A0A0A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.nextButtonBase}>
+                <Text variant="body" weight="bold" color={isDark ? '#0A0A0A' : '#FFFFFF'}>{primaryLabel}</Text>
+            </LinearGradient>
+        </TouchableOpacity>
+    </View>
+);
+
+// ============================================
+// LARGE ICONS
+// ============================================
+
+const LargeIcon: React.FC<{ type: 'usage' | 'overlay' | 'battery'; isDark: boolean }> = ({ type, isDark }) => {
+    const color = isDark ? '#FFFFFF' : '#1A1A1A';
+
+    if (type === 'usage') {
+        return (
+            <View style={styles.iconBox}>
+                <View style={[styles.chartIcon, { borderColor: color }]}>
+                    <View style={[styles.chartBar, { height: 28, backgroundColor: color }]} />
+                    <View style={[styles.chartBar, { height: 50, backgroundColor: color }]} />
+                    <View style={[styles.chartBar, { height: 38, backgroundColor: color }]} />
+                </View>
+            </View>
+        );
+    }
+    if (type === 'overlay') {
+        return (
+            <View style={styles.iconBox}>
+                <View style={[styles.shieldIcon, { borderColor: color }]} />
+            </View>
+        );
+    }
+    return (
+        <View style={styles.iconBox}>
+            <View style={[styles.batteryIcon, { borderColor: color }]}>
+                <View style={[styles.batteryFill, { backgroundColor: color }]} />
+            </View>
+            <View style={[styles.batteryTop, { backgroundColor: color }]} />
+        </View>
     );
 };
 
 // ============================================
-// SCREEN 1: USAGE STATS PERMISSION
+// USAGE STATS PERMISSION
 // ============================================
 
 interface UsageStatsScreenProps {
@@ -165,127 +160,49 @@ interface UsageStatsScreenProps {
 export const OnboardingUsageStats: React.FC<UsageStatsScreenProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
     const [granted, setGranted] = useState(false);
-    const buttonScale = useRef(new Animated.Value(1)).current;
-    const anim1 = useEntranceAnimation(0);
-    const anim2 = useEntranceAnimation(200);
+    const iconAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(100);
+    const cardAnim = useEntranceAnimation(200);
 
-    const checkPermission = async () => {
-        const result = await Permissions.checkUsageStatsPermission();
-        setGranted(result);
-    };
+    const checkPermission = async () => { setGranted(await Permissions.checkUsageStatsPermission()); };
 
     useEffect(() => {
         checkPermission();
-
-        const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
-            if (state === 'active') {
-                checkPermission();
-            }
-        });
-
-        return () => subscription.remove();
+        const sub = AppState.addEventListener('change', (s: AppStateStatus) => { if (s === 'active') checkPermission(); });
+        return () => sub.remove();
     }, []);
-
-    const handleRequestPermission = async () => {
-        await Permissions.requestUsageStatsPermission();
-    };
-
-    const handlePressIn = () => {
-        Animated.spring(buttonScale, { toValue: 0.96, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(buttonScale, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
-
-            <LinearGradient
-                colors={theme.gradients.background}
-                style={StyleSheet.absoluteFillObject}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            />
-
-            <View style={[styles.decorCircle1, { backgroundColor: isDark ? 'rgba(119,141,118,0.08)' : 'rgba(119,141,118,0.06)' }]} />
-
-            <BackButton onPress={onBack} isDark={isDark} />
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+            <ProgressBar current={1} total={3} />
 
             <View style={styles.permissionContent}>
-                <Animated.View style={{ opacity: anim1.opacity, transform: [{ translateY: anim1.translateY }] }}>
-                    <View style={styles.iconContainer}>
-                        <LinearGradient colors={colors.gradients.sage1} style={styles.iconCircle} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                            <Text variant="h2" color="#FFFFFF">📊</Text>
-                        </LinearGradient>
-                    </View>
-
-                    <Text variant="h2" weight="bold" align="center" style={styles.permissionTitle}>
-                        Usage Access
-                    </Text>
-                    <PermissionStatus granted={granted} />
+                <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
+                    <LargeIcon type="usage" isDark={isDark} />
                 </Animated.View>
 
-                <Animated.View style={{ opacity: anim2.opacity, transform: [{ translateY: anim2.translateY }] }}>
-                    <GlassCard intensity="medium" padding="xl" style={styles.explanationCard}>
-                        <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>
-                            Blockd needs to track which apps you use to help you manage your screen time effectively.
-                        </Text>
-                        <View style={styles.bulletPoints}>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• See which apps are currently active</Text>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Track time spent in each app</Text>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Enforce your limits automatically</Text>
-                        </View>
-                    </GlassCard>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.title}>Usage Access</Text>
+                    <StatusBadge granted={granted} isDark={isDark} />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] }}>
+                    <View style={[styles.card, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }]}>
+                        <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ lineHeight: 26 }}>See which apps you use to help manage your screen time.</Text>
+                    </View>
                 </Animated.View>
             </View>
 
-            <Animated.View style={[styles.buttonContainer, { transform: [{ scale: buttonScale }] }]}>
-                {!granted ? (
-                    <TouchableOpacity
-                        onPress={handleRequestPermission}
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        activeOpacity={1}
-                        style={styles.buttonWrapper}
-                    >
-                        <LinearGradient
-                            colors={colors.gradients.sage1}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[styles.button, shadows.primaryGlow]}
-                        >
-                            <Text variant="body" weight="semibold" color="#FFFFFF">Grant Permission</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity
-                        onPress={onNext}
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        activeOpacity={1}
-                        style={styles.buttonWrapper}
-                    >
-                        <LinearGradient
-                            colors={colors.gradients.premium2}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[styles.button, shadows.primaryGlow]}
-                        >
-                            <Text variant="body" weight="semibold" color="#FFFFFF">Continue</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                )}
-            </Animated.View>
-
-            <ProgressRing current={1} total={3} />
+            <BottomButtons onBack={onBack} onPrimary={granted ? onNext : () => Permissions.requestUsageStatsPermission()} primaryLabel={granted ? 'Continue' : 'Grant Access'} isDark={isDark} />
         </View>
     );
 };
 
 // ============================================
-// SCREEN 2: OVERLAY PERMISSION
+// OVERLAY PERMISSION
 // ============================================
 
 interface OverlayScreenProps {
@@ -296,127 +213,49 @@ interface OverlayScreenProps {
 export const OnboardingOverlay: React.FC<OverlayScreenProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
     const [granted, setGranted] = useState(false);
-    const buttonScale = useRef(new Animated.Value(1)).current;
-    const anim1 = useEntranceAnimation(0);
-    const anim2 = useEntranceAnimation(200);
+    const iconAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(100);
+    const cardAnim = useEntranceAnimation(200);
 
-    const checkPermission = async () => {
-        const result = await Permissions.checkOverlayPermission();
-        setGranted(result);
-    };
+    const checkPermission = async () => { setGranted(await Permissions.checkOverlayPermission()); };
 
     useEffect(() => {
         checkPermission();
-
-        const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
-            if (state === 'active') {
-                checkPermission();
-            }
-        });
-
-        return () => subscription.remove();
+        const sub = AppState.addEventListener('change', (s: AppStateStatus) => { if (s === 'active') checkPermission(); });
+        return () => sub.remove();
     }, []);
-
-    const handleRequestPermission = async () => {
-        await Permissions.requestOverlayPermission();
-    };
-
-    const handlePressIn = () => {
-        Animated.spring(buttonScale, { toValue: 0.96, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(buttonScale, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
-
-            <LinearGradient
-                colors={theme.gradients.background}
-                style={StyleSheet.absoluteFillObject}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            />
-
-            <View style={[styles.decorCircle2, { backgroundColor: isDark ? 'rgba(119,141,118,0.08)' : 'rgba(119,141,118,0.05)' }]} />
-
-            <BackButton onPress={onBack} isDark={isDark} />
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+            <ProgressBar current={2} total={3} />
 
             <View style={styles.permissionContent}>
-                <Animated.View style={{ opacity: anim1.opacity, transform: [{ translateY: anim1.translateY }] }}>
-                    <View style={styles.iconContainer}>
-                        <LinearGradient colors={colors.gradients.premium2} style={styles.iconCircle} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                            <Text variant="h2" color="#FFFFFF">🛡️</Text>
-                        </LinearGradient>
-                    </View>
-
-                    <Text variant="h2" weight="bold" align="center" style={styles.permissionTitle}>
-                        Overlay Access
-                    </Text>
-                    <PermissionStatus granted={granted} />
+                <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
+                    <LargeIcon type="overlay" isDark={isDark} />
                 </Animated.View>
 
-                <Animated.View style={{ opacity: anim2.opacity, transform: [{ translateY: anim2.translateY }] }}>
-                    <GlassCard intensity="medium" padding="xl" style={styles.explanationCard}>
-                        <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>
-                            This allows Blockd to display a blocking screen when you've reached your limit.
-                        </Text>
-                        <View style={styles.bulletPoints}>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Block distracting apps when time is up</Text>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Show gentle reminders before limits</Text>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Keep you focused on what matters</Text>
-                        </View>
-                    </GlassCard>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.title}>Overlay Access</Text>
+                    <StatusBadge granted={granted} isDark={isDark} />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] }}>
+                    <View style={[styles.card, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }]}>
+                        <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ lineHeight: 26 }}>Display a blocking screen when you've reached your limit.</Text>
+                    </View>
                 </Animated.View>
             </View>
 
-            <Animated.View style={[styles.buttonContainer, { transform: [{ scale: buttonScale }] }]}>
-                {!granted ? (
-                    <TouchableOpacity
-                        onPress={handleRequestPermission}
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        activeOpacity={1}
-                        style={styles.buttonWrapper}
-                    >
-                        <LinearGradient
-                            colors={colors.gradients.sage1}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[styles.button, shadows.primaryGlow]}
-                        >
-                            <Text variant="body" weight="semibold" color="#FFFFFF">Grant Permission</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity
-                        onPress={onNext}
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        activeOpacity={1}
-                        style={styles.buttonWrapper}
-                    >
-                        <LinearGradient
-                            colors={colors.gradients.premium2}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[styles.button, shadows.primaryGlow]}
-                        >
-                            <Text variant="body" weight="semibold" color="#FFFFFF">Continue</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                )}
-            </Animated.View>
-
-            <ProgressRing current={2} total={3} />
+            <BottomButtons onBack={onBack} onPrimary={granted ? onNext : () => Permissions.requestOverlayPermission()} primaryLabel={granted ? 'Continue' : 'Grant Access'} isDark={isDark} />
         </View>
     );
 };
 
 // ============================================
-// SCREEN 3: BATTERY OPTIMIZATION
+// BATTERY PERMISSION
 // ============================================
 
 interface BatteryScreenProps {
@@ -427,121 +266,43 @@ interface BatteryScreenProps {
 export const OnboardingBattery: React.FC<BatteryScreenProps> = ({ onComplete, onBack }) => {
     const { theme, isDark } = useTheme();
     const [granted, setGranted] = useState(false);
-    const buttonScale = useRef(new Animated.Value(1)).current;
-    const anim1 = useEntranceAnimation(0);
-    const anim2 = useEntranceAnimation(200);
+    const iconAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(100);
+    const cardAnim = useEntranceAnimation(200);
 
-    const checkPermission = async () => {
-        const result = await Permissions.checkBatteryOptimization();
-        setGranted(result);
-    };
+    const checkPermission = async () => { setGranted(await Permissions.checkBatteryOptimization()); };
 
     useEffect(() => {
         checkPermission();
-
-        const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
-            if (state === 'active') {
-                checkPermission();
-            }
-        });
-
-        return () => subscription.remove();
+        const sub = AppState.addEventListener('change', (s: AppStateStatus) => { if (s === 'active') checkPermission(); });
+        return () => sub.remove();
     }, []);
-
-    const handleRequestPermission = async () => {
-        await Permissions.requestIgnoreBatteryOptimization();
-    };
-
-    const handlePressIn = () => {
-        Animated.spring(buttonScale, { toValue: 0.96, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(buttonScale, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
-
-            <LinearGradient
-                colors={theme.gradients.background}
-                style={StyleSheet.absoluteFillObject}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            />
-
-            <View style={[styles.decorCircle3, { backgroundColor: isDark ? 'rgba(119,141,118,0.08)' : 'rgba(119,141,118,0.05)' }]} />
-
-            <BackButton onPress={onBack} isDark={isDark} />
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+            <ProgressBar current={3} total={3} />
 
             <View style={styles.permissionContent}>
-                <Animated.View style={{ opacity: anim1.opacity, transform: [{ translateY: anim1.translateY }] }}>
-                    <View style={styles.iconContainer}>
-                        <LinearGradient colors={colors.gradients.sage2} style={styles.iconCircle} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                            <Text variant="h2" color="#FFFFFF">🔋</Text>
-                        </LinearGradient>
-                    </View>
-
-                    <Text variant="h2" weight="bold" align="center" style={styles.permissionTitle}>
-                        Background Access
-                    </Text>
-                    <PermissionStatus granted={granted} />
+                <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
+                    <LargeIcon type="battery" isDark={isDark} />
                 </Animated.View>
 
-                <Animated.View style={{ opacity: anim2.opacity, transform: [{ translateY: anim2.translateY }] }}>
-                    <GlassCard intensity="medium" padding="xl" style={styles.explanationCard}>
-                        <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>
-                            Allow Blockd to run reliably in the background to enforce your limits.
-                        </Text>
-                        <View style={styles.bulletPoints}>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Monitor apps even when Blockd is closed</Text>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Ensure limits work 24/7</Text>
-                            <Text variant="bodySmall" color={theme.colors.textSecondary}>• Minimal battery impact</Text>
-                        </View>
-                    </GlassCard>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.title}>Background Access</Text>
+                    <StatusBadge granted={granted} isDark={isDark} />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] }}>
+                    <View style={[styles.card, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }]}>
+                        <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ lineHeight: 26 }}>Run reliably in the background to enforce your limits 24/7.</Text>
+                    </View>
                 </Animated.View>
             </View>
 
-            <Animated.View style={[styles.buttonContainer, { transform: [{ scale: buttonScale }] }]}>
-                {!granted ? (
-                    <TouchableOpacity
-                        onPress={handleRequestPermission}
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        activeOpacity={1}
-                        style={styles.buttonWrapper}
-                    >
-                        <LinearGradient
-                            colors={colors.gradients.sage1}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[styles.button, shadows.primaryGlow]}
-                        >
-                            <Text variant="body" weight="semibold" color="#FFFFFF">Grant Permission</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity
-                        onPress={onComplete}
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        activeOpacity={1}
-                        style={styles.buttonWrapper}
-                    >
-                        <LinearGradient
-                            colors={colors.gradients.premium2}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[styles.button, shadows.primaryGlow]}
-                        >
-                            <Text variant="body" weight="semibold" color="#FFFFFF">Complete Setup</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                )}
-            </Animated.View>
-
-            <ProgressRing current={3} total={3} />
+            <BottomButtons onBack={onBack} onPrimary={granted ? onComplete : () => Permissions.requestIgnoreBatteryOptimization()} primaryLabel={granted ? 'Complete' : 'Grant Access'} isDark={isDark} />
         </View>
     );
 };
@@ -551,103 +312,31 @@ export const OnboardingBattery: React.FC<BatteryScreenProps> = ({ onComplete, on
 // ============================================
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    permissionContent: {
-        flex: 1,
-        justifyContent: 'center',
-        paddingHorizontal: spacing[6],
-    },
-    iconContainer: {
-        alignItems: 'center',
-        marginBottom: spacing[6],
-    },
-    iconCircle: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
-        ...shadows.primaryGlow,
-    },
-    permissionTitle: {
-        marginBottom: spacing[3],
-    },
-    statusBadge: {
-        alignSelf: 'center',
-        paddingHorizontal: spacing[4],
-        paddingVertical: spacing[2],
-        borderRadius: borderRadius.full,
-        marginBottom: spacing[6],
-    },
-    explanationCard: {
-        marginTop: spacing[2],
-    },
-    bulletPoints: {
-        marginTop: spacing[4],
-        gap: spacing[2],
-    },
-    buttonContainer: {
-        paddingHorizontal: spacing[6],
-        paddingBottom: spacing[6],
-    },
-    buttonWrapper: {
-        width: '100%',
-    },
-    button: {
-        height: tapTargets.large,
-        borderRadius: borderRadius.squircle.button,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    progressRingContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: spacing[2],
-        paddingBottom: spacing[6],
-    },
-    progressDot: {
-        height: 8,
-        borderRadius: 4,
-    },
-    backButton: {
-        position: 'absolute',
-        top: spacing[12],
-        left: spacing[6],
-        zIndex: 10,
-    },
-    backButtonCircle: {
-        width: tapTargets.comfortable,
-        height: tapTargets.comfortable,
-        borderRadius: tapTargets.comfortable / 2,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    decorCircle1: {
-        position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        top: -60,
-        right: -100,
-    },
-    decorCircle2: {
-        position: 'absolute',
-        width: 250,
-        height: 250,
-        borderRadius: 125,
-        bottom: 100,
-        left: -100,
-    },
-    decorCircle3: {
-        position: 'absolute',
-        width: 280,
-        height: 280,
-        borderRadius: 140,
-        top: '40%',
-        right: -120,
-    },
+    container: { flex: 1 },
+    waveBlob: { position: 'absolute' },
+    permissionContent: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing[5] },
+
+    progressBarContainer: { position: 'absolute', top: 50, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
+    progressSegment: { flex: 1, height: 3, borderRadius: 1.5 },
+
+    title: { marginBottom: spacing[2], fontSize: 32 },
+    statusBadge: { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[2], borderRadius: 50, marginBottom: spacing[5], gap: spacing[2] },
+    statusDot: { width: 8, height: 8, borderRadius: 4 },
+    card: { padding: spacing[5], borderRadius: 20 },
+
+    iconBox: { alignItems: 'center', marginBottom: spacing[5], height: 120, justifyContent: 'center' },
+    chartIcon: { width: 90, height: 75, borderBottomWidth: 3, borderLeftWidth: 3, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-evenly', paddingBottom: 8, paddingLeft: 8 },
+    chartBar: { width: 18, borderRadius: 4 },
+    shieldIcon: { width: 75, height: 95, borderWidth: 3, borderRadius: 38, borderBottomLeftRadius: 48, borderBottomRightRadius: 48 },
+    batteryIcon: { width: 65, height: 95, borderWidth: 3, borderRadius: 12, padding: 8 },
+    batteryFill: { width: '100%', height: '70%', borderRadius: 6, marginTop: 'auto' },
+    batteryTop: { position: 'absolute', top: -12, left: '50%', marginLeft: -12, width: 24, height: 12, borderTopLeftRadius: 6, borderTopRightRadius: 6 },
+
+    bottomButtonsContainer: { flexDirection: 'row', paddingHorizontal: spacing[4], paddingBottom: spacing[4], gap: spacing[3] },
+    backButtonWrapper: { flex: 1 },
+    buttonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
+    nextButtonWrapper: { flex: 2 },
+    nextButtonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 },
 });
 
 export default OnboardingUsageStats;

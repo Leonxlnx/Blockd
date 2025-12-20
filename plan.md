@@ -1,84 +1,48 @@
 # Blockd - Vollständige Projekt-Roadmap
 
-> **Legende**:
-> - `[ ]` = Noch nicht begonnen
-> - `[/]` = In Arbeit  
-> - `[x]` = Fertig
-> - `(Optional)` = Vorschlag/Freiwillig
-> - `(Vorschlag)` = Von Gemini vorgeschlagen
+> **Legende**: `[ ]` Noch nicht | `[x]` Fertig
 
 ---
 
-## Phase 1: Projekt Foundation ✅
-- [x] React Native Bare Workflow Setup
-- [x] Asset Generation (Logo, Zen Art)
-- [x] Landing Screen Implementation
-- [x] Android Build & Deploy
+## Phase 1-2: Foundation & Design ✅
+- [x] React Native Bare Workflow
+- [x] Theme System (Dark/Light Mode)
+- [x] Reusable Components
 
 ---
 
-## Phase 2: Design System & Theming ✅
-- [x] **Theme Konfiguration**
-  - [x] Zentrale `theme.ts` mit Farben, Spacing, Typography
-  - [x] 8-Point Grid System
-  - [x] Squircle Border Radius (Apple-style)
-  - [x] Soft Colored Shadows
-  - [x] OLED-optimierter Dark Mode
-  - [x] Responsive Scaling Utilities
-- [x] **Reusable Components**
-  - [x] `Button`, `Text`, `Card`, `Input`, `ProgressBar`
-  - [x] `GlassCard`, `AnimatedContainer`
+## Phase 3: Premium Onboarding ✅
+- [x] Splash: Logo CENTER → shrinks → moves left → "lockd" slides in
+- [x] 6 Onboarding Screens (Welcome, Problem, Solution, Benefits, How Heard, Name)
+- [x] Progress bar at TOP
+- [x] Flowing blob background (not particles)
+- [x] Keyboard-aware Name screen
+- [x] 2.5D premium buttons
 
 ---
 
-## Phase 3: Onboarding Flow - Basis Screens ✅
-- [x] **Screen 1: Value Proposition**
-- [x] **Screen 2: Social Proof** (5-Sterne Ratings, Testimonials)
-- [x] **Screen 3: Identity Input** (moderner Input mit Avatar)
+## Phase 4: Permissions ✅
+- [x] Usage Stats, Overlay, Battery permissions
+- [x] Native Android module
+- [x] `getAppUsageStats()` for real usage data
 
 ---
 
-## Phase 4: Onboarding Flow - Permissions ✅
-- [x] **Native Android Permissions Module**
-  - [x] PermissionsModule.java
-  - [x] PermissionsPackage.java
-  - [x] TypeScript Wrapper (Permissions.ts)
-- [x] **Screen 4: Usage Access Permission**
-- [x] **Screen 5: Overlay Permission**
-- [x] **Screen 6: Battery Optimization**
+## Phase 5: App Setup ✅
+- [x] App Analysis (fetches real usage data)
+- [x] App Selection (shows real apps from device)
+- [x] Time Calculation (25% reduction = X days/year saved)
+- [x] Commitment screen (hold-to-promise)
 
 ---
 
-## Phase 5: Onboarding Flow - Analysis
-- [ ] **Screen 7: App Analysis**
-  - [ ] UsageStatsManager Integration
-  - [ ] Letzte 14 Tage scannen
-  - [ ] Top 5 "distracting apps" ermitteln
-- [ ] **Screen 8: App Selection**
-  - [ ] Multi-Select Liste der erkannten Apps
-  - [ ] App Icons laden via PackageManager
+## Phase 6: Main App
+- [x] Main Placeholder
+- [ ] Dashboard with stats
+- [ ] Limits management
+- [ ] Settings
 
 ---
 
-## Phase 6: Onboarding Flow - Commitment
-- [ ] **Screen 9: The Calculation** ("If you continue, you will lose [X] Days")
-- [ ] **Screen 10: The Commitment** (Hold to Commit Button)
-- [ ] **Screen 11: First Configuration**
-
----
-
-## Phase 7: Navigation Setup
-- [ ] Bottom Tab Navigation (Dashboard, Limits, Settings)
-
----
-
-## Phase 8-50: Future Phases
-(Siehe vorherige Version für vollständige Details)
-
----
-
-## Aktueller Status
-
-**Abgeschlossen**: Phase 1, 2, 3, 4 + Premium Design Overhaul  
-**Nächste Phase**: Phase 5 (App Analysis)  
-**Letzte Aktualisierung**: 2024-12-18
+**Status**: Phase 1-5 complete, Phase 6 in progress  
+**Letzte Aktualisierung**: 2024-12-19

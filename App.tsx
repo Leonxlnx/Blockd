@@ -1,93 +1,189 @@
 import React, { useState } from 'react';
 import { View, StatusBar } from 'react-native';
 import { ThemeProvider, useTheme } from './src/theme';
-import Landing from './src/screens/Landing';
+import SplashScreen from './src/screens/SplashScreen';
 import {
-  OnboardingValue,
-  OnboardingSocialProof,
-  OnboardingIdentity
+  OnboardingWelcome,
+  OnboardingProblem,
+  OnboardingSolution,
+  OnboardingBenefits,
+  OnboardingHowHeard,
+  OnboardingName,
 } from './src/screens/onboarding/OnboardingScreens';
 import {
   OnboardingUsageStats,
   OnboardingOverlay,
   OnboardingBattery,
 } from './src/screens/onboarding/OnboardingPermissions';
+import {
+  AppAnalysisScreen,
+  AppSelectionScreen,
+  TimeCalculationScreen,
+  CommitmentScreen,
+} from './src/screens/onboarding/AppSetupScreens';
+import MainPlaceholder from './src/screens/MainPlaceholder';
+
+// Type for app usage data
+interface AppUsage {
+  packageName: string;
+  appName: string;
+  usageMinutes: number;
+}
 
 type Screen =
-  | 'landing'
-  | 'onboarding-1'
-  | 'onboarding-2'
-  | 'onboarding-3'
-  | 'permissions-1'
-  | 'permissions-2'
-  | 'permissions-3'
-  | 'complete';
+  | 'splash'
+  | 'onboarding-welcome'
+  | 'onboarding-problem'
+  | 'onboarding-solution'
+  | 'onboarding-benefits'
+  | 'onboarding-howheard'
+  | 'onboarding-name'
+  | 'permissions-usage'
+  | 'permissions-overlay'
+  | 'permissions-battery'
+  | 'app-analysis'
+  | 'app-selection'
+  | 'time-calculation'
+  | 'commitment'
+  | 'main';
 
 const AppContent: React.FC = () => {
   const { theme, isDark } = useTheme();
-  const [currentScreen, setCurrentScreen] = useState<Screen>('landing');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [userName, setUserName] = useState<string>('');
+  const [heardFrom, setHeardFrom] = useState<string>('');
+  const [analyzedApps, setAnalyzedApps] = useState<AppUsage[]>([]);
+  const [selectedApps, setSelectedApps] = useState<AppUsage[]>([]);
 
   const renderScreen = () => {
     switch (currentScreen) {
-      // Onboarding Flow
-      case 'onboarding-1':
-        return <OnboardingValue onNext={() => setCurrentScreen('onboarding-2')} />;
-      case 'onboarding-2':
+      // Splash Screen
+      case 'splash':
         return (
-          <OnboardingSocialProof
-            onNext={() => setCurrentScreen('onboarding-3')}
-            onBack={() => setCurrentScreen('onboarding-1')}
-          />
-        );
-      case 'onboarding-3':
-        return (
-          <OnboardingIdentity
-            onNext={(name) => {
-              setUserName(name);
-              setCurrentScreen('permissions-1');
-            }}
-            onBack={() => setCurrentScreen('onboarding-2')}
+          <SplashScreen
+            onContinue={() => setCurrentScreen('onboarding-welcome')}
           />
         );
 
-      // Permission Flow
-      case 'permissions-1':
+      // Onboarding Flow (6 screens)
+      case 'onboarding-welcome':
+        return (
+          <OnboardingWelcome
+            onNext={() => setCurrentScreen('onboarding-problem')}
+            onBack={() => setCurrentScreen('splash')}
+          />
+        );
+      case 'onboarding-problem':
+        return (
+          <OnboardingProblem
+            onNext={() => setCurrentScreen('onboarding-solution')}
+            onBack={() => setCurrentScreen('onboarding-welcome')}
+          />
+        );
+      case 'onboarding-solution':
+        return (
+          <OnboardingSolution
+            onNext={() => setCurrentScreen('onboarding-benefits')}
+            onBack={() => setCurrentScreen('onboarding-problem')}
+          />
+        );
+      case 'onboarding-benefits':
+        return (
+          <OnboardingBenefits
+            onNext={() => setCurrentScreen('onboarding-howheard')}
+            onBack={() => setCurrentScreen('onboarding-solution')}
+          />
+        );
+      case 'onboarding-howheard':
+        return (
+          <OnboardingHowHeard
+            onNext={(source: string) => {
+              setHeardFrom(source);
+              setCurrentScreen('onboarding-name');
+            }}
+            onBack={() => setCurrentScreen('onboarding-benefits')}
+          />
+        );
+      case 'onboarding-name':
+        return (
+          <OnboardingName
+            onNext={(name: string) => {
+              setUserName(name);
+              setCurrentScreen('permissions-usage');
+            }}
+            onBack={() => setCurrentScreen('onboarding-howheard')}
+          />
+        );
+
+      // Permission Flow (3 screens)
+      case 'permissions-usage':
         return (
           <OnboardingUsageStats
-            onNext={() => setCurrentScreen('permissions-2')}
-            onBack={() => setCurrentScreen('onboarding-3')}
+            onNext={() => setCurrentScreen('permissions-overlay')}
+            onBack={() => setCurrentScreen('onboarding-name')}
           />
         );
-      case 'permissions-2':
+      case 'permissions-overlay':
         return (
           <OnboardingOverlay
-            onNext={() => setCurrentScreen('permissions-3')}
-            onBack={() => setCurrentScreen('permissions-1')}
+            onNext={() => setCurrentScreen('permissions-battery')}
+            onBack={() => setCurrentScreen('permissions-usage')}
           />
         );
-      case 'permissions-3':
+      case 'permissions-battery':
         return (
           <OnboardingBattery
-            onComplete={() => setCurrentScreen('complete')}
-            onBack={() => setCurrentScreen('permissions-2')}
+            onComplete={() => setCurrentScreen('app-analysis')}
+            onBack={() => setCurrentScreen('permissions-overlay')}
           />
         );
 
-      // Complete - back to landing for now
-      case 'complete':
+      // App Setup Flow
+      case 'app-analysis':
         return (
-          <Landing
-            onNavigateToOnboarding={() => setCurrentScreen('onboarding-1')}
+          <AppAnalysisScreen
+            onNext={(apps: AppUsage[]) => {
+              setAnalyzedApps(apps);
+              setCurrentScreen('app-selection');
+            }}
+            onBack={() => setCurrentScreen('permissions-battery')}
+          />
+        );
+      case 'app-selection':
+        return (
+          <AppSelectionScreen
+            apps={analyzedApps}
+            onNext={(apps: AppUsage[]) => {
+              setSelectedApps(apps);
+              setCurrentScreen('time-calculation');
+            }}
+            onBack={() => setCurrentScreen('app-analysis')}
+          />
+        );
+      case 'time-calculation':
+        return (
+          <TimeCalculationScreen
+            selectedApps={selectedApps}
+            onNext={() => setCurrentScreen('commitment')}
+            onBack={() => setCurrentScreen('app-selection')}
+          />
+        );
+      case 'commitment':
+        return (
+          <CommitmentScreen
+            onComplete={() => setCurrentScreen('main')}
+            onBack={() => setCurrentScreen('time-calculation')}
           />
         );
 
-      // Landing
-      case 'landing':
+      // Main App
+      case 'main':
+        return <MainPlaceholder />;
+
       default:
         return (
-          <Landing
-            onNavigateToOnboarding={() => setCurrentScreen('onboarding-1')}
+          <SplashScreen
+            onContinue={() => setCurrentScreen('onboarding-welcome')}
           />
         );
     }
@@ -97,7 +193,8 @@ const AppContent: React.FC = () => {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={theme.colors.background}
+        backgroundColor="transparent"
+        translucent
       />
       {renderScreen()}
     </View>

@@ -14,7 +14,7 @@ interface CardProps {
     children: React.ReactNode;
     variant?: CardVariant;
     padding?: keyof typeof spacing;
-    borderRadiusSize?: keyof typeof borderRadius;
+    borderRadiusSize?: Exclude<keyof typeof borderRadius, 'squircle'>;
     gradientIndex?: 1 | 2 | 3;
     style?: ViewStyle;
 }
@@ -57,7 +57,7 @@ export const Card: React.FC<CardProps> = ({
 
     const variantStyles: Record<Exclude<CardVariant, 'gradient'>, ViewStyle> = {
         elevated: {
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.surface1,
             ...shadows.md,
         },
         outlined: {
@@ -66,7 +66,7 @@ export const Card: React.FC<CardProps> = ({
             borderColor: theme.colors.border,
         },
         filled: {
-            backgroundColor: theme.colors.surfaceSecondary,
+            backgroundColor: theme.colors.surface2,
         },
     };
 

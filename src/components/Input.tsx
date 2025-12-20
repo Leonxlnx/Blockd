@@ -44,7 +44,7 @@ export const Input: React.FC<InputProps> = ({
                     : theme.colors.border,
         },
         filled: {
-            backgroundColor: theme.colors.surfaceSecondary,
+            backgroundColor: theme.colors.surface2,
             borderWidth: 0,
         },
     };

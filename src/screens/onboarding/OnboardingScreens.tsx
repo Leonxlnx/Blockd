@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
     Image,
@@ -9,110 +9,131 @@ import {
     TextInput,
     Animated,
     Easing,
+    ScrollView,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../theme';
-import { colors, spacing, borderRadius, shadows, tapTargets } from '../../theme/theme';
-import { Text, GlassCard } from '../../components';
+import { spacing } from '../../theme/theme';
+import { Text } from '../../components';
 
 const { width, height } = Dimensions.get('window');
 
 // ============================================
-// ANIMATED ENTRANCE HOOK
+// PROFESSIONAL FLOWING BACKGROUND
 // ============================================
 
-const useEntranceAnimation = (delay: number = 0) => {
-    const opacity = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(30)).current;
-    const scale = useRef(new Animated.Value(0.95)).current;
+const FlowingBackground: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+    const wave1 = useRef(new Animated.Value(0)).current;
+    const wave2 = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(opacity, {
+        Animated.loop(
+            Animated.timing(wave1, {
                 toValue: 1,
-                duration: 400,
-                delay,
-                easing: Easing.out(Easing.cubic),
+                duration: 12000,
+                easing: Easing.linear,
                 useNativeDriver: true,
-            }),
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 500,
-                delay,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }),
-            Animated.spring(scale, {
+            })
+        ).start();
+
+        Animated.loop(
+            Animated.timing(wave2, {
                 toValue: 1,
-                tension: 50,
-                friction: 10,
-                delay,
+                duration: 15000,
+                easing: Easing.linear,
                 useNativeDriver: true,
-            }),
-        ]).start();
+            })
+        ).start();
     }, []);
 
-    return { opacity, translateY, scale };
-};
+    const translateX1 = wave1.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-width * 0.5, width * 0.5],
+    });
 
-// ============================================
-// BACK BUTTON COMPONENT
-// ============================================
-
-interface BackButtonProps {
-    onPress: () => void;
-    isDark: boolean;
-}
-
-const BackButton: React.FC<BackButtonProps> = ({ onPress, isDark }) => {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-
-    const handlePress = () => {
-        Animated.sequence([
-            Animated.timing(scaleAnim, { toValue: 0.9, duration: 50, useNativeDriver: true }),
-            Animated.spring(scaleAnim, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }),
-        ]).start(() => onPress());
-    };
+    const translateX2 = wave2.interpolate({
+        inputRange: [0, 1],
+        outputRange: [width * 0.3, -width * 0.3],
+    });
 
     return (
-        <TouchableOpacity onPress={handlePress} style={styles.backButton} activeOpacity={1}>
-            <Animated.View style={[
-                styles.backButtonCircle,
-                {
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-                    transform: [{ scale: scaleAnim }],
-                }
-            ]}>
-                <Text variant="body" weight="medium">←</Text>
-            </Animated.View>
-        </TouchableOpacity>
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+            <Animated.View
+                style={[
+                    styles.waveBlob,
+                    {
+                        top: height * 0.1,
+                        left: -width * 0.3,
+                        width: width * 1.2,
+                        height: width * 1.2,
+                        borderRadius: width * 0.6,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                        transform: [{ translateX: translateX1 }],
+                    },
+                ]}
+            />
+            <Animated.View
+                style={[
+                    styles.waveBlob,
+                    {
+                        top: height * 0.5,
+                        right: -width * 0.4,
+                        width: width * 0.9,
+                        height: width * 0.9,
+                        borderRadius: width * 0.45,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)',
+                        transform: [{ translateX: translateX2 }],
+                    },
+                ]}
+            />
+        </View>
     );
 };
 
 // ============================================
-// PROGRESS RING COMPONENT
+// ENTRANCE ANIMATION
 // ============================================
 
-interface ProgressRingProps {
+const useEntranceAnimation = (delay: number = 0) => {
+    const opacity = useRef(new Animated.Value(0)).current;
+    const translateY = useRef(new Animated.Value(35)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(opacity, { toValue: 1, duration: 400, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            Animated.timing(translateY, { toValue: 0, duration: 500, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        ]).start();
+    }, []);
+
+    return { opacity, translateY };
+};
+
+// ============================================
+// PROGRESS BAR (TOP)
+// ============================================
+
+interface ProgressBarProps {
     current: number;
     total: number;
 }
 
-const ProgressRing: React.FC<ProgressRingProps> = ({ current, total }) => {
-    const { theme } = useTheme();
+const ProgressBar: React.FC<ProgressBarProps> = ({ current, total }) => {
+    const { isDark } = useTheme();
 
     return (
-        <View style={styles.progressRingContainer}>
+        <View style={styles.progressBarContainer}>
             {Array.from({ length: total }).map((_, index) => (
                 <View
                     key={index}
                     style={[
-                        styles.progressDot,
+                        styles.progressSegment,
                         {
                             backgroundColor: index < current
-                                ? colors.primary[400]
-                                : theme.colors.border,
-                            width: index === current - 1 ? 24 : 8,
+                                ? (isDark ? '#FFFFFF' : '#1A1A1A')
+                                : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'),
                         },
                     ]}
                 />
@@ -122,330 +143,385 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ current, total }) => {
 };
 
 // ============================================
-// STAR RATING COMPONENT
+// PREMIUM 2.5D BUTTONS
 // ============================================
 
-const StarRating: React.FC<{ rating: number }> = ({ rating }) => (
-    <View style={styles.starContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-            <Text
-                key={star}
-                variant="body"
-                style={{ ...styles.star, opacity: star <= rating ? 1 : 0.25 }}
+interface BottomButtonsProps {
+    onBack?: () => void;
+    onNext: () => void;
+    nextLabel?: string;
+    nextDisabled?: boolean;
+    showBack?: boolean;
+    isDark: boolean;
+}
+
+const BottomButtons: React.FC<BottomButtonsProps> = ({
+    onBack,
+    onNext,
+    nextLabel = 'Continue',
+    nextDisabled = false,
+    showBack = true,
+    isDark,
+}) => (
+    <View style={styles.bottomButtonsContainer}>
+        {showBack && onBack ? (
+            <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backButtonWrapper}>
+                <LinearGradient
+                    colors={isDark ? ['#1A1A1A', '#282828', '#1A1A1A'] : ['#F5F5F5', '#FFFFFF', '#F5F5F5']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={[styles.buttonBase, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)' }]}
+                >
+                    <Text variant="body" weight="semibold" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
+                        Back
+                    </Text>
+                </LinearGradient>
+            </TouchableOpacity>
+        ) : (
+            <View style={styles.backButtonWrapper} />
+        )}
+
+        <TouchableOpacity
+            onPress={onNext}
+            activeOpacity={0.8}
+            disabled={nextDisabled}
+            style={[styles.nextButtonWrapper, { opacity: nextDisabled ? 0.3 : 1 }]}
+        >
+            <LinearGradient
+                colors={isDark ? ['#FFFFFF', '#F0F0F0', '#DFDFDF'] : ['#2A2A2A', '#1A1A1A', '#0A0A0A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.nextButtonBase}
             >
-                ★
-            </Text>
-        ))}
+                <Text variant="body" weight="bold" color={isDark ? '#0A0A0A' : '#FFFFFF'}>
+                    {nextLabel}
+                </Text>
+            </LinearGradient>
+        </TouchableOpacity>
     </View>
 );
 
 // ============================================
-// ONBOARDING SCREEN 1: VALUE PROPOSITION
+// SCREEN 1: WELCOME
 // ============================================
 
-interface OnboardingValueProps {
-    onNext: () => void;
-}
-
-export const OnboardingValue: React.FC<OnboardingValueProps> = ({ onNext }) => {
-    const { theme, isDark } = useTheme();
-    const anim1 = useEntranceAnimation(0);
-    const anim2 = useEntranceAnimation(200);
-    const anim3 = useEntranceAnimation(400);
-    const buttonScale = useRef(new Animated.Value(1)).current;
-
-    const handlePressIn = () => {
-        Animated.spring(buttonScale, { toValue: 0.96, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(buttonScale, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
-
-    return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
-
-            <LinearGradient
-                colors={theme.gradients.background}
-                style={StyleSheet.absoluteFillObject}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            />
-
-            {/* 2.5D Decorative circles */}
-            <View style={[styles.decorCircle1, { backgroundColor: isDark ? 'rgba(119,141,118,0.1)' : 'rgba(119,141,118,0.08)' }]} />
-            <View style={[styles.decorCircle2, { backgroundColor: isDark ? 'rgba(119,141,118,0.06)' : 'rgba(119,141,118,0.04)' }]} />
-
-            <View style={styles.content}>
-                <Animated.View style={[styles.imageContainer, { opacity: anim1.opacity, transform: [{ scale: anim1.scale }] }]}>
-                    <Image
-                        source={require('../../../assets/images/onboarding-zen.png')}
-                        style={styles.heroImage}
-                        resizeMode="contain"
-                    />
-                </Animated.View>
-
-                <Animated.View style={{ opacity: anim2.opacity, transform: [{ translateY: anim2.translateY }] }}>
-                    <GlassCard intensity="medium" padding="xl" style={styles.glassCard}>
-                        <Text variant="h2" weight="bold" align="center" style={styles.title}>
-                            Blockd removes{'\n'}the noise.
-                        </Text>
-                        <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtitle}>
-                            Reclaim your focus. Take back your time.{'\n'}One block at a time.
-                        </Text>
-                    </GlassCard>
-                </Animated.View>
-            </View>
-
-            <Animated.View style={[styles.buttonContainer, { opacity: anim3.opacity, transform: [{ translateY: anim3.translateY }, { scale: buttonScale }] }]}>
-                <TouchableOpacity
-                    onPress={onNext}
-                    onPressIn={handlePressIn}
-                    onPressOut={handlePressOut}
-                    activeOpacity={1}
-                    style={styles.buttonWrapper}
-                >
-                    <LinearGradient
-                        colors={colors.gradients.sage1}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={[styles.button, shadows.primaryGlow]}
-                    >
-                        <Text variant="body" weight="semibold" color="#FFFFFF">Continue</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-            </Animated.View>
-
-            <ProgressRing current={1} total={3} />
-        </View>
-    );
-};
-
-// ============================================
-// ONBOARDING SCREEN 2: SOCIAL PROOF
-// ============================================
-
-interface OnboardingSocialProofProps {
+interface OnboardingWelcomeProps {
     onNext: () => void;
     onBack: () => void;
 }
 
-export const OnboardingSocialProof: React.FC<OnboardingSocialProofProps> = ({ onNext, onBack }) => {
+export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
-    const buttonScale = useRef(new Animated.Value(1)).current;
-
-    const testimonials = [
-        { quote: "Reclaimed 400 hours last year. That's like getting 2 extra weeks back.", author: "Alex M.", role: "Software Engineer", rating: 5 },
-        { quote: "Finally stopped doom-scrolling. My anxiety has decreased significantly.", author: "Sarah K.", role: "Designer", rating: 5 },
-        { quote: "The high-friction design works. I think twice before opening apps.", author: "Michael T.", role: "Student", rating: 5 },
-    ];
-
-    const handlePressIn = () => {
-        Animated.spring(buttonScale, { toValue: 0.96, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(buttonScale, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
+    const imgAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(120);
+    const subAnim = useEntranceAnimation(220);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
 
-            <LinearGradient
-                colors={theme.gradients.background}
-                style={StyleSheet.absoluteFillObject}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            />
+            <ProgressBar current={1} total={6} />
 
-            <View style={[styles.decorCircle3, { backgroundColor: isDark ? 'rgba(119,141,118,0.1)' : 'rgba(119,141,118,0.05)' }]} />
+            <View style={styles.content}>
+                <Animated.View style={[styles.imageWrap, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/mascot-placeholder.png')} style={[styles.imageXL, { tintColor: isDark ? undefined : '#1A1A1A' }]} resizeMode="contain" />
+                </Animated.View>
 
-            <BackButton onPress={onBack} isDark={isDark} />
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>We live in an{'\n'}over-stimulating world</Text>
+                </Animated.View>
 
-            <View style={styles.header}>
-                <Text variant="h3" weight="bold" align="center">People are reclaiming{'\n'}their time.</Text>
+                <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }] }}>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>It makes us tired, stressed,{'\n'}and unable to focus</Text>
+                </Animated.View>
             </View>
 
-            <View style={styles.testimonialsContainer}>
-                {testimonials.map((testimonial, index) => {
-                    const anim = useEntranceAnimation(index * 150);
-                    return (
-                        <Animated.View
-                            key={index}
-                            style={{ opacity: anim.opacity, transform: [{ translateY: anim.translateY }] }}
-                        >
-                            <GlassCard intensity={index === 1 ? 'strong' : 'medium'} padding="lg" style={styles.testimonialCard}>
-                                <StarRating rating={testimonial.rating} />
-                                <Text variant="body" style={styles.quoteText}>"{testimonial.quote}"</Text>
-                                <View style={styles.authorRow}>
-                                    <LinearGradient colors={colors.gradients.sage1} style={styles.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                                        <Text variant="bodySmall" weight="bold" color="#FFFFFF">{testimonial.author[0]}</Text>
-                                    </LinearGradient>
-                                    <View>
-                                        <Text variant="bodySmall" weight="semibold">{testimonial.author}</Text>
-                                        <Text variant="caption" color={theme.colors.textTertiary}>{testimonial.role}</Text>
-                                    </View>
-                                </View>
-                            </GlassCard>
-                        </Animated.View>
-                    );
-                })}
-            </View>
-
-            <Animated.View style={[styles.buttonContainer, { transform: [{ scale: buttonScale }] }]}>
-                <TouchableOpacity
-                    onPress={onNext}
-                    onPressIn={handlePressIn}
-                    onPressOut={handlePressOut}
-                    activeOpacity={1}
-                    style={styles.buttonWrapper}
-                >
-                    <LinearGradient
-                        colors={colors.gradients.premium2}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={[styles.button, shadows.primaryGlow]}
-                    >
-                        <Text variant="body" weight="semibold" color="#FFFFFF">Continue</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-            </Animated.View>
-
-            <ProgressRing current={2} total={3} />
+            <BottomButtons onBack={onBack} onNext={onNext} isDark={isDark} />
         </View>
     );
 };
 
 // ============================================
-// ONBOARDING SCREEN 3: NAME INPUT
+// SCREEN 2: PROBLEM
 // ============================================
 
-interface OnboardingIdentityProps {
+interface OnboardingProblemProps {
+    onNext: () => void;
+    onBack: () => void;
+}
+
+export const OnboardingProblem: React.FC<OnboardingProblemProps> = ({ onNext, onBack }) => {
+    const { theme, isDark } = useTheme();
+    const imgAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(120);
+    const subAnim = useEntranceAnimation(220);
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+
+            <ProgressBar current={2} total={6} />
+
+            <View style={styles.content}>
+                <Animated.View style={[styles.imageWrap, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/onboarding-overwhelmed.png')} style={[styles.imageXL, { tintColor: isDark ? undefined : '#1A1A1A' }]} resizeMode="contain" />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>A new world needs{'\n'}new solutions</Text>
+                </Animated.View>
+
+                <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }] }}>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>Technology that helps us{'\n'}reclaim control</Text>
+                </Animated.View>
+            </View>
+
+            <BottomButtons onBack={onBack} onNext={onNext} isDark={isDark} />
+        </View>
+    );
+};
+
+// ============================================
+// SCREEN 3: SOLUTION
+// ============================================
+
+interface OnboardingSolutionProps {
+    onNext: () => void;
+    onBack: () => void;
+}
+
+export const OnboardingSolution: React.FC<OnboardingSolutionProps> = ({ onNext, onBack }) => {
+    const { theme, isDark } = useTheme();
+    const imgAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(120);
+    const subAnim = useEntranceAnimation(220);
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+
+            <ProgressBar current={3} total={6} />
+
+            <View style={styles.content}>
+                <Animated.View style={[styles.imageWrap, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={isDark ? require('../../../assets/images/logo-dark.png') : require('../../../assets/images/logo-light.png')} style={styles.logoXXL} resizeMode="contain" />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>That's why we{'\n'}made Blockd</Text>
+                </Animated.View>
+
+                <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }] }}>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>An antidote to distraction.{'\n'}Powered by intention.</Text>
+                </Animated.View>
+            </View>
+
+            <BottomButtons onBack={onBack} onNext={onNext} isDark={isDark} />
+        </View>
+    );
+};
+
+// ============================================
+// SCREEN 4: BENEFITS (5-Star Image)
+// ============================================
+
+interface OnboardingBenefitsProps {
+    onNext: () => void;
+    onBack: () => void;
+}
+
+export const OnboardingBenefits: React.FC<OnboardingBenefitsProps> = ({ onNext, onBack }) => {
+    const { theme, isDark } = useTheme();
+    const imgAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(180);
+    const subAnim = useEntranceAnimation(300);
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+
+            <ProgressBar current={4} total={6} />
+
+            <View style={styles.content}>
+                <Animated.View style={[styles.starsImageWrap, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/stars-5-rating.png')} style={[styles.starsImage, { tintColor: isDark ? undefined : '#1A1A1A' }]} resizeMode="contain" />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>Improve your focus{'\n'}and reclaim your time</Text>
+                </Animated.View>
+
+                <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }] }}>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>Focus, relax, and be present.{'\n'}See the magic in everyday life.</Text>
+                </Animated.View>
+            </View>
+
+            <BottomButtons onBack={onBack} onNext={onNext} isDark={isDark} />
+        </View>
+    );
+};
+
+// ============================================
+// SCREEN 5: HOW HEARD (2-Col Grid)
+// ============================================
+
+const SOURCES = [
+    { id: 'instagram', label: 'Instagram' },
+    { id: 'tiktok', label: 'TikTok' },
+    { id: 'youtube', label: 'YouTube' },
+    { id: 'x', label: 'X (Twitter)' },
+    { id: 'ads', label: 'Ads' },
+    { id: 'friend', label: 'Friend' },
+    { id: 'appstore', label: 'App Store' },
+    { id: 'other', label: 'Other' },
+];
+
+interface OnboardingHowHeardProps {
+    onNext: (source: string) => void;
+    onBack: () => void;
+}
+
+export const OnboardingHowHeard: React.FC<OnboardingHowHeardProps> = ({ onNext, onBack }) => {
+    const { theme, isDark } = useTheme();
+    const [selected, setSelected] = useState<string | null>(null);
+    const [otherText, setOtherText] = useState('');
+    const titleAnim = useEntranceAnimation(0);
+    const imgAnim = useEntranceAnimation(80);
+
+    const isValid = selected && (selected !== 'other' || otherText.length > 0);
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+
+            <ProgressBar current={5} total={6} />
+
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.howHeardScrollContent}>
+                <Animated.View style={[styles.howHeardImageWrap, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/onboarding-source.png')} style={[styles.howHeardImage, { tintColor: isDark ? undefined : '#1A1A1A' }]} resizeMode="contain" />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h2" weight="bold" align="center" style={styles.headlineSmaller}>Where did you hear{'\n'}about us?</Text>
+                </Animated.View>
+
+                <View style={styles.gridContainer}>
+                    {SOURCES.map((source) => {
+                        const isSelected = selected === source.id;
+                        const isOtherSelected = source.id === 'other' && isSelected;
+
+                        return (
+                            <TouchableOpacity
+                                key={source.id}
+                                onPress={() => { setSelected(source.id); if (source.id !== 'other') setOtherText(''); }}
+                                activeOpacity={0.7}
+                                style={[
+                                    styles.gridItem,
+                                    {
+                                        backgroundColor: isSelected ? (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                                        borderColor: isSelected ? (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)') : 'transparent',
+                                    },
+                                ]}
+                            >
+                                {isOtherSelected ? (
+                                    <TextInput
+                                        style={[styles.otherInlineInput, { color: theme.colors.text }]}
+                                        value={otherText}
+                                        onChangeText={setOtherText}
+                                        placeholder="Type..."
+                                        placeholderTextColor={theme.colors.textTertiary}
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <Text variant="bodySmall" weight={isSelected ? 'bold' : 'medium'} align="center">{source.label}</Text>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </ScrollView>
+
+            <BottomButtons onBack={onBack} onNext={() => isValid && onNext(selected === 'other' ? otherText : selected!)} nextDisabled={!isValid} isDark={isDark} />
+        </View>
+    );
+};
+
+// ============================================
+// SCREEN 6: NAME INPUT (Keyboard Aware)
+// ============================================
+
+interface OnboardingNameProps {
     onNext: (name: string) => void;
     onBack: () => void;
 }
 
-export const OnboardingIdentity: React.FC<OnboardingIdentityProps> = ({ onNext, onBack }) => {
+export const OnboardingName: React.FC<OnboardingNameProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
-    const [name, setName] = React.useState('');
-    const [isFocused, setIsFocused] = React.useState(false);
-    const buttonScale = useRef(new Animated.Value(1)).current;
-    const inputScale = useRef(new Animated.Value(1)).current;
-    const anim1 = useEntranceAnimation(0);
-    const anim2 = useEntranceAnimation(200);
+    const [name, setName] = useState('');
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+    const titleAnim = useEntranceAnimation(0);
+    const imgAnim = useEntranceAnimation(80);
+    const inputAnim = useEntranceAnimation(160);
 
-    const handleFocus = () => {
-        setIsFocused(true);
-        Animated.spring(inputScale, { toValue: 1.02, tension: 300, friction: 15, useNativeDriver: true }).start();
-    };
-
-    const handleBlur = () => {
-        setIsFocused(false);
-        Animated.spring(inputScale, { toValue: 1, tension: 300, friction: 15, useNativeDriver: true }).start();
-    };
-
-    const handlePressIn = () => {
-        Animated.spring(buttonScale, { toValue: 0.96, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(buttonScale, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }).start();
-    };
+    useEffect(() => {
+        const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+        return () => { showSub.remove(); hideSub.remove(); };
+    }, []);
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <KeyboardAvoidingView style={[styles.container, { backgroundColor: theme.colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000', '#050505', '#0A0A0A'] : ['#FFF', '#FAFAFA', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
 
-            <LinearGradient
-                colors={theme.gradients.background}
-                style={StyleSheet.absoluteFillObject}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            />
+            <ProgressBar current={6} total={6} />
 
-            <View style={[styles.decorCircle1, { backgroundColor: isDark ? 'rgba(119,141,118,0.08)' : 'rgba(119,141,118,0.06)', top: '25%' }]} />
-            <View style={[styles.decorCircle2, { backgroundColor: isDark ? 'rgba(119,141,118,0.05)' : 'rgba(119,141,118,0.03)' }]} />
+            <View style={styles.nameContent}>
+                {!keyboardVisible && (
+                    <Animated.View style={[styles.imageWrap, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                        <Image source={require('../../../assets/images/onboarding-name.png')} style={[styles.nameImage, { tintColor: isDark ? undefined : '#1A1A1A' }]} resizeMode="contain" />
+                    </Animated.View>
+                )}
 
-            <BackButton onPress={onBack} isDark={isDark} />
-
-            <View style={styles.identityContent}>
-                <Animated.View style={{ opacity: anim1.opacity, transform: [{ translateY: anim1.translateY }] }}>
-                    <Text variant="h2" weight="bold" align="center" style={styles.identityTitle}>
-                        What should we{'\n'}call you?
-                    </Text>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginBottom: spacing[8] }}>
-                        Let's personalize your experience
-                    </Text>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>What should we{'\n'}call you?</Text>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginTop: spacing[2] }}>Let's personalize your experience</Text>
                 </Animated.View>
 
-                <Animated.View style={{ opacity: anim2.opacity, transform: [{ translateY: anim2.translateY }, { scale: inputScale }] }}>
-                    <View style={[
-                        styles.modernInputContainer,
-                        {
-                            backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.95)',
-                            borderColor: isFocused || name.length > 0 ? colors.primary[400] : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                            ...shadows.card,
-                        },
-                    ]}>
-                        <LinearGradient
-                            colors={name.length > 0 ? colors.gradients.sage1 : [colors.neutral[400], colors.neutral[500]]}
-                            style={styles.inputIcon}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        >
-                            <Text variant="body" color="#FFFFFF" weight="bold">
-                                {name.length > 0 ? name[0].toUpperCase() : '?'}
-                            </Text>
-                        </LinearGradient>
+                <Animated.View style={[styles.inputWrapper, { opacity: inputAnim.opacity, transform: [{ translateY: inputAnim.translateY }] }]}>
+                    <LinearGradient colors={isDark ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)'] : ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.02)']} style={styles.inputCard}>
                         <TextInput
-                            style={[styles.modernTextInput, { color: theme.colors.text }]}
+                            style={[styles.nameInput, { color: theme.colors.text }]}
                             value={name}
                             onChangeText={setName}
                             placeholder="Enter your name"
                             placeholderTextColor={theme.colors.textTertiary}
                             autoCapitalize="words"
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
                         />
-                        {name.length > 0 && (
-                            <TouchableOpacity onPress={() => setName('')} style={styles.clearButton}>
-                                <Text variant="caption" color={theme.colors.textTertiary}>✕</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
+                    </LinearGradient>
 
                     {name.length > 0 && (
-                        <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginTop: spacing[6] }}>
-                            Hey {name}! Ready to focus? 🧘
-                        </Text>
+                        <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginTop: spacing[4] }}>Nice to meet you, {name}! 👋</Text>
                     )}
                 </Animated.View>
             </View>
 
-            <Animated.View style={[styles.buttonContainer, { transform: [{ scale: buttonScale }], opacity: name.length > 0 ? 1 : 0.5 }]}>
-                <TouchableOpacity
-                    onPress={() => name.length > 0 && onNext(name)}
-                    onPressIn={handlePressIn}
-                    onPressOut={handlePressOut}
-                    activeOpacity={1}
-                    style={styles.buttonWrapper}
-                    disabled={name.length === 0}
-                >
-                    <LinearGradient
-                        colors={name.length > 0 ? colors.gradients.sage2 : [colors.neutral[400], colors.neutral[500]]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={[styles.button, name.length > 0 ? shadows.primaryGlow : {}]}
-                    >
-                        <Text variant="body" weight="semibold" color="#FFFFFF">Continue</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-            </Animated.View>
-
-            <ProgressRing current={3} total={3} />
-        </View>
+            {/* Show buttons when keyboard is HIDDEN */}
+            {!keyboardVisible && (
+                <BottomButtons onBack={onBack} onNext={() => name.length > 0 && onNext(name)} nextDisabled={name.length === 0} isDark={isDark} />
+            )}
+        </KeyboardAvoidingView>
     );
 };
 
@@ -454,168 +530,48 @@ export const OnboardingIdentity: React.FC<OnboardingIdentityProps> = ({ onNext, 
 // ============================================
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'center',
-        paddingHorizontal: spacing[6],
-    },
-    header: {
-        paddingTop: height * 0.12,
-        paddingHorizontal: spacing[6],
-    },
-    imageContainer: {
-        alignItems: 'center',
-        marginBottom: spacing[6],
-    },
-    heroImage: {
-        width: width * 0.55,
-        height: width * 0.55,
-    },
-    glassCard: {
-        marginTop: spacing[4],
-    },
-    title: {
-        marginBottom: spacing[3],
-    },
-    subtitle: {
-        lineHeight: 24,
-    },
-    buttonContainer: {
-        paddingHorizontal: spacing[6],
-        paddingBottom: spacing[6],
-    },
-    buttonWrapper: {
-        width: '100%',
-    },
-    button: {
-        height: tapTargets.large,
-        borderRadius: borderRadius.squircle.button,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    progressRingContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: spacing[2],
-        paddingBottom: spacing[6],
-    },
-    progressDot: {
-        height: 8,
-        borderRadius: 4,
-    },
-    backButton: {
-        position: 'absolute',
-        top: spacing[12],
-        left: spacing[6],
-        zIndex: 10,
-    },
-    backButtonCircle: {
-        width: tapTargets.comfortable,
-        height: tapTargets.comfortable,
-        borderRadius: tapTargets.comfortable / 2,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    starContainer: {
-        flexDirection: 'row',
-        marginBottom: spacing[2],
-    },
-    star: {
-        fontSize: 16,
-        color: colors.star,
-        marginRight: 2,
-    },
-    decorCircle1: {
-        position: 'absolute',
-        width: 320,
-        height: 320,
-        borderRadius: 160,
-        top: -60,
-        right: -100,
-    },
-    decorCircle2: {
-        position: 'absolute',
-        width: 220,
-        height: 220,
-        borderRadius: 110,
-        bottom: 100,
-        left: -80,
-    },
-    decorCircle3: {
-        position: 'absolute',
-        width: 260,
-        height: 260,
-        borderRadius: 130,
-        top: '38%',
-        right: -100,
-    },
-    testimonialsContainer: {
-        flex: 1,
-        paddingHorizontal: spacing[6],
-        paddingTop: spacing[4],
-        gap: spacing[3],
-    },
-    testimonialCard: {
-        marginBottom: spacing[1],
-    },
-    quoteText: {
-        fontStyle: 'italic',
-        marginBottom: spacing[3],
-        lineHeight: 22,
-    },
-    authorRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing[3],
-    },
-    avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    identityContent: {
-        flex: 1,
-        justifyContent: 'center',
-        paddingHorizontal: spacing[6],
-    },
-    identityTitle: {
-        marginBottom: spacing[2],
-    },
-    modernInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderRadius: borderRadius.squircle.lg,
-        paddingHorizontal: spacing[4],
-        paddingVertical: spacing[3],
-    },
-    inputIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: spacing[4],
-    },
-    modernTextInput: {
-        flex: 1,
-        fontSize: 18,
-        fontWeight: '500',
-        padding: 0,
-    },
-    clearButton: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: 'rgba(0,0,0,0.05)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+    container: { flex: 1 },
+    waveBlob: { position: 'absolute' },
+    scrollView: { flex: 1 },
+    content: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing[5] },
+    nameContent: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing[5] },
+
+    // Progress bar at top
+    progressBarContainer: { position: 'absolute', top: 50, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
+    progressSegment: { flex: 1, height: 3, borderRadius: 1.5 },
+
+    // Images
+    imageWrap: { marginBottom: spacing[5], alignItems: 'center' },
+    imageXL: { width: width * 0.7, height: width * 0.7 },
+    logoXXL: { width: 180, height: 180 },
+    starsImageWrap: { marginBottom: spacing[5], alignItems: 'center' },
+    starsImage: { width: width * 0.6, height: 80 },
+    nameImage: { width: width * 0.5, height: width * 0.5 },
+
+    // Text
+    headline: { marginBottom: spacing[2], fontSize: 32, lineHeight: 42 },
+    headlineSmaller: { marginBottom: spacing[4], fontSize: 26, lineHeight: 34 },
+    subtext: { lineHeight: 26, fontSize: 16 },
+
+    // How Heard
+    howHeardScrollContent: { paddingHorizontal: spacing[4], paddingTop: 100, paddingBottom: spacing[4] },
+    howHeardImageWrap: { alignItems: 'center', marginBottom: spacing[4] },
+    howHeardImage: { width: width * 0.55, height: width * 0.4 },
+    gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing[3], marginTop: spacing[4] },
+    gridItem: { width: (width - spacing[4] * 2 - spacing[3]) / 2, paddingVertical: spacing[4], paddingHorizontal: spacing[3], borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 2, minHeight: 56 },
+    otherInlineInput: { fontSize: 15, textAlign: 'center', width: '100%', padding: 0 },
+
+    // Name input
+    inputWrapper: { marginTop: spacing[5] },
+    inputCard: { borderRadius: 20, paddingHorizontal: spacing[5], paddingVertical: spacing[4] },
+    nameInput: { fontSize: 20, fontWeight: '500', textAlign: 'center', padding: spacing[2] },
+
+    // Buttons
+    bottomButtonsContainer: { flexDirection: 'row', paddingHorizontal: spacing[4], paddingBottom: spacing[4], gap: spacing[3] },
+    backButtonWrapper: { flex: 1 },
+    buttonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
+    nextButtonWrapper: { flex: 2 },
+    nextButtonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 },
 });
 
-export default OnboardingValue;
+export default OnboardingWelcome;

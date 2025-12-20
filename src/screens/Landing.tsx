@@ -23,6 +23,9 @@ const Landing: React.FC<LandingProps> = ({ onNavigateToOnboarding }) => {
     const { theme, isDark } = useTheme();
 
     // Animation refs
+    const heroOpacity = useRef(new Animated.Value(0)).current;
+    const heroScale = useRef(new Animated.Value(0.9)).current;
+    const heroTranslateY = useRef(new Animated.Value(-20)).current;
     const logoScale = useRef(new Animated.Value(0.8)).current;
     const logoOpacity = useRef(new Animated.Value(0)).current;
     const taglineOpacity = useRef(new Animated.Value(0)).current;
@@ -32,10 +35,33 @@ const Landing: React.FC<LandingProps> = ({ onNavigateToOnboarding }) => {
     const decorCircle1 = useRef(new Animated.Value(0)).current;
     const decorCircle2 = useRef(new Animated.Value(0)).current;
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    const shimmerAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
+        // Hero image entrance first
+        Animated.parallel([
+            Animated.timing(heroOpacity, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.spring(heroScale, {
+                toValue: 1,
+                tension: 40,
+                friction: 8,
+                useNativeDriver: true,
+            }),
+            Animated.timing(heroTranslateY, {
+                toValue: 0,
+                duration: 600,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+        ]).start();
+
         // Staggered entrance animations
         Animated.sequence([
+            Animated.delay(300),
             // Logo entrance with bounce
             Animated.parallel([
                 Animated.spring(logoScale, {
@@ -115,7 +141,21 @@ const Landing: React.FC<LandingProps> = ({ onNavigateToOnboarding }) => {
         );
         pulse.start();
 
-        return () => pulse.stop();
+        // Shimmer animation for button
+        const shimmer = Animated.loop(
+            Animated.timing(shimmerAnim, {
+                toValue: 1,
+                duration: 3000,
+                easing: Easing.linear,
+                useNativeDriver: true,
+            })
+        );
+        shimmer.start();
+
+        return () => {
+            pulse.stop();
+            shimmer.stop();
+        };
     }, []);
 
     // Button press animation
@@ -180,15 +220,23 @@ const Landing: React.FC<LandingProps> = ({ onNavigateToOnboarding }) => {
                 }
             ]} />
 
-            {/* Surface Layer for depth */}
-            <View style={[
-                styles.surfaceLayer,
+            {/* Hero Illustration - Floating above */}
+            <Animated.View style={[
+                styles.heroContainer,
                 {
-                    backgroundColor: isDark
-                        ? 'rgba(20, 19, 18, 0.5)'
-                        : 'rgba(255, 255, 255, 0.3)',
+                    opacity: heroOpacity,
+                    transform: [
+                        { scale: heroScale },
+                        { translateY: heroTranslateY },
+                    ],
                 }
-            ]} />
+            ]}>
+                <Image
+                    source={require('../../assets/images/hero-focus.png')}
+                    style={styles.heroImage}
+                    resizeMode="contain"
+                />
+            </Animated.View>
 
             {/* Content */}
             <View style={styles.content}>
@@ -224,7 +272,7 @@ const Landing: React.FC<LandingProps> = ({ onNavigateToOnboarding }) => {
                 </Animated.View>
             </View>
 
-            {/* Primary CTA Button - Floating style with soft shadow */}
+            {/* Primary CTA Button - Full width, premium gradient */}
             {onNavigateToOnboarding && (
                 <Animated.View style={[
                     styles.buttonContainer,
@@ -244,33 +292,31 @@ const Landing: React.FC<LandingProps> = ({ onNavigateToOnboarding }) => {
                         style={styles.buttonTouchable}
                     >
                         <LinearGradient
-                            colors={colors.gradients.sage1}
+                            colors={['#5B7A5A', '#4A6849', '#3D5A3C']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={[
                                 styles.primaryButton,
                                 {
-                                    // Soft colored shadow
+                                    // Premium colored shadow
                                     shadowColor: colors.primary[400],
-                                    shadowOffset: { width: 0, height: 8 },
-                                    shadowOpacity: 0.35,
-                                    shadowRadius: 16,
-                                    elevation: 12,
+                                    shadowOffset: { width: 0, height: 12 },
+                                    shadowOpacity: 0.45,
+                                    shadowRadius: 20,
+                                    elevation: 16,
                                 },
                             ]}
                         >
-                            <RNText style={styles.primaryButtonText}>Get Started</RNText>
+                            <View style={styles.buttonContent}>
+                                <RNText style={styles.primaryButtonText}>Get Started</RNText>
+                                <View style={styles.arrowContainer}>
+                                    <RNText style={styles.arrowIcon}>→</RNText>
+                                </View>
+                            </View>
                         </LinearGradient>
                     </TouchableOpacity>
                 </Animated.View>
             )}
-
-            {/* Footer */}
-            <Animated.View style={[styles.footer, { opacity: buttonOpacity }]}>
-                <RNText style={[styles.version, { color: theme.colors.textTertiary }]}>
-                    v0.1.0 • Premium Focus
-                </RNText>
-            </Animated.View>
         </View>
     );
 };
@@ -280,6 +326,18 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+
+    // Hero illustration
+    heroContainer: {
+        position: 'absolute',
+        top: height * 0.08,
+        alignItems: 'center',
+        width: '100%',
+    },
+    heroImage: {
+        width: width * 0.75,
+        height: width * 0.75,
     },
 
     // 2.5D Decorative elements
@@ -308,34 +366,24 @@ const styles = StyleSheet.create({
         right: -60,
     },
 
-    // Surface layer for depth
-    surfaceLayer: {
-        position: 'absolute',
-        width: width * 2,
-        height: height * 0.6,
-        borderRadius: 300,
-        top: height * 0.35,
-        left: -width * 0.5,
-        transform: [{ rotate: '-15deg' }],
-    },
-
     content: {
         alignItems: 'center',
         zIndex: 1,
         paddingHorizontal: spacing[8],
+        marginTop: height * 0.35,
     },
 
     logoContainer: {
-        marginBottom: spacing[8],
+        marginBottom: spacing[6],
     },
 
     logo: {
-        width: 140,
-        height: 140,
+        width: 100,
+        height: 100,
     },
 
     tagline: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: '700',
         letterSpacing: -0.5,
         textAlign: 'center',
@@ -351,41 +399,51 @@ const styles = StyleSheet.create({
 
     buttonContainer: {
         position: 'absolute',
-        bottom: height * 0.15,
+        bottom: height * 0.08,
         width: '100%',
-        paddingHorizontal: spacing[8],
+        paddingHorizontal: spacing[6],
         alignItems: 'center',
     },
 
     buttonTouchable: {
         width: '100%',
-        maxWidth: 280,
     },
 
     primaryButton: {
-        height: tapTargets.large, // 56px - premium feel
-        borderRadius: borderRadius.squircle.button,
+        height: 60,
+        borderRadius: 30,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: spacing[10],
+        paddingHorizontal: spacing[8],
+    },
+
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing[3],
     },
 
     primaryButtonText: {
         color: '#FFFFFF',
-        fontSize: 17,
+        fontSize: 18,
         fontWeight: '600',
         letterSpacing: 0.3,
     },
 
-    footer: {
-        position: 'absolute',
-        bottom: spacing[8],
+    arrowContainer: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
-    version: {
-        fontSize: 12,
-        fontWeight: '400',
-        letterSpacing: 0.5,
+    arrowIcon: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

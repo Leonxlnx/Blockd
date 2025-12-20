@@ -162,4 +162,71 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
             promise.reject("ERROR", e.getMessage());
         }
     }
+
+    // ============================================
+    // GET APP USAGE STATS
+    // ============================================
+
+    @ReactMethod
+    public void getAppUsageStats(int days, Promise promise) {
+        try {
+            android.app.usage.UsageStatsManager usageStatsManager = 
+                (android.app.usage.UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
+            
+            if (usageStatsManager == null) {
+                promise.resolve(com.facebook.react.bridge.Arguments.createArray());
+                return;
+            }
+
+            long endTime = System.currentTimeMillis();
+            long startTime = endTime - ((long) days * 24 * 60 * 60 * 1000L);
+
+            java.util.List<android.app.usage.UsageStats> stats = 
+                usageStatsManager.queryUsageStats(
+                    android.app.usage.UsageStatsManager.INTERVAL_DAILY,
+                    startTime,
+                    endTime
+                );
+
+            com.facebook.react.bridge.WritableArray result = com.facebook.react.bridge.Arguments.createArray();
+            android.content.pm.PackageManager pm = reactContext.getPackageManager();
+
+            // Aggregate stats by package
+            java.util.Map<String, Long> usageMap = new java.util.HashMap<>();
+            if (stats != null) {
+                for (android.app.usage.UsageStats stat : stats) {
+                    String pkg = stat.getPackageName();
+                    long time = stat.getTotalTimeInForeground();
+                    Long existing = usageMap.get(pkg);
+                    usageMap.put(pkg, (existing != null ? existing : 0L) + time);
+                }
+            }
+
+            // Convert to array and get app names
+            for (java.util.Map.Entry<String, Long> entry : usageMap.entrySet()) {
+                try {
+                    String packageName = entry.getKey();
+                    long totalMs = entry.getValue();
+                    int avgMinutesPerDay = (int) ((totalMs / 1000 / 60) / days);
+                    
+                    if (avgMinutesPerDay < 5) continue; // Filter out rarely used apps
+
+                    android.content.pm.ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+                    String appName = (String) pm.getApplicationLabel(appInfo);
+
+                    com.facebook.react.bridge.WritableMap app = com.facebook.react.bridge.Arguments.createMap();
+                    app.putString("packageName", packageName);
+                    app.putString("appName", appName);
+                    app.putInt("usageMinutes", avgMinutesPerDay);
+                    result.pushMap(app);
+                } catch (Exception ignored) {
+                    // App not found, skip
+                }
+            }
+
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
 }
