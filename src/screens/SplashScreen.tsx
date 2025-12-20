@@ -145,7 +145,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onContinue }) => {
                 {/* Tap indicator */}
                 <Animated.View style={[styles.tapIndicator, { opacity: tapOpacity }]}>
                     <Text variant="caption" color={theme.colors.textTertiary}>
-                        tap to continue
+                        tap
                     </Text>
                 </Animated.View>
             </View>
@@ -178,7 +178,8 @@ const styles = StyleSheet.create({
         height: LOGO_SIZE,
     },
     textWrapper: {
-        marginLeft: LOGO_SIZE / 2 + 10, // Offset to appear next to scaled-down logo
+        marginLeft: LOGO_SIZE / 2 + 10,
+        marginTop: 2, // 2px lower to align with logo
     },
     brandText: {
         fontSize: 42,

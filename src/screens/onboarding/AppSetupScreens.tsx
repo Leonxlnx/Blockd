@@ -276,7 +276,14 @@ export const AppSelectionScreen: React.FC<AppSelectionProps> = ({ apps, onNext, 
                 </View>
             </ScrollView>
 
-            <BottomButtons onBack={onBack} onNext={() => onNext(selectedApps)} nextLabel={selected.length > 0 ? `Continue (${selected.length})` : 'Select apps'} nextDisabled={selected.length === 0} isDark={isDark} />
+            {/* No Back button - only Continue (full width) */}
+            <View style={styles.bottomButtonsContainer}>
+                <TouchableOpacity onPress={() => onNext(selectedApps)} activeOpacity={0.8} disabled={selected.length === 0} style={[{ flex: 1, opacity: selected.length === 0 ? 0.3 : 1 }]}>
+                    <LinearGradient colors={isDark ? ['#FFFFFF', '#F0F0F0', '#DFDFDF'] : ['#2A2A2A', '#1A1A1A', '#0A0A0A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.nextButtonBase}>
+                        <Text variant="body" weight="bold" color={isDark ? '#0A0A0A' : '#FFFFFF'}>{selected.length > 0 ? `Continue (${selected.length})` : 'Select apps'}</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };

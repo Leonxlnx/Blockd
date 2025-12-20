@@ -412,14 +412,13 @@ export const OnboardingName: React.FC<OnboardingNameProps> = ({ onNext, onBack }
     }, []);
 
     return (
-        <KeyboardAvoidingView style={[styles.container, { backgroundColor: theme.colors.background }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
-            <FlowingBackground isDark={isDark} />
 
             <ProgressBar current={6} total={6} />
 
-            <View style={styles.nameContent}>
+            <KeyboardAvoidingView style={styles.nameContent} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 {!keyboardVisible && (
                     <Animated.View style={[styles.imageWrap, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
                         <Image source={require('../../../assets/images/onboarding-name.png')} style={[styles.nameImage, { tintColor: isDark ? undefined : '#1A1A1A' }]} resizeMode="contain" />
@@ -442,16 +441,14 @@ export const OnboardingName: React.FC<OnboardingNameProps> = ({ onNext, onBack }
                             autoCapitalize="words"
                         />
                     </LinearGradient>
-
-
                 </Animated.View>
-            </View>
+            </KeyboardAvoidingView>
 
-            {/* Buttons always at bottom */}
+            {/* Buttons ALWAYS at fixed bottom - outside KeyboardAvoidingView */}
             <View style={styles.bottomFixed}>
                 <BottomButtons onBack={onBack} onNext={() => name.length > 0 && onNext(name)} nextDisabled={name.length === 0} isDark={isDark} />
             </View>
-        </KeyboardAvoidingView>
+        </View>
     );
 };
 

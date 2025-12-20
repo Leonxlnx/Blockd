@@ -112,7 +112,6 @@ interface HelloNameProps {
 export const HelloNameScreen: React.FC<HelloNameProps> = ({ name, onNext }) => {
     const { theme, isDark } = useTheme();
     const titleAnim = useEntranceAnimation(0);
-    const imgAnim = useEntranceAnimation(100);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -120,14 +119,41 @@ export const HelloNameScreen: React.FC<HelloNameProps> = ({ name, onNext }) => {
             <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
-                <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/hero-focus.png')} style={styles.heroImage} resizeMode="contain" />
-                </Animated.View>
-
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h1" weight="bold" align="center" style={styles.headline}>Hello, {name}!</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
-                        Let's enable some permissions{'\n'}so the app can work properly
+                        Let's enable some permissions{"\n"}so the app can work properly
+                    </Text>
+                </Animated.View>
+            </View>
+
+            <FullWidthButton onPress={onNext} label="Continue" isDark={isDark} />
+        </View>
+    );
+};
+
+// ============================================
+// SCREEN 1.5: LET'S PERSONALIZE (NEW)
+// ============================================
+
+interface LetsPersonalizeProps {
+    onNext: () => void;
+}
+
+export const LetsPersonalizeScreen: React.FC<LetsPersonalizeProps> = ({ onNext }) => {
+    const { theme, isDark } = useTheme();
+    const titleAnim = useEntranceAnimation(0);
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+
+            <View style={styles.content}>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>Let's personalize{"\n"}your experience</Text>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
+                        Answer a few quick questions{"\n"}so we can help you better
                     </Text>
                 </Animated.View>
             </View>
@@ -453,8 +479,8 @@ export const FiveDaysScreen: React.FC<FiveDaysProps> = ({ onNext, onBack }) => {
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h1" weight="bold" align="center" style={{ fontSize: 72, marginBottom: spacing[2] }}>5</Text>
-                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>days</Text>
+                    <Text variant="h1" weight="bold" align="center" style={{ fontSize: 72, lineHeight: 82, marginBottom: spacing[1] }}>5</Text>
+                    <Text variant="h2" weight="bold" align="center">days</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
                         After just 5 days of using Blockd,{'\n'}you'll feel a noticeable difference{'\n'}in your focus and energy
                     </Text>

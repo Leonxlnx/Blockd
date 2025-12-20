@@ -24,6 +24,7 @@ import {
 } from './src/screens/onboarding/AppSetupScreens';
 import {
   HelloNameScreen,
+  LetsPersonalizeScreen,
   AgeSelectionScreen,
   GenderSelectionScreen,
   ConcentrationScaleScreen,
@@ -58,6 +59,7 @@ type Screen =
   | 'time-calculation'
   | 'commitment'
   // Personalization
+  | 'lets-personalize'
   | 'personalize-age'
   | 'personalize-gender'
   | 'personalize-concentration'
@@ -133,13 +135,15 @@ const AppContent: React.FC = () => {
       case 'time-calculation':
         return <TimeCalculationScreen selectedApps={selectedApps} onNext={() => setCurrentScreen('commitment')} onBack={() => setCurrentScreen('app-selection')} />;
       case 'commitment':
-        return <CommitmentScreen onComplete={() => setCurrentScreen('personalize-age')} onBack={() => setCurrentScreen('time-calculation')} />;
+        return <CommitmentScreen onComplete={() => setCurrentScreen('lets-personalize')} onBack={() => setCurrentScreen('time-calculation')} />;
 
       // ==========================================
-      // PERSONALIZATION FLOW (8 screens)
+      // PERSONALIZATION FLOW
       // ==========================================
+      case 'lets-personalize':
+        return <LetsPersonalizeScreen onNext={() => setCurrentScreen('personalize-age')} />;
       case 'personalize-age':
-        return <AgeSelectionScreen onNext={(age: string) => { setUserAge(age); setCurrentScreen('personalize-gender'); }} onBack={() => setCurrentScreen('commitment')} />;
+        return <AgeSelectionScreen onNext={(age: string) => { setUserAge(age); setCurrentScreen('personalize-gender'); }} onBack={() => setCurrentScreen('lets-personalize')} />;
       case 'personalize-gender':
         return <GenderSelectionScreen onNext={(gender: string) => { setUserGender(gender); setCurrentScreen('personalize-concentration'); }} onBack={() => setCurrentScreen('personalize-age')} />;
       case 'personalize-concentration':
