@@ -99,7 +99,7 @@ export const HelloNameScreen: React.FC<HelloNameProps> = ({ name, onNext }) => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
@@ -133,7 +133,7 @@ export const LetsPersonalizeScreen: React.FC<LetsPersonalizeProps> = ({ onNext }
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
@@ -170,7 +170,7 @@ export const AgeSelectionScreen: React.FC<AgeSelectionProps> = ({ onNext, onBack
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={1} total={7} />
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -214,7 +214,7 @@ export const GenderSelectionScreen: React.FC<GenderSelectionProps> = ({ onNext, 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={2} total={7} />
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -255,7 +255,7 @@ export const ConcentrationScaleScreen: React.FC<ConcentrationScaleProps> = ({ on
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={3} total={7} />
 
             <View style={styles.content}>
@@ -321,7 +321,7 @@ export const PhoneStatsScreen: React.FC<PhoneStatsProps> = ({ onNext, onBack }) 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={4} total={7} />
 
             <View style={styles.content}>
@@ -367,7 +367,7 @@ export const StudyScreen: React.FC<StudyScreenProps> = ({ onNext, onBack }) => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={5} total={7} />
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContentCenter}>
@@ -407,7 +407,7 @@ export const RewireScreen: React.FC<RewireScreenProps> = ({ onNext, onBack }) =>
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={6} total={7} />
 
             <View style={styles.content}>
@@ -442,7 +442,7 @@ export const FiveDaysScreen: React.FC<FiveDaysProps> = ({ onNext, onBack }) => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={7} total={7} />
 
             <View style={styles.content}>
@@ -478,7 +478,7 @@ export const ReadyScreen: React.FC<ReadyScreenProps> = ({ onNext }) => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
@@ -507,13 +507,19 @@ interface AuthScreenProps { onDemo: () => void; onLogin: () => void; onSignup: (
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignup }) => {
     const { theme, isDark } = useTheme();
     const titleAnim = useEntranceAnimation(0);
+    const imgAnim = useEntranceAnimation(100);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
+                {/* Mascot Image */}
+                <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/mascot-placeholder.png')} style={styles.heroImage} resizeMode="contain" />
+                </Animated.View>
+
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h2" weight="bold" align="center" style={styles.headline}>Create your account</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary}>Save your progress and sync across devices</Text>
@@ -523,7 +529,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
                     {/* Google Button */}
                     <TouchableOpacity onPress={onSignup} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
                         <View style={styles.authButtonContent}>
-                            <Image source={require('../../../assets/images/icon-google.png')} style={styles.authIcon} resizeMode="contain" />
+                            <Image source={require('../../../assets/images/icon-google.png')} style={styles.authIconLarge} resizeMode="contain" />
                             <Text variant="body" weight="semibold">Continue with Google</Text>
                         </View>
                     </TouchableOpacity>
@@ -531,7 +537,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
                     {/* Email Button */}
                     <TouchableOpacity onPress={onLogin} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
                         <View style={styles.authButtonContent}>
-                            <Image source={require('../../../assets/images/icon-email.png')} style={styles.authIcon} resizeMode="contain" />
+                            <Image source={require('../../../assets/images/icon-email.png')} style={styles.authIconXL} resizeMode="contain" />
                             <Text variant="body" weight="semibold">Continue with Email</Text>
                         </View>
                     </TouchableOpacity>
@@ -557,7 +563,7 @@ export const WelcomeFirstTimeScreen: React.FC<WelcomeFirstTimeProps> = ({ onStar
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
@@ -591,8 +597,8 @@ const styles = StyleSheet.create({
 
     imageContainer: { marginBottom: spacing[5], alignItems: 'center' },
     imageContainerSmall: { marginBottom: spacing[4], alignItems: 'center' },
-    heroImage: { width: width * 0.5, height: width * 0.5 },
-    smallImage: { width: width * 0.35, height: width * 0.35 },
+    heroImage: { width: width * 0.65, height: width * 0.65 },
+    smallImage: { width: width * 0.45, height: width * 0.45 },
 
     headline: { marginBottom: spacing[2], fontSize: 28, lineHeight: 38 },
     subtext: { lineHeight: 26, fontSize: 16, marginTop: spacing[3] },
@@ -617,6 +623,8 @@ const styles = StyleSheet.create({
     authButton: { paddingVertical: spacing[4], paddingHorizontal: spacing[5], borderRadius: 16 },
     authButtonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing[3] },
     authIcon: { width: 24, height: 24 },
+    authIconLarge: { width: 36, height: 36 },
+    authIconXL: { width: 48, height: 48 },
 
     fullButtonContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4] },
     fullButtonWrapper: { width: '100%' },

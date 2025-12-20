@@ -36,7 +36,7 @@ import {
   AuthScreen,
   WelcomeFirstTimeScreen,
 } from './src/screens/onboarding/PersonalizationScreens';
-import MainPlaceholder from './src/screens/MainPlaceholder';
+import MainApp from './src/screens/MainApp';
 
 type Screen =
   | 'splash'
@@ -171,7 +171,7 @@ const AppContent: React.FC = () => {
       // MAIN APP
       // ==========================================
       case 'main':
-        return <MainPlaceholder />;
+        return <MainApp />;
 
       default:
         return <SplashScreen onContinue={() => setCurrentScreen('onboarding-welcome')} />;

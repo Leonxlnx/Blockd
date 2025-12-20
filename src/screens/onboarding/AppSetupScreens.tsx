@@ -167,7 +167,8 @@ export const AppAnalysisScreen: React.FC<AppAnalysisProps> = ({ onNext, onBack }
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient
-                colors={isDark ? ['#0A0A0A', '#121212', '#0A0A0A'] : ['#FFFFFF', '#F8F8F8', '#FFFFFF']}
+                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
+                locations={[0, 0.25, 0.5, 0.75, 1]}
                 style={StyleSheet.absoluteFillObject}
             />
 
@@ -228,7 +229,8 @@ export const AppSelectionScreen: React.FC<AppSelectionProps> = ({ apps, onNext, 
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient
-                colors={isDark ? ['#0A0A0A', '#121212', '#0A0A0A'] : ['#FFFFFF', '#F8F8F8', '#FFFFFF']}
+                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
+                locations={[0, 0.25, 0.5, 0.75, 1]}
                 style={StyleSheet.absoluteFillObject}
             />
             <ProgressBar current={1} total={3} />
@@ -318,7 +320,8 @@ export const TimeCalculationScreen: React.FC<TimeCalculationProps> = ({ selected
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient
-                colors={isDark ? ['#0A0A0A', '#121212', '#0A0A0A'] : ['#FFFFFF', '#F8F8F8', '#FFFFFF']}
+                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
+                locations={[0, 0.25, 0.5, 0.75, 1]}
                 style={StyleSheet.absoluteFillObject}
             />
             <ProgressBar current={2} total={3} />
@@ -392,7 +395,8 @@ export const CommitmentScreen: React.FC<CommitmentProps> = ({ onComplete, onBack
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient
-                colors={isDark ? ['#0A0A0A', '#121212', '#0A0A0A'] : ['#FFFFFF', '#F8F8F8', '#FFFFFF']}
+                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
+                locations={[0, 0.25, 0.5, 0.75, 1]}
                 style={StyleSheet.absoluteFillObject}
             />
             <ProgressBar current={3} total={3} />
