@@ -56,14 +56,7 @@ const ProgressBar: React.FC<{ current: number; total: number }> = ({ current, to
 // FULL WIDTH BUTTON
 // ============================================
 
-interface FullButtonProps {
-    onPress: () => void;
-    label: string;
-    isDark: boolean;
-    disabled?: boolean;
-}
-
-const FullWidthButton: React.FC<FullButtonProps> = ({ onPress, label, isDark, disabled = false }) => (
+const FullWidthButton: React.FC<{ onPress: () => void; label: string; isDark: boolean; disabled?: boolean }> = ({ onPress, label, isDark, disabled = false }) => (
     <View style={styles.fullButtonContainer}>
         <TouchableOpacity onPress={onPress} activeOpacity={0.8} disabled={disabled} style={[styles.fullButtonWrapper, { opacity: disabled ? 0.3 : 1 }]}>
             <LinearGradient colors={isDark ? ['#FFFFFF', '#F0F0F0', '#DFDFDF'] : ['#2A2A2A', '#1A1A1A', '#0A0A0A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.fullButton}>
@@ -77,15 +70,7 @@ const FullWidthButton: React.FC<FullButtonProps> = ({ onPress, label, isDark, di
 // TWO BUTTONS (Back + Next)
 // ============================================
 
-interface TwoButtonsProps {
-    onBack: () => void;
-    onNext: () => void;
-    nextLabel?: string;
-    nextDisabled?: boolean;
-    isDark: boolean;
-}
-
-const TwoButtons: React.FC<TwoButtonsProps> = ({ onBack, onNext, nextLabel = 'Continue', nextDisabled = false, isDark }) => (
+const TwoButtons: React.FC<{ onBack: () => void; onNext: () => void; nextLabel?: string; nextDisabled?: boolean; isDark: boolean }> = ({ onBack, onNext, nextLabel = 'Continue', nextDisabled = false, isDark }) => (
     <View style={styles.twoButtonsContainer}>
         <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backButtonWrapper}>
             <LinearGradient colors={isDark ? ['#1A1A1A', '#282828', '#1A1A1A'] : ['#F5F5F5', '#FFFFFF', '#F5F5F5']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[styles.buttonBase, { borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)' }]}>
@@ -101,17 +86,15 @@ const TwoButtons: React.FC<TwoButtonsProps> = ({ onBack, onNext, nextLabel = 'Co
 );
 
 // ============================================
-// SCREEN 1: HELLO NAME - Let's enable permissions
+// SCREEN: HELLO NAME
 // ============================================
 
-interface HelloNameProps {
-    name: string;
-    onNext: () => void;
-}
+interface HelloNameProps { name: string; onNext: () => void; }
 
 export const HelloNameScreen: React.FC<HelloNameProps> = ({ name, onNext }) => {
     const { theme, isDark } = useTheme();
     const titleAnim = useEntranceAnimation(0);
+    const imgAnim = useEntranceAnimation(100);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -119,6 +102,10 @@ export const HelloNameScreen: React.FC<HelloNameProps> = ({ name, onNext }) => {
             <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
+                <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/hello-name.png')} style={styles.heroImage} resizeMode="contain" />
+                </Animated.View>
+
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h1" weight="bold" align="center" style={styles.headline}>Hello, {name}!</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
@@ -133,16 +120,15 @@ export const HelloNameScreen: React.FC<HelloNameProps> = ({ name, onNext }) => {
 };
 
 // ============================================
-// SCREEN 1.5: LET'S PERSONALIZE (NEW)
+// SCREEN: LET'S PERSONALIZE
 // ============================================
 
-interface LetsPersonalizeProps {
-    onNext: () => void;
-}
+interface LetsPersonalizeProps { onNext: () => void; }
 
 export const LetsPersonalizeScreen: React.FC<LetsPersonalizeProps> = ({ onNext }) => {
     const { theme, isDark } = useTheme();
     const titleAnim = useEntranceAnimation(0);
+    const imgAnim = useEntranceAnimation(100);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -150,6 +136,10 @@ export const LetsPersonalizeScreen: React.FC<LetsPersonalizeProps> = ({ onNext }
             <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
+                <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/personalize.png')} style={styles.heroImage} resizeMode="contain" />
+                </Animated.View>
+
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h1" weight="bold" align="center" style={styles.headline}>Let's personalize{"\n"}your experience</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
@@ -164,15 +154,12 @@ export const LetsPersonalizeScreen: React.FC<LetsPersonalizeProps> = ({ onNext }
 };
 
 // ============================================
-// SCREEN 2: AGE SELECTION
+// SCREEN: AGE SELECTION
 // ============================================
 
 const AGE_GROUPS = ['Under 18', '18-25', '26-34', '35-44', '45+'];
 
-interface AgeSelectionProps {
-    onNext: (age: string) => void;
-    onBack: () => void;
-}
+interface AgeSelectionProps { onNext: (age: string) => void; onBack: () => void; }
 
 export const AgeSelectionScreen: React.FC<AgeSelectionProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
@@ -188,7 +175,7 @@ export const AgeSelectionScreen: React.FC<AgeSelectionProps> = ({ onNext, onBack
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                 <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/onboarding-zen.png')} style={styles.smallImage} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/age-select.png')} style={styles.smallImage} resizeMode="contain" />
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
@@ -211,20 +198,18 @@ export const AgeSelectionScreen: React.FC<AgeSelectionProps> = ({ onNext, onBack
 };
 
 // ============================================
-// SCREEN 3: GENDER SELECTION
+// SCREEN: GENDER SELECTION
 // ============================================
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
-interface GenderSelectionProps {
-    onNext: (gender: string) => void;
-    onBack: () => void;
-}
+interface GenderSelectionProps { onNext: (gender: string) => void; onBack: () => void; }
 
 export const GenderSelectionScreen: React.FC<GenderSelectionProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
     const [selected, setSelected] = useState<string | null>(null);
     const titleAnim = useEntranceAnimation(0);
+    const imgAnim = useEntranceAnimation(100);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -232,7 +217,11 @@ export const GenderSelectionScreen: React.FC<GenderSelectionProps> = ({ onNext, 
             <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
             <ProgressBar current={2} total={7} />
 
-            <View style={styles.content}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/gender-select.png')} style={styles.smallImage} resizeMode="contain" />
+                </Animated.View>
+
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h2" weight="bold" align="center" style={styles.headline}>What's your gender?</Text>
                 </Animated.View>
@@ -244,7 +233,7 @@ export const GenderSelectionScreen: React.FC<GenderSelectionProps> = ({ onNext, 
                         </TouchableOpacity>
                     ))}
                 </View>
-            </View>
+            </ScrollView>
 
             <TwoButtons onBack={onBack} onNext={() => selected && onNext(selected)} nextDisabled={!selected} isDark={isDark} />
         </View>
@@ -252,13 +241,10 @@ export const GenderSelectionScreen: React.FC<GenderSelectionProps> = ({ onNext, 
 };
 
 // ============================================
-// SCREEN 4: CONCENTRATION SCALE
+// SCREEN: CONCENTRATION SCALE
 // ============================================
 
-interface ConcentrationScaleProps {
-    onNext: (level: number) => void;
-    onBack: () => void;
-}
+interface ConcentrationScaleProps { onNext: (level: number) => void; onBack: () => void; }
 
 export const ConcentrationScaleScreen: React.FC<ConcentrationScaleProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
@@ -274,7 +260,7 @@ export const ConcentrationScaleScreen: React.FC<ConcentrationScaleProps> = ({ on
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/onboarding-focus.png')} style={styles.smallImage} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/concentration.png')} style={styles.smallImage} resizeMode="contain" />
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
@@ -303,19 +289,17 @@ export const ConcentrationScaleScreen: React.FC<ConcentrationScaleProps> = ({ on
 };
 
 // ============================================
-// SCREEN 5: PHONE STATS
+// SCREEN: PHONE STATS
 // ============================================
 
-interface PhoneStatsProps {
-    onNext: () => void;
-    onBack: () => void;
-}
+interface PhoneStatsProps { onNext: () => void; onBack: () => void; }
 
 export const PhoneStatsScreen: React.FC<PhoneStatsProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
     const [stats, setStats] = useState({ opens: 0, avgMinutes: 0 });
     const [loading, setLoading] = useState(true);
     const titleAnim = useEntranceAnimation(0);
+    const imgAnim = useEntranceAnimation(100);
     const statsAnim = useEntranceAnimation(300);
 
     useEffect(() => {
@@ -323,9 +307,8 @@ export const PhoneStatsScreen: React.FC<PhoneStatsProps> = ({ onNext, onBack }) 
             try {
                 const data = await PermissionsModule.getAppUsageStats(7);
                 const totalApps = data?.length || 8;
-                // Realistic calculation based on typical usage patterns
                 const avgOpens = Math.max(60, Math.min(150, totalApps * 8 + 40));
-                const avgMins = Math.max(8, Math.round(960 / avgOpens)); // ~16 waking hours
+                const avgMins = Math.max(8, Math.round(960 / avgOpens));
                 setStats({ opens: avgOpens, avgMinutes: avgMins });
             } catch {
                 setStats({ opens: 85, avgMinutes: 11 });
@@ -342,6 +325,10 @@ export const PhoneStatsScreen: React.FC<PhoneStatsProps> = ({ onNext, onBack }) 
             <ProgressBar current={4} total={7} />
 
             <View style={styles.content}>
+                <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
+                    <Image source={require('../../../assets/images/phone-stats.png')} style={styles.smallImage} resizeMode="contain" />
+                </Animated.View>
+
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="body" align="center" color={theme.colors.textSecondary}>Looking at your phone usage...</Text>
                 </Animated.View>
@@ -352,9 +339,7 @@ export const PhoneStatsScreen: React.FC<PhoneStatsProps> = ({ onNext, onBack }) 
                         <Text variant="body" weight="medium" color={theme.colors.textSecondary}>times per day</Text>
                         <Text variant="caption" color={theme.colors.textTertiary}>you check your phone</Text>
                     </View>
-
                     <View style={styles.statDivider} />
-
                     <View style={styles.statBox}>
                         <Text variant="h1" weight="bold" style={styles.bigNumber}>{loading ? '...' : stats.avgMinutes}</Text>
                         <Text variant="body" weight="medium" color={theme.colors.textSecondary}>minutes average</Text>
@@ -369,13 +354,10 @@ export const PhoneStatsScreen: React.FC<PhoneStatsProps> = ({ onNext, onBack }) 
 };
 
 // ============================================
-// SCREEN 6: SCIENTIFIC STUDY
+// SCREEN: STUDY
 // ============================================
 
-interface StudyScreenProps {
-    onNext: () => void;
-    onBack: () => void;
-}
+interface StudyScreenProps { onNext: () => void; onBack: () => void; }
 
 export const StudyScreen: React.FC<StudyScreenProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
@@ -390,13 +372,11 @@ export const StudyScreen: React.FC<StudyScreenProps> = ({ onNext, onBack }) => {
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContentCenter}>
                 <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/onboarding-overwhelmed.png')} style={styles.smallImage} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/brain-study.png')} style={styles.smallImage} resizeMode="contain" />
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>
-                        Studies show this behavior{'\n'}affects your brain
-                    </Text>
+                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>Studies show this behavior{'\n'}affects your brain</Text>
                     <View style={[styles.studyCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
                         <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ lineHeight: 26 }}>
                             "Frequent phone checking reduces attention span and increases anxiety. The constant dopamine hits rewire neural pathways."
@@ -414,13 +394,10 @@ export const StudyScreen: React.FC<StudyScreenProps> = ({ onNext, onBack }) => {
 };
 
 // ============================================
-// SCREEN 7: REWIRE HABITS (NEW SEPARATE SCREEN)
+// SCREEN: REWIRE HABITS
 // ============================================
 
-interface RewireScreenProps {
-    onNext: () => void;
-    onBack: () => void;
-}
+interface RewireScreenProps { onNext: () => void; onBack: () => void; }
 
 export const RewireScreen: React.FC<RewireScreenProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
@@ -435,13 +412,11 @@ export const RewireScreen: React.FC<RewireScreenProps> = ({ onNext, onBack }) =>
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/zen-art.png')} style={styles.heroImage} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/rewire-habits.png')} style={styles.heroImage} resizeMode="contain" />
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>
-                        With Blockd, you can{'\n'}rewire these habits
-                    </Text>
+                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>With Blockd, you can{'\n'}rewire these habits</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
                         Take back control of your attention{'\n'}and focus on what truly matters
                     </Text>
@@ -454,13 +429,10 @@ export const RewireScreen: React.FC<RewireScreenProps> = ({ onNext, onBack }) =>
 };
 
 // ============================================
-// SCREEN 8: 5 DAYS DIFFERENCE
+// SCREEN: 5 DAYS
 // ============================================
 
-interface FiveDaysProps {
-    onNext: () => void;
-    onBack: () => void;
-}
+interface FiveDaysProps { onNext: () => void; onBack: () => void; }
 
 export const FiveDaysScreen: React.FC<FiveDaysProps> = ({ onNext, onBack }) => {
     const { theme, isDark } = useTheme();
@@ -475,11 +447,11 @@ export const FiveDaysScreen: React.FC<FiveDaysProps> = ({ onNext, onBack }) => {
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/onboarding-time.png')} style={styles.smallImage} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/five-days.png')} style={styles.smallImage} resizeMode="contain" />
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h1" weight="bold" align="center" style={{ fontSize: 72, lineHeight: 82, marginBottom: spacing[1] }}>5</Text>
+                    <Text variant="h1" weight="bold" align="center" style={styles.bigFive}>5</Text>
                     <Text variant="h2" weight="bold" align="center">days</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
                         After just 5 days of using Blockd,{'\n'}you'll feel a noticeable difference{'\n'}in your focus and energy
@@ -493,12 +465,10 @@ export const FiveDaysScreen: React.FC<FiveDaysProps> = ({ onNext, onBack }) => {
 };
 
 // ============================================
-// SCREEN 9: BLOCKD IS READY
+// SCREEN: BLOCKD IS READY
 // ============================================
 
-interface ReadyScreenProps {
-    onNext: () => void;
-}
+interface ReadyScreenProps { onNext: () => void; }
 
 export const ReadyScreen: React.FC<ReadyScreenProps> = ({ onNext }) => {
     const { theme, isDark } = useTheme();
@@ -512,7 +482,7 @@ export const ReadyScreen: React.FC<ReadyScreenProps> = ({ onNext }) => {
 
             <View style={styles.content}>
                 <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/hero-focus.png')} style={styles.heroImage} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/ready-check.png')} style={styles.heroImage} resizeMode="contain" />
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
@@ -529,19 +499,14 @@ export const ReadyScreen: React.FC<ReadyScreenProps> = ({ onNext }) => {
 };
 
 // ============================================
-// SCREEN 10: AUTH (Login/Signup)
+// SCREEN: AUTH (Login/Signup) - REAL ICONS
 // ============================================
 
-interface AuthScreenProps {
-    onDemo: () => void;
-    onLogin: () => void;
-    onSignup: () => void;
-}
+interface AuthScreenProps { onDemo: () => void; onLogin: () => void; onSignup: () => void; }
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignup }) => {
     const { theme, isDark } = useTheme();
     const titleAnim = useEntranceAnimation(0);
-    const imgAnim = useEntranceAnimation(100);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -549,27 +514,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
             <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
 
             <View style={styles.content}>
-                <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/icon-shield.png')} style={styles.iconImage} resizeMode="contain" />
-                </Animated.View>
-
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h2" weight="bold" align="center" style={styles.headline}>Create your account</Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary}>Save your progress and sync across devices</Text>
                 </Animated.View>
 
                 <View style={styles.authButtons}>
-                    <TouchableOpacity onPress={onLogin} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                    {/* Google Button */}
+                    <TouchableOpacity onPress={onSignup} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
                         <View style={styles.authButtonContent}>
-                            <Image source={require('../../../assets/images/icon-chart.png')} style={styles.authIcon} resizeMode="contain" />
-                            <Text variant="body" weight="semibold">Continue with Email</Text>
+                            <Image source={require('../../../assets/images/icon-google.png')} style={styles.authIcon} resizeMode="contain" />
+                            <Text variant="body" weight="semibold">Continue with Google</Text>
                         </View>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={onSignup} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                    {/* Email Button */}
+                    <TouchableOpacity onPress={onLogin} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
                         <View style={styles.authButtonContent}>
-                            <Image source={require('../../../assets/images/icon-shield.png')} style={styles.authIcon} resizeMode="contain" />
-                            <Text variant="body" weight="semibold">Continue with Google</Text>
+                            <Image source={require('../../../assets/images/icon-email.png')} style={styles.authIcon} resizeMode="contain" />
+                            <Text variant="body" weight="semibold">Continue with Email</Text>
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -581,12 +544,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
 };
 
 // ============================================
-// SCREEN 11: WELCOME (First Time)
+// SCREEN: WELCOME (First Time)
 // ============================================
 
-interface WelcomeFirstTimeProps {
-    onStart: () => void;
-}
+interface WelcomeFirstTimeProps { onStart: () => void; }
 
 export const WelcomeFirstTimeScreen: React.FC<WelcomeFirstTimeProps> = ({ onStart }) => {
     const { theme, isDark } = useTheme();
@@ -605,9 +566,7 @@ export const WelcomeFirstTimeScreen: React.FC<WelcomeFirstTimeProps> = ({ onStar
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h1" weight="bold" align="center" style={styles.headline}>Welcome!</Text>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
-                        Let's start focusing
-                    </Text>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>Let's start focusing</Text>
                 </Animated.View>
             </View>
 
@@ -634,10 +593,10 @@ const styles = StyleSheet.create({
     imageContainerSmall: { marginBottom: spacing[4], alignItems: 'center' },
     heroImage: { width: width * 0.5, height: width * 0.5 },
     smallImage: { width: width * 0.35, height: width * 0.35 },
-    iconImage: { width: 80, height: 80 },
 
     headline: { marginBottom: spacing[2], fontSize: 28, lineHeight: 38 },
     subtext: { lineHeight: 26, fontSize: 16, marginTop: spacing[3] },
+    bigFive: { fontSize: 72, lineHeight: 82, marginBottom: spacing[1] },
 
     optionsList: { marginTop: spacing[5], width: '100%', gap: spacing[3] },
     optionItem: { paddingVertical: spacing[4], paddingHorizontal: spacing[5], borderRadius: 16, borderWidth: 2, alignItems: 'center' },
@@ -659,7 +618,6 @@ const styles = StyleSheet.create({
     authButtonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing[3] },
     authIcon: { width: 24, height: 24 },
 
-    // Buttons
     fullButtonContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4] },
     fullButtonWrapper: { width: '100%' },
     fullButton: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
