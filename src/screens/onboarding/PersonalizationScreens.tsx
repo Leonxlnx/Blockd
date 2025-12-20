@@ -597,8 +597,8 @@ const styles = StyleSheet.create({
 
     imageContainer: { marginBottom: spacing[5], alignItems: 'center' },
     imageContainerSmall: { marginBottom: spacing[4], alignItems: 'center' },
-    heroImage: { width: width * 0.65, height: width * 0.65 },
-    smallImage: { width: width * 0.45, height: width * 0.45 },
+    heroImage: { width: width * 0.75, height: width * 0.75 },
+    smallImage: { width: width * 0.55, height: width * 0.55 },
 
     headline: { marginBottom: spacing[2], fontSize: 28, lineHeight: 38 },
     subtext: { lineHeight: 26, fontSize: 16, marginTop: spacing[3] },
@@ -623,8 +623,8 @@ const styles = StyleSheet.create({
     authButton: { paddingVertical: spacing[4], paddingHorizontal: spacing[5], borderRadius: 16 },
     authButtonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing[3] },
     authIcon: { width: 24, height: 24 },
-    authIconLarge: { width: 36, height: 36 },
-    authIconXL: { width: 48, height: 48 },
+    authIconLarge: { width: 28, height: 28 },
+    authIconXL: { width: 32, height: 32 },
 
     fullButtonContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4] },
     fullButtonWrapper: { width: '100%' },

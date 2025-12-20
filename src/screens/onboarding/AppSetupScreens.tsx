@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
+    Image,
     StyleSheet,
     Dimensions,
     TouchableOpacity,
@@ -91,6 +92,7 @@ export interface AppUsage {
     packageName: string;
     appName: string;
     usageMinutes: number;
+    icon?: string;
 }
 
 // ============================================
@@ -259,9 +261,13 @@ export const AppSelectionScreen: React.FC<AppSelectionProps> = ({ apps, onNext, 
                                 ]}
                             >
                                 <View style={styles.appInfo}>
-                                    <View style={[styles.appIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                                        <Text variant="body" weight="bold">{app.appName.charAt(0)}</Text>
-                                    </View>
+                                    {app.icon ? (
+                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIconImage} />
+                                    ) : (
+                                        <View style={[styles.appIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                                            <Text variant="body" weight="bold">{app.appName.charAt(0)}</Text>
+                                        </View>
+                                    )}
                                     <View>
                                         <Text variant="body" weight={isSelected ? 'bold' : 'medium'}>{app.appName}</Text>
                                         <Text variant="caption" color={theme.colors.textTertiary}>{formatTime(app.usageMinutes)}/day avg</Text>
@@ -306,9 +312,9 @@ export const TimeCalculationScreen: React.FC<TimeCalculationProps> = ({ selected
     const numberAnim = useEntranceAnimation(200);
     const subAnim = useEntranceAnimation(350);
 
-    // Calculate time saved if using 25% less
+    // Calculate time saved with 75% reduction (e.g., 60min -> 15min = 45min saved)
     const totalDailyMinutes = selectedApps.reduce((sum, app) => sum + app.usageMinutes, 0);
-    const savedDailyMinutes = Math.round(totalDailyMinutes * 0.25);
+    const savedDailyMinutes = Math.round(totalDailyMinutes * 0.75);
     const savedYearlyHours = Math.round((savedDailyMinutes * 365) / 60);
     const savedYearlyDays = Math.round(savedYearlyHours / 24);
 
@@ -328,7 +334,7 @@ export const TimeCalculationScreen: React.FC<TimeCalculationProps> = ({ selected
 
             <View style={styles.content}>
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary}>If you reduce time on {appText} by 25%...</Text>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary}>By cutting {appText} down to just 25% of current use...</Text>
                 </Animated.View>
 
                 <Animated.View style={[styles.bigNumberWrap, { opacity: numberAnim.opacity, transform: [{ translateY: numberAnim.translateY }] }]}>
@@ -338,7 +344,7 @@ export const TimeCalculationScreen: React.FC<TimeCalculationProps> = ({ selected
 
                 <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }] }}>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
-                        That's {savedYearlyHours} hours you could spend on what truly matters.
+                        That's {savedYearlyHours} hours you could reclaim for what truly matters.
                     </Text>
                 </Animated.View>
             </View>
@@ -469,6 +475,7 @@ const styles = StyleSheet.create({
     appItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing[4], paddingHorizontal: spacing[4], borderRadius: 16, borderWidth: 2 },
     appInfo: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
     appIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    appIconImage: { width: 44, height: 44, borderRadius: 12 },
     checkmark: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 
     // Time Calculation

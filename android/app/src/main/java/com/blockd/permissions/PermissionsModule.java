@@ -249,10 +249,27 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
                     
                     String appName = (String) pm.getApplicationLabel(appInfo);
 
+                    // Get app icon as Base64
+                    String iconBase64 = "";
+                    try {
+                        android.graphics.drawable.Drawable icon = pm.getApplicationIcon(packageName);
+                        android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(
+                            64, 64, android.graphics.Bitmap.Config.ARGB_8888);
+                        android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+                        icon.setBounds(0, 0, 64, 64);
+                        icon.draw(canvas);
+                        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, baos);
+                        iconBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP);
+                    } catch (Exception iconEx) {
+                        // Icon extraction failed, continue without icon
+                    }
+
                     WritableMap app = Arguments.createMap();
                     app.putString("packageName", packageName);
                     app.putString("appName", appName);
                     app.putInt("usageMinutes", avgMinutesPerDay);
+                    app.putString("icon", iconBase64);
                     result.pushMap(app);
                     count++;
                 } catch (Exception ignored) {
