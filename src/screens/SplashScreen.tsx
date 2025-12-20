@@ -1,98 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import {
     View,
-    Text as RNText,
-    StyleSheet,
     Image,
+    StyleSheet,
     Dimensions,
     TouchableWithoutFeedback,
+    StatusBar,
     Animated,
     Easing,
-    StatusBar,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../theme';
+import { Text } from '../components';
 
 const { width, height } = Dimensions.get('window');
-
-// ============================================
-// PROFESSIONAL FLOWING BACKGROUND
-// ============================================
-
-const FlowingBackground: React.FC<{ isDark: boolean }> = ({ isDark }) => {
-    const wave1 = useRef(new Animated.Value(0)).current;
-    const wave2 = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        // Subtle flowing wave animation
-        Animated.loop(
-            Animated.timing(wave1, {
-                toValue: 1,
-                duration: 12000,
-                easing: Easing.linear,
-                useNativeDriver: true,
-            })
-        ).start();
-
-        Animated.loop(
-            Animated.timing(wave2, {
-                toValue: 1,
-                duration: 15000,
-                easing: Easing.linear,
-                useNativeDriver: true,
-            })
-        ).start();
-    }, []);
-
-    const translateX1 = wave1.interpolate({
-        inputRange: [0, 1],
-        outputRange: [-width * 0.5, width * 0.5],
-    });
-
-    const translateX2 = wave2.interpolate({
-        inputRange: [0, 1],
-        outputRange: [width * 0.3, -width * 0.3],
-    });
-
-    return (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            {/* Wave 1 - Large subtle gradient blob */}
-            <Animated.View
-                style={[
-                    styles.waveBlob,
-                    {
-                        top: height * 0.15,
-                        left: -width * 0.3,
-                        width: width * 1.2,
-                        height: width * 1.2,
-                        borderRadius: width * 0.6,
-                        backgroundColor: isDark
-                            ? 'rgba(255,255,255,0.015)'
-                            : 'rgba(0,0,0,0.015)',
-                        transform: [{ translateX: translateX1 }],
-                    },
-                ]}
-            />
-            {/* Wave 2 - Smaller accent blob */}
-            <Animated.View
-                style={[
-                    styles.waveBlob,
-                    {
-                        top: height * 0.5,
-                        right: -width * 0.4,
-                        width: width * 0.9,
-                        height: width * 0.9,
-                        borderRadius: width * 0.45,
-                        backgroundColor: isDark
-                            ? 'rgba(255,255,255,0.02)'
-                            : 'rgba(0,0,0,0.02)',
-                        transform: [{ translateX: translateX2 }],
-                    },
-                ]}
-            />
-        </View>
-    );
-};
+const LOGO_SIZE = 80;
 
 // ============================================
 // SPLASH SCREEN
@@ -105,27 +27,14 @@ interface SplashScreenProps {
 const SplashScreen: React.FC<SplashScreenProps> = ({ onContinue }) => {
     const { theme, isDark } = useTheme();
 
-    // Animation phases
-    const phase = useRef(new Animated.Value(0)).current;
+    // Animation values
     const logoScale = useRef(new Animated.Value(0)).current;
+    const phase = useRef(new Animated.Value(0)).current;
     const textOpacity = useRef(new Animated.Value(0)).current;
     const tapOpacity = useRef(new Animated.Value(0)).current;
 
-    // Interpolated values for logo position
-    const logoTranslateX = phase.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, -50],
-    });
-
-    const logoScaleValue = Animated.add(
-        logoScale,
-        phase.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, -0.6], // Scale down from 2.0 to 1.4
-        })
-    );
-
     useEffect(() => {
+        // Animation sequence
         Animated.sequence([
             // Phase 1: Logo appears BIG in CENTER
             Animated.spring(logoScale, {
@@ -161,68 +70,83 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onContinue }) => {
         ]).start();
     }, []);
 
+    // Logo starts at screen center, ends 60px left of center
+    const logoTranslateX = phase.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -60],
+    });
+
+    // Logo starts at 2x, shrinks to 1x
+    const finalLogoScale = phase.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 0.5],
+    });
+
+    // Combined scale (initial animation * phase animation)
+    const combinedScale = Animated.multiply(logoScale, finalLogoScale);
+
     return (
         <TouchableWithoutFeedback onPress={onContinue}>
-            <View style={styles.container}>
-                <StatusBar
-                    barStyle={isDark ? 'light-content' : 'dark-content'}
-                    backgroundColor="transparent"
-                    translucent
-                />
+            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+                <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-                {/* Base gradient */}
+                {/* Gradient Background - Stronger */}
                 <LinearGradient
                     colors={isDark
-                        ? ['#000000', '#050505', '#0A0A0A']
-                        : ['#FFFFFF', '#FAFAFA', '#F5F5F5']
-                    }
+                        ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A', '#000000']
+                        : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5', '#FFFFFF']}
+                    locations={[0, 0.25, 0.5, 0.75, 1]}
                     style={StyleSheet.absoluteFillObject}
                 />
 
-                {/* Flowing background */}
-                <FlowingBackground isDark={isDark} />
-
-                {/* Center brand container */}
-                <View style={styles.centerContent}>
-                    <View style={styles.brandRow}>
-                        {/* Logo - starts center, moves left */}
-                        <Animated.View
-                            style={{
+                {/* Content Container - absolutely centered */}
+                <View style={styles.centerContainer}>
+                    {/* Logo - starts at exact center */}
+                    <Animated.View
+                        style={[
+                            styles.logoWrapper,
+                            {
                                 transform: [
                                     { translateX: logoTranslateX },
-                                    { scale: logoScaleValue },
+                                    { scale: combinedScale },
                                 ],
-                            }}
-                        >
-                            <Image
-                                source={isDark
-                                    ? require('../../assets/images/logo-dark.png')
-                                    : require('../../assets/images/logo-light.png')
-                                }
-                                style={styles.logo}
-                                resizeMode="contain"
-                            />
-                        </Animated.View>
+                            },
+                        ]}
+                    >
+                        <Image
+                            source={isDark
+                                ? require('../../assets/images/logo-dark.png')
+                                : require('../../assets/images/logo-light.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
+                    </Animated.View>
 
-                        {/* Text - fades in */}
-                        <Animated.View
-                            style={{
+                    {/* Text - appears to the right of logo */}
+                    <Animated.View
+                        style={[
+                            styles.textWrapper,
+                            {
                                 opacity: textOpacity,
-                                marginLeft: 8,
-                            }}
+                            },
+                        ]}
+                    >
+                        <Text
+                            variant="h1"
+                            weight="bold"
+                            color={theme.colors.text}
+                            style={styles.brandText}
                         >
-                            <RNText style={[styles.brandText, { color: theme.colors.text }]}>
-                                lockd
-                            </RNText>
-                        </Animated.View>
-                    </View>
+                            lockd
+                        </Text>
+                    </Animated.View>
                 </View>
 
                 {/* Tap indicator */}
-                <Animated.View style={[styles.tapContainer, { opacity: tapOpacity }]}>
-                    <RNText style={[styles.tapText, { color: theme.colors.textTertiary }]}>
-                        tap
-                    </RNText>
+                <Animated.View style={[styles.tapIndicator, { opacity: tapOpacity }]}>
+                    <Text variant="caption" color={theme.colors.textTertiary}>
+                        tap to continue
+                    </Text>
                 </Animated.View>
             </View>
         </TouchableWithoutFeedback>
@@ -233,38 +157,39 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    waveBlob: {
+    centerContainer: {
         position: 'absolute',
-    },
-    centerContent: {
-        flex: 1,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    brandRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+    },
+    logoWrapper: {
+        width: LOGO_SIZE,
+        height: LOGO_SIZE,
+        position: 'absolute',
+        // Centered by default, logo itself is positioned here
     },
     logo: {
-        width: 44,
-        height: 44,
+        width: LOGO_SIZE,
+        height: LOGO_SIZE,
+    },
+    textWrapper: {
+        marginLeft: LOGO_SIZE / 2 + 10, // Offset to appear next to scaled-down logo
     },
     brandText: {
-        fontSize: 32,
-        fontWeight: '300',
-        letterSpacing: -1,
+        fontSize: 42,
+        letterSpacing: 2,
     },
-    tapContainer: {
+    tapIndicator: {
         position: 'absolute',
-        bottom: height * 0.05,
-        width: '100%',
+        bottom: 60,
+        left: 0,
+        right: 0,
         alignItems: 'center',
-    },
-    tapText: {
-        fontSize: 14,
-        fontWeight: '400',
-        letterSpacing: 3,
     },
 });
 

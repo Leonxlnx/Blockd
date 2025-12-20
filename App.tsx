@@ -20,31 +20,56 @@ import {
   AppSelectionScreen,
   TimeCalculationScreen,
   CommitmentScreen,
+  AppUsage,
 } from './src/screens/onboarding/AppSetupScreens';
+import {
+  HelloNameScreen,
+  AgeSelectionScreen,
+  GenderSelectionScreen,
+  ConcentrationScaleScreen,
+  PhoneStatsScreen,
+  StudyScreen,
+  RewireScreen,
+  FiveDaysScreen,
+  ReadyScreen,
+  AuthScreen,
+  WelcomeFirstTimeScreen,
+} from './src/screens/onboarding/PersonalizationScreens';
 import MainPlaceholder from './src/screens/MainPlaceholder';
-
-// Type for app usage data
-interface AppUsage {
-  packageName: string;
-  appName: string;
-  usageMinutes: number;
-}
 
 type Screen =
   | 'splash'
+  // Onboarding
   | 'onboarding-welcome'
   | 'onboarding-problem'
   | 'onboarding-solution'
   | 'onboarding-benefits'
   | 'onboarding-howheard'
   | 'onboarding-name'
+  // Transition
+  | 'hello-name'
+  // Permissions
   | 'permissions-usage'
   | 'permissions-overlay'
   | 'permissions-battery'
+  // App Setup
   | 'app-analysis'
   | 'app-selection'
   | 'time-calculation'
   | 'commitment'
+  // Personalization
+  | 'personalize-age'
+  | 'personalize-gender'
+  | 'personalize-concentration'
+  | 'personalize-phonestats'
+  | 'personalize-study'
+  | 'personalize-rewire'
+  | 'personalize-fivedays'
+  | 'personalize-ready'
+  // Auth
+  | 'auth'
+  | 'welcome-first'
+  // Main
   | 'main';
 
 const AppContent: React.FC = () => {
@@ -54,148 +79,104 @@ const AppContent: React.FC = () => {
   const [heardFrom, setHeardFrom] = useState<string>('');
   const [analyzedApps, setAnalyzedApps] = useState<AppUsage[]>([]);
   const [selectedApps, setSelectedApps] = useState<AppUsage[]>([]);
+  const [userAge, setUserAge] = useState<string>('');
+  const [userGender, setUserGender] = useState<string>('');
+  const [concentrationLevel, setConcentrationLevel] = useState<number>(0);
 
   const renderScreen = () => {
     switch (currentScreen) {
-      // Splash Screen
+      // ==========================================
+      // SPLASH
+      // ==========================================
       case 'splash':
-        return (
-          <SplashScreen
-            onContinue={() => setCurrentScreen('onboarding-welcome')}
-          />
-        );
+        return <SplashScreen onContinue={() => setCurrentScreen('onboarding-welcome')} />;
 
-      // Onboarding Flow (6 screens)
+      // ==========================================
+      // ONBOARDING FLOW (6 screens)
+      // ==========================================
       case 'onboarding-welcome':
-        return (
-          <OnboardingWelcome
-            onNext={() => setCurrentScreen('onboarding-problem')}
-            onBack={() => setCurrentScreen('splash')}
-          />
-        );
+        return <OnboardingWelcome onNext={() => setCurrentScreen('onboarding-problem')} onBack={() => setCurrentScreen('splash')} />;
       case 'onboarding-problem':
-        return (
-          <OnboardingProblem
-            onNext={() => setCurrentScreen('onboarding-solution')}
-            onBack={() => setCurrentScreen('onboarding-welcome')}
-          />
-        );
+        return <OnboardingProblem onNext={() => setCurrentScreen('onboarding-solution')} onBack={() => setCurrentScreen('onboarding-welcome')} />;
       case 'onboarding-solution':
-        return (
-          <OnboardingSolution
-            onNext={() => setCurrentScreen('onboarding-benefits')}
-            onBack={() => setCurrentScreen('onboarding-problem')}
-          />
-        );
+        return <OnboardingSolution onNext={() => setCurrentScreen('onboarding-benefits')} onBack={() => setCurrentScreen('onboarding-problem')} />;
       case 'onboarding-benefits':
-        return (
-          <OnboardingBenefits
-            onNext={() => setCurrentScreen('onboarding-howheard')}
-            onBack={() => setCurrentScreen('onboarding-solution')}
-          />
-        );
+        return <OnboardingBenefits onNext={() => setCurrentScreen('onboarding-howheard')} onBack={() => setCurrentScreen('onboarding-solution')} />;
       case 'onboarding-howheard':
-        return (
-          <OnboardingHowHeard
-            onNext={(source: string) => {
-              setHeardFrom(source);
-              setCurrentScreen('onboarding-name');
-            }}
-            onBack={() => setCurrentScreen('onboarding-benefits')}
-          />
-        );
+        return <OnboardingHowHeard onNext={(source: string) => { setHeardFrom(source); setCurrentScreen('onboarding-name'); }} onBack={() => setCurrentScreen('onboarding-benefits')} />;
       case 'onboarding-name':
-        return (
-          <OnboardingName
-            onNext={(name: string) => {
-              setUserName(name);
-              setCurrentScreen('permissions-usage');
-            }}
-            onBack={() => setCurrentScreen('onboarding-howheard')}
-          />
-        );
+        return <OnboardingName onNext={(name: string) => { setUserName(name); setCurrentScreen('hello-name'); }} onBack={() => setCurrentScreen('onboarding-howheard')} />;
 
-      // Permission Flow (3 screens)
+      // ==========================================
+      // TRANSITION: Hello Name
+      // ==========================================
+      case 'hello-name':
+        return <HelloNameScreen name={userName} onNext={() => setCurrentScreen('permissions-usage')} />;
+
+      // ==========================================
+      // PERMISSIONS FLOW (3 screens)
+      // ==========================================
       case 'permissions-usage':
-        return (
-          <OnboardingUsageStats
-            onNext={() => setCurrentScreen('permissions-overlay')}
-            onBack={() => setCurrentScreen('onboarding-name')}
-          />
-        );
+        return <OnboardingUsageStats onNext={() => setCurrentScreen('permissions-overlay')} onBack={() => setCurrentScreen('hello-name')} />;
       case 'permissions-overlay':
-        return (
-          <OnboardingOverlay
-            onNext={() => setCurrentScreen('permissions-battery')}
-            onBack={() => setCurrentScreen('permissions-usage')}
-          />
-        );
+        return <OnboardingOverlay onNext={() => setCurrentScreen('permissions-battery')} onBack={() => setCurrentScreen('permissions-usage')} />;
       case 'permissions-battery':
-        return (
-          <OnboardingBattery
-            onComplete={() => setCurrentScreen('app-analysis')}
-            onBack={() => setCurrentScreen('permissions-overlay')}
-          />
-        );
+        return <OnboardingBattery onComplete={() => setCurrentScreen('app-analysis')} onBack={() => setCurrentScreen('permissions-overlay')} />;
 
-      // App Setup Flow
+      // ==========================================
+      // APP SETUP FLOW
+      // ==========================================
       case 'app-analysis':
-        return (
-          <AppAnalysisScreen
-            onNext={(apps: AppUsage[]) => {
-              setAnalyzedApps(apps);
-              setCurrentScreen('app-selection');
-            }}
-            onBack={() => setCurrentScreen('permissions-battery')}
-          />
-        );
+        return <AppAnalysisScreen onNext={(apps: AppUsage[]) => { setAnalyzedApps(apps); setCurrentScreen('app-selection'); }} onBack={() => setCurrentScreen('permissions-battery')} />;
       case 'app-selection':
-        return (
-          <AppSelectionScreen
-            apps={analyzedApps}
-            onNext={(apps: AppUsage[]) => {
-              setSelectedApps(apps);
-              setCurrentScreen('time-calculation');
-            }}
-            onBack={() => setCurrentScreen('app-analysis')}
-          />
-        );
+        return <AppSelectionScreen apps={analyzedApps} onNext={(apps: AppUsage[]) => { setSelectedApps(apps); setCurrentScreen('time-calculation'); }} onBack={() => setCurrentScreen('app-analysis')} />;
       case 'time-calculation':
-        return (
-          <TimeCalculationScreen
-            selectedApps={selectedApps}
-            onNext={() => setCurrentScreen('commitment')}
-            onBack={() => setCurrentScreen('app-selection')}
-          />
-        );
+        return <TimeCalculationScreen selectedApps={selectedApps} onNext={() => setCurrentScreen('commitment')} onBack={() => setCurrentScreen('app-selection')} />;
       case 'commitment':
-        return (
-          <CommitmentScreen
-            onComplete={() => setCurrentScreen('main')}
-            onBack={() => setCurrentScreen('time-calculation')}
-          />
-        );
+        return <CommitmentScreen onComplete={() => setCurrentScreen('personalize-age')} onBack={() => setCurrentScreen('time-calculation')} />;
 
-      // Main App
+      // ==========================================
+      // PERSONALIZATION FLOW (8 screens)
+      // ==========================================
+      case 'personalize-age':
+        return <AgeSelectionScreen onNext={(age: string) => { setUserAge(age); setCurrentScreen('personalize-gender'); }} onBack={() => setCurrentScreen('commitment')} />;
+      case 'personalize-gender':
+        return <GenderSelectionScreen onNext={(gender: string) => { setUserGender(gender); setCurrentScreen('personalize-concentration'); }} onBack={() => setCurrentScreen('personalize-age')} />;
+      case 'personalize-concentration':
+        return <ConcentrationScaleScreen onNext={(level: number) => { setConcentrationLevel(level); setCurrentScreen('personalize-phonestats'); }} onBack={() => setCurrentScreen('personalize-gender')} />;
+      case 'personalize-phonestats':
+        return <PhoneStatsScreen onNext={() => setCurrentScreen('personalize-study')} onBack={() => setCurrentScreen('personalize-concentration')} />;
+      case 'personalize-study':
+        return <StudyScreen onNext={() => setCurrentScreen('personalize-rewire')} onBack={() => setCurrentScreen('personalize-phonestats')} />;
+      case 'personalize-rewire':
+        return <RewireScreen onNext={() => setCurrentScreen('personalize-fivedays')} onBack={() => setCurrentScreen('personalize-study')} />;
+      case 'personalize-fivedays':
+        return <FiveDaysScreen onNext={() => setCurrentScreen('personalize-ready')} onBack={() => setCurrentScreen('personalize-rewire')} />;
+      case 'personalize-ready':
+        return <ReadyScreen onNext={() => setCurrentScreen('auth')} />;
+
+      // ==========================================
+      // AUTH FLOW
+      // ==========================================
+      case 'auth':
+        return <AuthScreen onDemo={() => setCurrentScreen('welcome-first')} onLogin={() => setCurrentScreen('welcome-first')} onSignup={() => setCurrentScreen('welcome-first')} />;
+      case 'welcome-first':
+        return <WelcomeFirstTimeScreen onStart={() => setCurrentScreen('main')} />;
+
+      // ==========================================
+      // MAIN APP
+      // ==========================================
       case 'main':
         return <MainPlaceholder />;
 
       default:
-        return (
-          <SplashScreen
-            onContinue={() => setCurrentScreen('onboarding-welcome')}
-          />
-        );
+        return <SplashScreen onContinue={() => setCurrentScreen('onboarding-welcome')} />;
     }
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
       {renderScreen()}
     </View>
   );

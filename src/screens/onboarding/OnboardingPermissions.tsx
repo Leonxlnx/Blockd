@@ -18,29 +18,9 @@ import { Permissions } from '../../native/Permissions';
 
 const { width, height } = Dimensions.get('window');
 
-// ============================================
-// PROFESSIONAL FLOWING BACKGROUND
-// ============================================
+// Pure gradient background only (no animated blobs)
+const FlowingBackground: React.FC<{ isDark: boolean }> = () => null;
 
-const FlowingBackground: React.FC<{ isDark: boolean }> = ({ isDark }) => {
-    const wave1 = useRef(new Animated.Value(0)).current;
-    const wave2 = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        Animated.loop(Animated.timing(wave1, { toValue: 1, duration: 12000, easing: Easing.linear, useNativeDriver: true })).start();
-        Animated.loop(Animated.timing(wave2, { toValue: 1, duration: 15000, easing: Easing.linear, useNativeDriver: true })).start();
-    }, []);
-
-    const translateX1 = wave1.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.5, width * 0.5] });
-    const translateX2 = wave2.interpolate({ inputRange: [0, 1], outputRange: [width * 0.3, -width * 0.3] });
-
-    return (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            <Animated.View style={[styles.waveBlob, { top: height * 0.1, left: -width * 0.3, width: width * 1.2, height: width * 1.2, borderRadius: width * 0.6, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', transform: [{ translateX: translateX1 }] }]} />
-            <Animated.View style={[styles.waveBlob, { top: height * 0.5, right: -width * 0.4, width: width * 0.9, height: width * 0.9, borderRadius: width * 0.45, backgroundColor: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)', transform: [{ translateX: translateX2 }] }]} />
-        </View>
-    );
-};
 
 // ============================================
 // ENTRANCE ANIMATION

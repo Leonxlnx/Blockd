@@ -48,7 +48,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
             style={[
                 styles.container,
                 {
-                    borderRadius: borderRadius[borderRadiusSize],
+                    borderRadius: borderRadius[borderRadiusSize] as number,
                 },
                 shadows.lg,
                 style,
@@ -66,7 +66,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
                 style={[
                     StyleSheet.absoluteFillObject,
                     {
-                        borderRadius: borderRadius[borderRadiusSize],
+                        borderRadius: borderRadius[borderRadiusSize] as number,
                     },
                 ]}
             />
@@ -77,7 +77,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
                     StyleSheet.absoluteFillObject,
                     styles.border,
                     {
-                        borderRadius: borderRadius[borderRadiusSize],
+                        borderRadius: borderRadius[borderRadiusSize] as number,
                         borderColor: isDark
                             ? `rgba(255, 255, 255, ${settings.borderOpacity})`
                             : `rgba(255, 255, 255, ${settings.borderOpacity + 0.3})`,
