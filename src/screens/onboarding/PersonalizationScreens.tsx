@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     scrollContentCenter: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: 100, paddingBottom: spacing[4], justifyContent: 'center' },
     content: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing[5] },
 
-    progressBarContainer: { position: 'absolute', top: 50, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
+    progressBarContainer: { position: 'absolute', top: 16, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
     progressSegment: { flex: 1, height: 4, borderRadius: 2 },
 
     imageContainer: { marginBottom: spacing[5], alignItems: 'center' },

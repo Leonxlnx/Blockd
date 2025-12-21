@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     nameContent: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing[5] },
 
     // Progress bar at top
-    progressBarContainer: { position: 'absolute', top: 50, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
+    progressBarContainer: { position: 'absolute', top: 16, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
     progressSegment: { flex: 1, height: 3, borderRadius: 1.5 },
 
     // Images

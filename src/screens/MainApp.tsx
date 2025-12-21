@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
 
     // Tab Content
     tabContent: { flex: 1 },
-    tabContentInner: { padding: spacing[4], paddingTop: 60, paddingBottom: 20 },
+    tabContentInner: { padding: spacing[4], paddingTop: 30, paddingBottom: 20 },
 
     header: { marginBottom: spacing[5] },
     section: { marginTop: spacing[5] },

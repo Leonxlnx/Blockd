@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     waveBlob: { position: 'absolute' },
     permissionContent: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing[5] },
 
-    progressBarContainer: { position: 'absolute', top: 50, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
+    progressBarContainer: { position: 'absolute', top: 16, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
     progressSegment: { flex: 1, height: 3, borderRadius: 1.5 },
 
     title: { marginBottom: spacing[2], fontSize: 32 },
