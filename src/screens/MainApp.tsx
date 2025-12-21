@@ -196,8 +196,8 @@ const DashboardTab: React.FC<{ isDark: boolean; apps: AppData[] }> = ({ isDark, 
 const LimitsTab: React.FC<{ isDark: boolean; apps: AppData[] }> = ({ isDark, apps }) => {
     const { theme } = useTheme();
 
-    // Top 5 apps for limits
-    const limitApps = apps.slice(0, 5);
+    // Show all apps with limits (up to 20)
+    const limitApps = apps.slice(0, 20);
 
     return (
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner}>

@@ -515,11 +515,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
     const [mode, setMode] = useState<'selection' | 'email_login' | 'email_signup'>('selection');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleAuth = async () => {
-        if (!email || !password) { setError('Please fill all fields'); return; }
+        if (!email.trim()) { setError('Please enter your email'); return; }
+        if (!password) { setError('Please enter your password'); return; }
+        if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
         setError('');
         setLoading(true);
 
@@ -580,23 +583,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
                     fontFamily: 'PlusJakartaSans-Medium'
                 }}
             />
-            <TextInput
-                placeholder="Password"
-                placeholderTextColor={theme.colors.textTertiary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={{
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F0',
-                    padding: spacing[4],
-                    borderRadius: 12,
-                    color: theme.colors.text,
-                    marginBottom: spacing[4],
-                    fontFamily: 'PlusJakartaSans-Medium'
-                }}
-            />
+            <View style={{ position: 'relative' }}>
+                <TextInput
+                    placeholder="Password"
+                    placeholderTextColor={theme.colors.textTertiary}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    style={{
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F0',
+                        padding: spacing[4],
+                        paddingRight: 60,
+                        borderRadius: 12,
+                        color: theme.colors.text,
+                        marginBottom: spacing[4],
+                        fontFamily: 'PlusJakartaSans-Medium'
+                    }}
+                />
+                <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: 16, top: 16 }}
+                >
+                    <Text variant="caption" weight="bold" color={theme.colors.textSecondary}>{showPassword ? 'HIDE' : 'SHOW'}</Text>
+                </TouchableOpacity>
+            </View>
 
-            {error ? <Text variant="caption" color="#FF4444" style={{ marginBottom: spacing[2] }}>{error}</Text> : null}
+            {error ? (
+                <View style={{ backgroundColor: 'rgba(255,68,68,0.1)', padding: spacing[3], borderRadius: 10, marginBottom: spacing[3] }}>
+                    <Text variant="body" color="#FF4444">⚠️ {error}</Text>
+                </View>
+            ) : null}
 
             <TouchableOpacity
                 onPress={handleAuth}
@@ -631,12 +647,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
             <View style={[styles.content, { justifyContent: 'center' }]}>
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], marginBottom: spacing[8] }}>
+                {/* BLOCKD LOGO */}
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], alignItems: 'center', marginBottom: spacing[6] }}>
+                    <View style={{ width: 60, height: 60, borderRadius: 16, backgroundColor: isDark ? '#FFF' : '#1A1A1A', justifyContent: 'center', alignItems: 'center', marginBottom: spacing[3] }}>
+                        <Text variant="h2" weight="bold" color={isDark ? '#000' : '#FFF'}>B</Text>
+                    </View>
                     <Text variant="h2" weight="bold" align="center" style={styles.headline}>
-                        {mode === 'selection' ? 'Create your account' : (mode === 'email_login' ? 'Welcome Back' : 'Join Blockd')}
+                        {mode === 'selection' ? 'Welcome to Blockd' : (mode === 'email_login' ? 'Welcome Back' : 'Join Blockd')}
                     </Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary}>
-                        {mode === 'selection' ? 'Save your progress and sync across devices' : (mode === 'email_login' ? 'Sign in to continue your streak' : 'Start your journey to better focus')}
+                        {mode === 'selection' ? 'Take control of your screen time' : (mode === 'email_login' ? 'Sign in to continue' : 'Create your account')}
                     </Text>
                 </Animated.View>
 
