@@ -37,6 +37,7 @@ import {
   WelcomeFirstTimeScreen,
 } from './src/screens/onboarding/PersonalizationScreens';
 import MainApp from './src/screens/MainApp';
+import { OverlayManager } from './src/screens/overlays/OverlayManager';
 import auth from '@react-native-firebase/auth';
 
 type Screen =
@@ -235,7 +236,11 @@ const AppContent: React.FC = () => {
       // MAIN APP
       // ==========================================
       case 'main':
-        return <MainApp />;
+        return (
+          <OverlayManager>
+            <MainApp />
+          </OverlayManager>
+        );
     }
   };
 

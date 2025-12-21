@@ -4,6 +4,7 @@ import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
+import com.blockd.BlockingModule;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +15,7 @@ public class PermissionsPackage implements ReactPackage {
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new PermissionsModule(reactContext));
+        modules.add(new BlockingModule(reactContext));
         return modules;
     }
 
@@ -22,3 +24,4 @@ public class PermissionsPackage implements ReactPackage {
         return Collections.emptyList();
     }
 }
+
