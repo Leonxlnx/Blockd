@@ -99,31 +99,56 @@ const BottomButtons: React.FC<BottomButtonsProps> = ({ onBack, onPrimary, primar
 
 const LargeIcon: React.FC<{ type: 'usage' | 'overlay' | 'battery'; isDark: boolean }> = ({ type, isDark }) => {
     const color = isDark ? '#FFFFFF' : '#1A1A1A';
+    const secondaryColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
 
     if (type === 'usage') {
+        // Usage Stats Icon: Bar chart with clock
         return (
             <View style={styles.iconBox}>
-                <View style={[styles.chartIcon, { borderColor: color }]}>
-                    <View style={[styles.chartBar, { height: 28, backgroundColor: color }]} />
-                    <View style={[styles.chartBar, { height: 50, backgroundColor: color }]} />
-                    <View style={[styles.chartBar, { height: 38, backgroundColor: color }]} />
+                <View style={styles.usageIconContainer}>
+                    {/* Chart bars */}
+                    <View style={styles.chartBarsRow}>
+                        <View style={[styles.modernBar, { height: 24, backgroundColor: secondaryColor }]} />
+                        <View style={[styles.modernBar, { height: 40, backgroundColor: color }]} />
+                        <View style={[styles.modernBar, { height: 32, backgroundColor: secondaryColor }]} />
+                        <View style={[styles.modernBar, { height: 48, backgroundColor: color }]} />
+                    </View>
+                    {/* Small clock overlay */}
+                    <View style={[styles.miniClock, { borderColor: color, backgroundColor: isDark ? '#0A0A0F' : '#FAFAFA' }]}>
+                        <View style={[styles.miniClockHand, { backgroundColor: color }]} />
+                    </View>
                 </View>
             </View>
         );
     }
     if (type === 'overlay') {
+        // Overlay Icon: Layered screens/windows
         return (
             <View style={styles.iconBox}>
-                <View style={[styles.shieldIcon, { borderColor: color }]} />
+                <View style={styles.overlayIconContainer}>
+                    <View style={[styles.overlayScreen, styles.overlayScreenBack, { borderColor: secondaryColor }]} />
+                    <View style={[styles.overlayScreen, styles.overlayScreenMid, { borderColor: secondaryColor }]} />
+                    <View style={[styles.overlayScreen, styles.overlayScreenFront, { borderColor: color }]}>
+                        <View style={[styles.overlayDot, { backgroundColor: color }]} />
+                    </View>
+                </View>
             </View>
         );
     }
+    // Battery Icon: Battery with infinity symbol
     return (
         <View style={styles.iconBox}>
-            <View style={[styles.batteryIcon, { borderColor: color }]}>
-                <View style={[styles.batteryFill, { backgroundColor: color }]} />
+            <View style={styles.batteryIconContainer}>
+                <View style={[styles.modernBattery, { borderColor: color }]}>
+                    <View style={[styles.modernBatteryFill, { backgroundColor: color }]} />
+                </View>
+                <View style={[styles.modernBatteryTop, { backgroundColor: color }]} />
+                {/* Infinity symbol overlay */}
+                <View style={styles.infinityContainer}>
+                    <View style={[styles.infinityLoop, { borderColor: color }]} />
+                    <View style={[styles.infinityLoop, styles.infinityLoopRight, { borderColor: color }]} />
+                </View>
             </View>
-            <View style={[styles.batteryTop, { backgroundColor: color }]} />
         </View>
     );
 };
@@ -305,6 +330,32 @@ const styles = StyleSheet.create({
     card: { padding: spacing[5], borderRadius: 20 },
 
     iconBox: { alignItems: 'center', marginBottom: spacing[5], height: 120, justifyContent: 'center' },
+
+    // Usage Icon (Bar Chart + Clock)
+    usageIconContainer: { position: 'relative', width: 100, height: 80 },
+    chartBarsRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 60 },
+    modernBar: { width: 14, borderRadius: 4 },
+    miniClock: { position: 'absolute', bottom: -8, right: -8, width: 28, height: 28, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+    miniClockHand: { width: 2, height: 8, borderRadius: 1, position: 'absolute', top: 5 },
+
+    // Overlay Icon (Layered Screens)
+    overlayIconContainer: { position: 'relative', width: 80, height: 90 },
+    overlayScreen: { position: 'absolute', width: 55, height: 70, borderWidth: 2, borderRadius: 8 },
+    overlayScreenBack: { top: 0, left: 0 },
+    overlayScreenMid: { top: 10, left: 12 },
+    overlayScreenFront: { top: 20, left: 24, alignItems: 'center', justifyContent: 'center' },
+    overlayDot: { width: 12, height: 12, borderRadius: 6 },
+
+    // Battery Icon (with Infinity)
+    batteryIconContainer: { position: 'relative', alignItems: 'center' },
+    modernBattery: { width: 55, height: 85, borderWidth: 3, borderRadius: 10, padding: 6 },
+    modernBatteryFill: { width: '100%', height: '65%', borderRadius: 4, marginTop: 'auto' },
+    modernBatteryTop: { position: 'absolute', top: -10, width: 20, height: 10, borderTopLeftRadius: 5, borderTopRightRadius: 5 },
+    infinityContainer: { position: 'absolute', bottom: 18, flexDirection: 'row' },
+    infinityLoop: { width: 14, height: 14, borderWidth: 2, borderRadius: 7 },
+    infinityLoopRight: { marginLeft: -4 },
+
+    // Legacy (keep for compatibility)
     chartIcon: { width: 90, height: 75, borderBottomWidth: 3, borderLeftWidth: 3, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-evenly', paddingBottom: 8, paddingLeft: 8 },
     chartBar: { width: 18, borderRadius: 4 },
     shieldIcon: { width: 75, height: 95, borderWidth: 3, borderRadius: 38, borderBottomLeftRadius: 48, borderBottomRightRadius: 48 },

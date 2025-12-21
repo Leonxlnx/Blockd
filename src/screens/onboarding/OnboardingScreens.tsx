@@ -414,7 +414,7 @@ export const OnboardingName: React.FC<OnboardingNameProps> = ({ onNext, onBack }
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#000000', '#0A0A0A', '#151515', '#0A0A0A'] : ['#FFFFFF', '#F5F5F5', '#ECECEC', '#F5F5F5']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
             <ProgressBar current={6} total={6} />
 

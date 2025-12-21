@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     },
     textWrapper: {
         marginLeft: LOGO_SIZE / 2 + 10,
-        marginTop: 6, // 6px lower to align with logo
+        marginTop: 10, // 10px lower to align with logo
     },
     brandText: {
         fontSize: 42,

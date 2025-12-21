@@ -135,7 +135,7 @@ export const LetsPersonalizeScreen: React.FC<LetsPersonalizeProps> = ({ onNext }
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
-            <View style={styles.content}>
+            <View style={[styles.content, { paddingBottom: 50 }]}>
                 <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
                     <Image source={require('../../../assets/images/personalize.png')} style={styles.heroImage} resizeMode="contain" />
                 </Animated.View>
@@ -175,7 +175,7 @@ export const AgeSelectionScreen: React.FC<AgeSelectionProps> = ({ onNext, onBack
 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                 <Animated.View style={[styles.imageContainerSmall, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/age-select.png')} style={styles.smallImage} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/age-select.png')} style={styles.ageImage} resizeMode="contain" />
                 </Animated.View>
 
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
@@ -599,6 +599,7 @@ const styles = StyleSheet.create({
     imageContainerSmall: { marginBottom: spacing[4], alignItems: 'center' },
     heroImage: { width: width * 0.75, height: width * 0.75 },
     smallImage: { width: width * 0.55, height: width * 0.55 },
+    ageImage: { width: width * 0.35, height: width * 0.35 },
 
     headline: { marginBottom: spacing[2], fontSize: 28, lineHeight: 38 },
     subtext: { lineHeight: 26, fontSize: 16, marginTop: spacing[3] },
