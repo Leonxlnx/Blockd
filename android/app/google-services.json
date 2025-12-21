@@ -1,36 +1,45 @@
 {
     "project_info": {
-        "project_number": "123456789012",
-        "project_id": "blockd-app",
-        "storage_bucket": "blockd-app.appspot.com"
+        "project_number": "499741394090",
+        "project_id": "gradz-44973",
+        "storage_bucket": "gradz-44973.firebasestorage.app"
     },
     "client": [
         {
             "client_info": {
-                "mobilesdk_app_id": "1:123456789012:android:abcdef1234567890",
+                "mobilesdk_app_id": "1:499741394090:android:c6fd1a1c4d7b0fe94c3cd3",
                 "android_client_info": {
                     "package_name": "com.blockd"
                 }
             },
-            "oauth_client": [
-                {
-                    "client_id": "123456789012-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com",
-                    "client_type": 3
-                }
-            ],
+            "oauth_client": [],
             "api_key": [
                 {
-                    "current_key": "AIzaSyDUMMYKEYFORBUILDONLYPLEASE_REPLACE"
+                    "current_key": "AIzaSyAGyJNGbAxWOkkvYSaAGAmZ_0yUUVH8uI0"
                 }
             ],
             "services": {
                 "appinvite_service": {
-                    "other_platform_oauth_client": [
-                        {
-                            "client_id": "123456789012-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com",
-                            "client_type": 3
-                        }
-                    ]
+                    "other_platform_oauth_client": []
+                }
+            }
+        },
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:499741394090:android:7cd315dfb53f77654c3cd3",
+                "android_client_info": {
+                    "package_name": "com.zenkindness.kind"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyAGyJNGbAxWOkkvYSaAGAmZ_0yUUVH8uI0"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
                 }
             }
         }

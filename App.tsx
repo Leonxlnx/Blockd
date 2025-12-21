@@ -37,6 +37,7 @@ import {
   WelcomeFirstTimeScreen,
 } from './src/screens/onboarding/PersonalizationScreens';
 import MainApp from './src/screens/MainApp';
+import auth from '@react-native-firebase/auth';
 
 type Screen =
   | 'splash'
@@ -111,7 +112,32 @@ const FadeTransition: React.FC<{ children: React.ReactNode; screenKey: string }>
 
 const AppContent: React.FC = () => {
   const { theme, isDark } = useTheme();
+  // Start with splash or check auth
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState<any>(null);
+
+  // Handle user state changes
+  function onAuthStateChanged(user: any) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
+
+  // Update effect to transition if user logged in
+  useEffect(() => {
+    // Only redirect if we are on splash or auth screens
+    if (!initializing && user && (currentScreen === 'splash' || currentScreen === 'auth')) {
+      // Check if we assume 'onboarding' is done if user exists?
+      // For now, let's redirect to main if user is logged in
+      setCurrentScreen('main');
+    }
+  }, [initializing, user]);
+
   const [userName, setUserName] = useState<string>('');
   const [heardFrom, setHeardFrom] = useState<string>('');
   const [analyzedApps, setAnalyzedApps] = useState<AppUsage[]>([]);

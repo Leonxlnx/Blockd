@@ -499,52 +499,151 @@ export const ReadyScreen: React.FC<ReadyScreenProps> = ({ onNext }) => {
 };
 
 // ============================================
-// SCREEN: AUTH (Login/Signup) - REAL ICONS
+// SCREEN: AUTH (Login/Signup) - REAL LOGIC
 // ============================================
+import { firebaseService } from '../../services/firebase';
+import { TextInput } from 'react-native';
 
 interface AuthScreenProps { onDemo: () => void; onLogin: () => void; onSignup: () => void; }
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignup }) => {
     const { theme, isDark } = useTheme();
     const titleAnim = useEntranceAnimation(0);
-    const imgAnim = useEntranceAnimation(100);
+    const formAnim = useEntranceAnimation(100);
+
+    // State
+    const [mode, setMode] = useState<'selection' | 'email_login' | 'email_signup'>('selection');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleAuth = async () => {
+        if (!email || !password) { setError('Please fill all fields'); return; }
+        setError('');
+        setLoading(true);
+
+        const res = mode === 'email_login'
+            ? await firebaseService.signIn(email, password)
+            : await firebaseService.signUp(email, password);
+
+        setLoading(false);
+
+        if (res.success) {
+            // Success! Proceed (App.tsx should listen to auth state, but we can also trigger callback)
+            if (mode === 'email_login') onLogin();
+            else onSignup();
+        } else {
+            setError(res.error || 'Authentication failed');
+        }
+    };
+
+    const renderSelection = () => (
+        <View style={styles.authButtons}>
+            {/* Google Button (Placeholder for now) */}
+            <TouchableOpacity onPress={() => {/* Implement Google Sign In later */ }} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                <View style={styles.authButtonContent}>
+                    <Image source={require('../../../assets/images/icon-google.png')} style={styles.authIconLarge} resizeMode="contain" />
+                    <Text variant="body" weight="semibold">Continue with Google</Text>
+                </View>
+            </TouchableOpacity>
+
+            {/* Email Button */}
+            <TouchableOpacity onPress={() => setMode('email_login')} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                <View style={styles.authButtonContent}>
+                    <Image source={require('../../../assets/images/icon-email.png')} style={styles.authIconXL} resizeMode="contain" />
+                    <Text variant="body" weight="semibold">Continue with Email</Text>
+                </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={onDemo} style={{ marginTop: spacing[6] }}>
+                <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ textDecorationLine: 'underline' }}>Try Demo Mode</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderEmailForm = () => (
+        <View style={{ width: '100%', paddingHorizontal: spacing[4] }}>
+            <TextInput
+                placeholder="Email"
+                placeholderTextColor={theme.colors.textTertiary}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F0',
+                    padding: spacing[4],
+                    borderRadius: 12,
+                    color: theme.colors.text,
+                    marginBottom: spacing[3],
+                    fontFamily: 'PlusJakartaSans-Medium'
+                }}
+            />
+            <TextInput
+                placeholder="Password"
+                placeholderTextColor={theme.colors.textTertiary}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F0',
+                    padding: spacing[4],
+                    borderRadius: 12,
+                    color: theme.colors.text,
+                    marginBottom: spacing[4],
+                    fontFamily: 'PlusJakartaSans-Medium'
+                }}
+            />
+
+            {error ? <Text variant="caption" color="#FF4444" style={{ marginBottom: spacing[2] }}>{error}</Text> : null}
+
+            <TouchableOpacity
+                onPress={handleAuth}
+                disabled={loading}
+                style={{
+                    backgroundColor: loading ? theme.colors.textTertiary : (isDark ? '#FFF' : '#1A1A1A'),
+                    paddingVertical: spacing[4],
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    marginBottom: spacing[4]
+                }}
+            >
+                <Text variant="body" weight="bold" color={isDark ? '#000' : '#FFF'}>{loading ? 'Processing...' : (mode === 'email_login' ? 'Log In' : 'Create Account')}</Text>
+            </TouchableOpacity>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                <Text variant="body" color={theme.colors.textSecondary}>{mode === 'email_login' ? "Don't have an account? " : "Already have an account? "}</Text>
+                <TouchableOpacity onPress={() => { setMode(mode === 'email_login' ? 'email_signup' : 'email_login'); setError(''); }}>
+                    <Text variant="body" weight="bold" color={theme.colors.primary}>{mode === 'email_login' ? 'Sign Up' : 'Log In'}</Text>
+                </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity onPress={() => setMode('selection')} style={{ marginTop: spacing[4], alignSelf: 'center' }}>
+                <Text variant="caption" color={theme.colors.textTertiary}>Back to options</Text>
+            </TouchableOpacity>
+        </View>
+    );
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
 
-            <View style={styles.content}>
-                {/* Mascot Image */}
-                <Animated.View style={[styles.imageContainer, { opacity: imgAnim.opacity, transform: [{ translateY: imgAnim.translateY }] }]}>
-                    <Image source={require('../../../assets/images/mascot-placeholder.png')} style={styles.heroImage} resizeMode="contain" />
+            <View style={[styles.content, { justifyContent: 'center' }]}>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], marginBottom: spacing[8] }}>
+                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>
+                        {mode === 'selection' ? 'Create your account' : (mode === 'email_login' ? 'Welcome Back' : 'Join Blockd')}
+                    </Text>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary}>
+                        {mode === 'selection' ? 'Save your progress and sync across devices' : (mode === 'email_login' ? 'Sign in to continue your streak' : 'Start your journey to better focus')}
+                    </Text>
                 </Animated.View>
 
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>Create your account</Text>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary}>Save your progress and sync across devices</Text>
+                <Animated.View style={{ opacity: formAnim.opacity, transform: [{ translateY: formAnim.translateY }], width: '100%' }}>
+                    {mode === 'selection' ? renderSelection() : renderEmailForm()}
                 </Animated.View>
-
-                <View style={styles.authButtons}>
-                    {/* Google Button */}
-                    <TouchableOpacity onPress={onSignup} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                        <View style={styles.authButtonContent}>
-                            <Image source={require('../../../assets/images/icon-google.png')} style={styles.authIconLarge} resizeMode="contain" />
-                            <Text variant="body" weight="semibold">Continue with Google</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Email Button */}
-                    <TouchableOpacity onPress={onLogin} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                        <View style={styles.authButtonContent}>
-                            <Image source={require('../../../assets/images/icon-email.png')} style={styles.authIconXL} resizeMode="contain" />
-                            <Text variant="body" weight="semibold">Continue with Email</Text>
-                        </View>
-                    </TouchableOpacity>
-                </View>
             </View>
-
-            <FullWidthButton onPress={onDemo} label="Try Demo Mode" isDark={isDark} />
         </View>
     );
 };
