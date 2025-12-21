@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View } from 'react-native';
 import { ThemeProvider, useTheme } from './src/theme';
 import SplashScreen from './src/screens/SplashScreen';
 import {
@@ -41,20 +41,25 @@ import auth from '@react-native-firebase/auth';
 
 type Screen =
   | 'splash'
+  // Onboarding Intro (6 screens)
   | 'onboarding-welcome'
   | 'onboarding-problem'
   | 'onboarding-solution'
   | 'onboarding-benefits'
   | 'onboarding-howheard'
   | 'onboarding-name'
+  // Hello Transition
   | 'hello-name'
+  // PERMISSIONS (3 screens - all together)
   | 'permissions-usage'
   | 'permissions-overlay'
   | 'permissions-battery'
+  // App Setup (4 screens)
   | 'app-analysis'
   | 'app-selection'
   | 'time-calculation'
   | 'commitment'
+  // Personalization (8 screens)
   | 'lets-personalize'
   | 'personalize-age'
   | 'personalize-gender'
@@ -64,60 +69,19 @@ type Screen =
   | 'personalize-rewire'
   | 'personalize-fivedays'
   | 'personalize-ready'
+  // Auth
   | 'auth'
   | 'welcome-first'
+  // Main
   | 'main';
 
-// ============================================
-// PREMIUM FADE TRANSITION
-// ============================================
-
-const FadeTransition: React.FC<{ children: React.ReactNode; screenKey: string }> = ({ children, screenKey }) => {
-  const [currentChild, setCurrentChild] = useState(children);
-  const [prevChild, setPrevChild] = useState<React.ReactNode | null>(null);
-  const [currentKey, setCurrentKey] = useState(screenKey);
-
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const prevAnim = useRef(new Animated.Value(0)).current;
-
-  if (screenKey !== currentKey) {
-    setPrevChild(currentChild);
-    setCurrentChild(children);
-    setCurrentKey(screenKey);
-
-    fadeAnim.setValue(0);
-    prevAnim.setValue(1);
-
-    Animated.parallel([
-      Animated.timing(prevAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
-      Animated.timing(fadeAnim, { toValue: 1, duration: 450, delay: 50, useNativeDriver: true }),
-    ]).start(() => {
-      setPrevChild(null);
-    });
-  }
-
-  return (
-    <View style={StyleSheet.absoluteFill}>
-      {prevChild && (
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: prevAnim, zIndex: 1 }]}>
-          {prevChild}
-        </Animated.View>
-      )}
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim, zIndex: 2 }]}>
-        {currentChild}
-      </Animated.View>
-    </View>
-  );
-};
-
 const AppContent: React.FC = () => {
-  const { theme, isDark } = useTheme();
-  // Start with splash or check auth
+  const { isDark } = useTheme();
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<any>(null);
 
-  // Handle user state changes
+  // Auth state listener
   function onAuthStateChanged(user: any) {
     setUser(user);
     if (initializing) setInitializing(false);
@@ -125,19 +89,17 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
+    return subscriber;
   }, []);
 
-  // Update effect to transition if user logged in
+  // Auto-redirect if logged in
   useEffect(() => {
-    // Only redirect if we are on splash or auth screens
     if (!initializing && user && (currentScreen === 'splash' || currentScreen === 'auth')) {
-      // Check if we assume 'onboarding' is done if user exists?
-      // For now, let's redirect to main if user is logged in
       setCurrentScreen('main');
     }
   }, [initializing, user]);
 
+  // State
   const [userName, setUserName] = useState<string>('');
   const [heardFrom, setHeardFrom] = useState<string>('');
   const [analyzedApps, setAnalyzedApps] = useState<AppUsage[]>([]);
@@ -148,9 +110,15 @@ const AppContent: React.FC = () => {
 
   const renderScreen = () => {
     switch (currentScreen) {
+      // ==========================================
+      // SPLASH
+      // ==========================================
       case 'splash':
         return <SplashScreen onContinue={() => setCurrentScreen('onboarding-welcome')} />;
 
+      // ==========================================
+      // ONBOARDING INTRO (6 screens)
+      // ==========================================
       case 'onboarding-welcome':
         return <OnboardingWelcome onNext={() => setCurrentScreen('onboarding-problem')} onBack={() => setCurrentScreen('splash')} />;
       case 'onboarding-problem':
@@ -172,9 +140,49 @@ const AppContent: React.FC = () => {
           />
         );
 
+      // ==========================================
+      // TRANSITION: "Hi {Name}!"
+      // ==========================================
       case 'hello-name':
-        return <HelloNameScreen name={userName} onNext={() => setCurrentScreen('lets-personalize')} />;
+        return <HelloNameScreen name={userName} onNext={() => setCurrentScreen('permissions-usage')} />;
 
+      // ==========================================
+      // PERMISSIONS (3 screens - ALL TOGETHER)
+      // ==========================================
+      case 'permissions-usage':
+        return <OnboardingUsageStats onNext={() => setCurrentScreen('permissions-overlay')} onBack={() => setCurrentScreen('hello-name')} />;
+      case 'permissions-overlay':
+        return <OnboardingOverlay onNext={() => setCurrentScreen('permissions-battery')} onBack={() => setCurrentScreen('permissions-usage')} />;
+      case 'permissions-battery':
+        return <OnboardingBattery onComplete={() => setCurrentScreen('app-analysis')} onBack={() => setCurrentScreen('permissions-overlay')} />;
+
+      // ==========================================
+      // APP SETUP (4 screens)
+      // ==========================================
+      case 'app-analysis':
+        return <AppAnalysisScreen onNext={(apps) => { setAnalyzedApps(apps); setCurrentScreen('app-selection'); }} onBack={() => setCurrentScreen('permissions-battery')} />;
+      case 'app-selection':
+        return (
+          <AppSelectionScreen
+            apps={analyzedApps}
+            onNext={(selected) => { setSelectedApps(selected); setCurrentScreen('time-calculation'); }}
+            onBack={() => setCurrentScreen('app-analysis')}
+          />
+        );
+      case 'time-calculation':
+        return (
+          <TimeCalculationScreen
+            selectedApps={selectedApps}
+            onNext={() => setCurrentScreen('commitment')}
+            onBack={() => setCurrentScreen('app-selection')}
+          />
+        );
+      case 'commitment':
+        return <CommitmentScreen onComplete={() => setCurrentScreen('lets-personalize')} onBack={() => setCurrentScreen('time-calculation')} />;
+
+      // ==========================================
+      // PERSONALIZATION (8 screens)
+      // ==========================================
       case 'lets-personalize':
         return <LetsPersonalizeScreen onNext={() => setCurrentScreen('personalize-age')} />;
       case 'personalize-age':
@@ -194,66 +202,25 @@ const AppContent: React.FC = () => {
       case 'personalize-concentration':
         return (
           <ConcentrationScaleScreen
-            onNext={(level) => { setConcentrationLevel(level); setCurrentScreen('permissions-usage'); }}
+            onNext={(level) => { setConcentrationLevel(level); setCurrentScreen('personalize-phonestats'); }}
             onBack={() => setCurrentScreen('personalize-gender')}
           />
         );
-
-      case 'permissions-usage':
-        // Changed onComplete -> onNext
-        return <OnboardingUsageStats onNext={() => setCurrentScreen('app-analysis')} onBack={() => setCurrentScreen('personalize-concentration')} />;
-
-      case 'app-analysis':
-        return <AppAnalysisScreen onNext={(apps) => { setAnalyzedApps(apps); setCurrentScreen('app-selection'); }} onBack={() => setCurrentScreen('permissions-usage')} />;
-
-      case 'app-selection':
-        // Changed initialApps -> apps
-        return (
-          <AppSelectionScreen
-            apps={analyzedApps}
-            onNext={(selected) => { setSelectedApps(selected); setCurrentScreen('time-calculation'); }}
-            onBack={() => setCurrentScreen('app-analysis')}
-          />
-        );
-
-      case 'time-calculation':
-        return (
-          <TimeCalculationScreen
-            selectedApps={selectedApps}
-            onNext={() => setCurrentScreen('personalize-phonestats')}
-            onBack={() => setCurrentScreen('app-selection')}
-          />
-        );
-
       case 'personalize-phonestats':
-        return <PhoneStatsScreen onNext={() => setCurrentScreen('permissions-overlay')} onBack={() => setCurrentScreen('time-calculation')} />;
-
-      case 'permissions-overlay':
-        // Changed onComplete -> onNext
-        return <OnboardingOverlay onNext={() => setCurrentScreen('personalize-study')} onBack={() => setCurrentScreen('personalize-phonestats')} />;
-
+        return <PhoneStatsScreen onNext={() => setCurrentScreen('personalize-study')} onBack={() => setCurrentScreen('personalize-concentration')} />;
       case 'personalize-study':
-        return <StudyScreen onNext={() => setCurrentScreen('permissions-battery')} onBack={() => setCurrentScreen('permissions-overlay')} />;
-
-      case 'permissions-battery':
-        return <OnboardingBattery onComplete={() => setCurrentScreen('personalize-rewire')} onBack={() => setCurrentScreen('personalize-study')} />;
-
+        return <StudyScreen onNext={() => setCurrentScreen('personalize-rewire')} onBack={() => setCurrentScreen('personalize-phonestats')} />;
       case 'personalize-rewire':
-        return <RewireScreen onNext={() => setCurrentScreen('personalize-fivedays')} onBack={() => setCurrentScreen('permissions-battery')} />;
-
+        return <RewireScreen onNext={() => setCurrentScreen('personalize-fivedays')} onBack={() => setCurrentScreen('personalize-study')} />;
       case 'personalize-fivedays':
-        return <FiveDaysScreen onNext={() => setCurrentScreen('commitment')} onBack={() => setCurrentScreen('personalize-rewire')} />;
-
-      case 'commitment':
-        // Changed onNext -> onComplete
-        return <CommitmentScreen onComplete={() => setCurrentScreen('personalize-ready')} onBack={() => setCurrentScreen('personalize-fivedays')} />;
-
+        return <FiveDaysScreen onNext={() => setCurrentScreen('personalize-ready')} onBack={() => setCurrentScreen('personalize-rewire')} />;
       case 'personalize-ready':
-        // Removed onBack
         return <ReadyScreen onNext={() => setCurrentScreen('auth')} />;
 
+      // ==========================================
+      // AUTH
+      // ==========================================
       case 'auth':
-        // Mapped onDemo, onLogin, onSignup -> next step
         return (
           <AuthScreen
             onDemo={() => setCurrentScreen('welcome-first')}
@@ -262,23 +229,30 @@ const AppContent: React.FC = () => {
           />
         );
       case 'welcome-first':
-        // Changed onNext -> onStart
         return <WelcomeFirstTimeScreen onStart={() => setCurrentScreen('main')} />;
 
+      // ==========================================
+      // MAIN APP
+      // ==========================================
       case 'main':
         return <MainApp />;
     }
   };
 
   return (
+    <View style={{ flex: 1, backgroundColor: isDark ? '#050508' : '#FAFAFA' }}>
+      {renderScreen()}
+    </View>
+  );
+};
+
+// Root App Component - ThemeProvider MUST wrap AppContent
+const App: React.FC = () => {
+  return (
     <ThemeProvider>
-      <View style={{ flex: 1, backgroundColor: isDark ? '#050508' : '#FAFAFA' }}>
-        <FadeTransition screenKey={currentScreen}>
-          {renderScreen()}
-        </FadeTransition>
-      </View>
+      <AppContent />
     </ThemeProvider>
   );
 };
 
-export default AppContent;
+export default App;
