@@ -221,10 +221,10 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
             List<Map.Entry<String, Long>> sortedList = new ArrayList<>(usageMap.entrySet());
             Collections.sort(sortedList, (a, b) -> Long.compare(b.getValue(), a.getValue()));
 
-            // Get top 20 apps
+            // Get top 100 apps
             int count = 0;
             for (Map.Entry<String, Long> entry : sortedList) {
-                if (count >= 20) break;
+                if (count >= 100) break;
                 
                 try {
                     String packageName = entry.getKey();

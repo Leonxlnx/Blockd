@@ -108,6 +108,18 @@ export const AppAnalysisScreen: React.FC<AppAnalysisProps> = ({ onNext, onBack }
     const { theme, isDark } = useTheme();
     const [apps, setApps] = useState<AppUsage[]>([]);
     const titleAnim = useEntranceAnimation(0);
+    const scanAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.timing(scanAnim, { toValue: 1, duration: 2000, easing: Easing.linear, useNativeDriver: true })
+        ).start();
+    }, []);
+
+    const spin = scanAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg']
+    });
 
     // Animated dots
     const dot1 = useRef(new Animated.Value(0.3)).current;
@@ -175,21 +187,25 @@ export const AppAnalysisScreen: React.FC<AppAnalysisProps> = ({ onNext, onBack }
             />
 
             <View style={styles.content}>
-                <View style={styles.iconBox}>
-                    <View style={[styles.searchIcon, { borderColor: isDark ? '#FFF' : '#1A1A1A' }]}>
-                        <View style={[styles.searchHandle, { backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
+                {/* Premium Scanning Radar Icon */}
+                <View style={[styles.radarContainer, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                    <View style={[styles.radarCircle, { borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }]} />
+                    <View style={[styles.radarCircleInner, { borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)' }]} />
+
+                    <View style={styles.radarLineContainer}>
+                        <Animated.View style={[styles.radarLineContainer, { transform: [{ rotate: spin }] }]}>
+                            <LinearGradient
+                                colors={isDark ? ['rgba(255,255,255,0.5)', 'transparent'] : ['rgba(0,0,0,0.4)', 'transparent']}
+                                style={styles.radarGradient}
+                            />
+                        </Animated.View>
                     </View>
+                    <View style={[styles.radarDot, { backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
                 </View>
 
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>Analyzing your apps</Text>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], marginTop: spacing[6] }}>
+                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>Analyzing your{'\n'}digital habits...</Text>
                 </Animated.View>
-
-                <View style={styles.loadingDots}>
-                    {[dot1, dot2, dot3].map((dot, i) => (
-                        <Animated.View key={i} style={[styles.loadingDot, { backgroundColor: isDark ? '#FFF' : '#1A1A1A', opacity: dot }]} />
-                    ))}
-                </View>
 
                 <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginTop: spacing[4] }}>
                     Finding your most used apps...
@@ -464,11 +480,13 @@ const styles = StyleSheet.create({
     subtext: { lineHeight: 26, fontSize: 16 },
 
     // App Analysis
-    iconBox: { marginBottom: spacing[5], width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
-    searchIcon: { width: 70, height: 70, borderWidth: 4, borderRadius: 35 },
-    searchHandle: { position: 'absolute', bottom: -20, right: -10, width: 30, height: 4, borderRadius: 2, transform: [{ rotate: '45deg' }] },
-    loadingDots: { flexDirection: 'row', justifyContent: 'center', gap: spacing[2], marginTop: spacing[4] },
-    loadingDot: { width: 10, height: 10, borderRadius: 5 },
+    // App Analysis - Premium Radar
+    radarContainer: { width: 140, height: 140, borderRadius: 70, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+    radarCircle: { width: 100, height: 100, borderRadius: 50, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+    radarCircleInner: { width: 60, height: 60, borderRadius: 30, borderWidth: 1 },
+    radarLineContainer: { position: 'absolute', width: 140, height: 140, borderRadius: 70, overflow: 'hidden' },
+    radarGradient: { width: 140, height: 70, opacity: 0.8 },
+    radarDot: { position: 'absolute', width: 8, height: 8, borderRadius: 4 },
 
     // App Selection
     appsList: { marginTop: spacing[5], gap: spacing[3] },
