@@ -15,6 +15,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../theme';
 import { spacing } from '../theme/theme';
 import { Text } from '../components';
+import { AppPickerModal } from '../components/AppPickerModal';
+import { LimitSetupModal } from '../components/LimitSetupModal';
+import { limitsService, AppLimit } from '../services/limitsService';
+import auth from '@react-native-firebase/auth';
 
 const { width, height } = Dimensions.get('window');
 const { PermissionsModule } = NativeModules;
@@ -195,53 +199,133 @@ const DashboardTab: React.FC<{ isDark: boolean; apps: AppData[] }> = ({ isDark, 
 
 const LimitsTab: React.FC<{ isDark: boolean; apps: AppData[] }> = ({ isDark, apps }) => {
     const { theme } = useTheme();
+    const [limits, setLimits] = useState<AppLimit[]>([]);
+    const [pickerVisible, setPickerVisible] = useState(false);
+    const [setupVisible, setSetupVisible] = useState(false);
+    const [selectedApp, setSelectedApp] = useState<{ packageName: string; appName: string; usageMinutes: number; icon?: string } | null>(null);
 
-    // Show all apps with limits (up to 20)
-    const limitApps = apps.slice(0, 20);
+    // Load limits on mount
+    useEffect(() => {
+        limitsService.loadLimits();
+        const unsub = limitsService.subscribe(setLimits);
+        return unsub;
+    }, []);
+
+    const handleSelectApp = (app: { packageName: string; appName: string; usageMinutes: number; icon?: string }) => {
+        setSelectedApp(app);
+        setPickerVisible(false);
+        setSetupVisible(true);
+    };
+
+    const handleConfirmLimit = async (mode: 'detox' | 'limit', value: number) => {
+        if (!selectedApp) return;
+
+        const newLimit: AppLimit = {
+            packageName: selectedApp.packageName,
+            appName: selectedApp.appName,
+            icon: selectedApp.icon,
+            mode,
+            dailyLimitMinutes: mode === 'limit' ? value : undefined,
+            detoxEndDate: mode === 'detox' ? new Date(Date.now() + value * 24 * 60 * 60 * 1000).toISOString() : undefined,
+            streak: 0,
+            startedAt: new Date().toISOString(),
+            usedTodayMinutes: 0,
+            lastResetDate: new Date().toISOString().split('T')[0],
+            isActive: true,
+        };
+
+        await limitsService.saveLimit(newLimit);
+        setSelectedApp(null);
+    };
+
+    const formatDaysRemaining = (endDate: string) => {
+        const days = Math.ceil((new Date(endDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+        return `${days}d left`;
+    };
+
+    const existingPackages = limits.map(l => l.packageName);
 
     return (
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner}>
             <View style={styles.header}>
                 <Text variant="h2" weight="bold">App Limits</Text>
-                <Text variant="caption" color={theme.colors.textSecondary}>Set daily time limits</Text>
+                <Text variant="caption" color={theme.colors.textSecondary}>
+                    {limits.length === 0 ? 'Add limits to take control' : `${limits.length} active limit${limits.length > 1 ? 's' : ''}`}
+                </Text>
             </View>
 
-            {/* App Limits List */}
-            <View style={styles.limitsList}>
-                {limitApps.map((app, i) => {
-                    const limit = app.limit || Math.round(app.usageMinutes * 0.5);
-                    const progress = Math.min(100, (app.usageMinutes / limit) * 100);
-                    const isOver = app.usageMinutes > limit;
-
-                    return (
+            {/* Empty State */}
+            {limits.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: spacing[8] }}>
+                    <Text variant="h1" style={{ fontSize: 48, marginBottom: spacing[4] }}>🎯</Text>
+                    <Text variant="h3" weight="bold" align="center">No limits set yet</Text>
+                    <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[2] }}>
+                        Start your focus journey by{'\n'}adding your first app limit
+                    </Text>
+                </View>
+            ) : (
+                <View style={styles.limitsList}>
+                    {limits.filter(l => l.isActive).map((limit, i) => (
                         <TouchableOpacity key={i} activeOpacity={0.8} style={[styles.limitItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }]}>
-                            {app.icon ? (
-                                <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.limitIcon} />
+                            {limit.icon ? (
+                                <Image source={{ uri: `data:image/png;base64,${limit.icon}` }} style={styles.limitIcon} />
                             ) : (
                                 <View style={[styles.limitIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]}>
-                                    <Text variant="body" weight="bold">{app.appName.charAt(0)}</Text>
+                                    <Text variant="body" weight="bold">{limit.appName.charAt(0)}</Text>
                                 </View>
                             )}
                             <View style={styles.limitInfo}>
                                 <View style={styles.limitHeader}>
-                                    <Text variant="body" weight="semibold">{app.appName}</Text>
-                                    <Text variant="caption" color={isOver ? '#FF4444' : theme.colors.textSecondary}>
-                                        {app.usageMinutes}m / {limit}m
-                                    </Text>
+                                    <Text variant="body" weight="semibold">{limit.appName}</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
+                                        {limit.streak > 0 && (
+                                            <Text variant="caption" weight="bold" color={isDark ? '#FFD700' : '#FF8C00'}>🔥 {limit.streak}d</Text>
+                                        )}
+                                        <Text variant="caption" color={theme.colors.textSecondary}>
+                                            {limit.mode === 'detox' ? formatDaysRemaining(limit.detoxEndDate!) : `${limit.dailyLimitMinutes}m/day`}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={[styles.progressBar, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                                    <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: isOver ? '#FF4444' : (isDark ? '#FFFFFF' : '#1A1A1A') }]} />
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing[1] }}>
+                                    <View style={[styles.modeTag, { backgroundColor: limit.mode === 'detox' ? 'rgba(255,68,68,0.15)' : 'rgba(0,122,255,0.15)' }]}>
+                                        <Text variant="caption" weight="bold" color={limit.mode === 'detox' ? '#FF4444' : '#007AFF'}>
+                                            {limit.mode === 'detox' ? '🚫 DETOX' : '⏱️ LIMIT'}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
                         </TouchableOpacity>
-                    );
-                })}
-            </View>
+                    ))}
+                </View>
+            )}
 
             {/* Add Limit Button */}
-            <TouchableOpacity style={[styles.addButton, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]} activeOpacity={0.7}>
-                <Text variant="body" weight="medium" color={theme.colors.textSecondary}>+ Add App Limit</Text>
+            <TouchableOpacity
+                onPress={() => setPickerVisible(true)}
+                style={[styles.addButton, { borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}
+                activeOpacity={0.7}
+            >
+                <Text variant="body" weight="semibold">+ Add App Limit</Text>
             </TouchableOpacity>
+
+            {/* Modals */}
+            <AppPickerModal
+                visible={pickerVisible}
+                onClose={() => setPickerVisible(false)}
+                onSelectApp={handleSelectApp}
+                excludePackages={existingPackages}
+            />
+
+            {selectedApp && (
+                <LimitSetupModal
+                    visible={setupVisible}
+                    onClose={() => { setSetupVisible(false); setSelectedApp(null); }}
+                    onConfirm={handleConfirmLimit}
+                    appName={selectedApp.appName}
+                    appIcon={selectedApp.icon}
+                    avgUsage={selectedApp.usageMinutes}
+                />
+            )}
         </ScrollView>
     );
 };
@@ -427,6 +511,7 @@ const styles = StyleSheet.create({
     limitHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing[2] },
     progressBar: { height: 6, borderRadius: 3 },
     progressFill: { height: 6, borderRadius: 3 },
+    modeTag: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6 },
     addButton: { marginTop: spacing[4], padding: spacing[4], borderRadius: 16, borderWidth: 2, borderStyle: 'dashed', alignItems: 'center' },
 
     // Settings

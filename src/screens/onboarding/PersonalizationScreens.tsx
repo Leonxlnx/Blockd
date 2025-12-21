@@ -140,9 +140,9 @@ export const LetsPersonalizeScreen: React.FC<LetsPersonalizeProps> = ({ onNext }
                     <Image source={require('../../../assets/images/personalize.png')} style={styles.heroImage} resizeMode="contain" />
                 </Animated.View>
 
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], marginTop: -spacing[4] }}>
                     <Text variant="h1" weight="bold" align="center" style={styles.headline}>Let's personalize{"\n"}your experience</Text>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
+                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginTop: spacing[2] }}>
                         Answer a few quick questions{"\n"}so we can help you better
                     </Text>
                 </Animated.View>
@@ -574,6 +574,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
+                selectionColor={isDark ? '#FFF' : '#1A1A1A'}
                 style={{
                     backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F0',
                     padding: spacing[4],
@@ -590,6 +591,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
+                    selectionColor={isDark ? '#FFF' : '#1A1A1A'}
                     style={{
                         backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F0',
                         padding: spacing[4],
@@ -648,11 +650,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
 
             <View style={[styles.content, { justifyContent: 'center' }]}>
                 {/* BLOCKD LOGO */}
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], alignItems: 'center', marginBottom: spacing[6] }}>
-                    <View style={{ width: 60, height: 60, borderRadius: 16, backgroundColor: isDark ? '#FFF' : '#1A1A1A', justifyContent: 'center', alignItems: 'center', marginBottom: spacing[3] }}>
-                        <Text variant="h2" weight="bold" color={isDark ? '#000' : '#FFF'}>B</Text>
-                    </View>
-                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], alignItems: 'center', marginBottom: spacing[4] }}>
+                    <Image source={isDark ? require('../../../assets/images/logo-dark.png') : require('../../../assets/images/logo-light.png')} style={{ width: 80, height: 80 }} resizeMode="contain" />
+                    <Text variant="h2" weight="bold" align="center" style={{ marginTop: spacing[3] }}>
                         {mode === 'selection' ? 'Welcome to Blockd' : (mode === 'email_login' ? 'Welcome Back' : 'Join Blockd')}
                     </Text>
                     <Text variant="body" align="center" color={theme.colors.textSecondary}>

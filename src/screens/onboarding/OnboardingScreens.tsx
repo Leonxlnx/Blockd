@@ -449,6 +449,7 @@ export const OnboardingName: React.FC<OnboardingNameProps> = ({ onNext, onBack }
                             placeholder="Enter your name"
                             placeholderTextColor={theme.colors.textTertiary}
                             autoCapitalize="words"
+                            selectionColor={isDark ? '#FFF' : '#1A1A1A'}
                         />
                     </LinearGradient>
                 </Animated.View>
