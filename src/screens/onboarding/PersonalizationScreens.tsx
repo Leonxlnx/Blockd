@@ -707,8 +707,8 @@ export const WelcomeFirstTimeScreen: React.FC<WelcomeFirstTimeProps> = ({ onStar
 const styles = StyleSheet.create({
     container: { flex: 1 },
     scrollView: { flex: 1 },
-    scrollContent: { paddingHorizontal: spacing[4], paddingTop: 100, paddingBottom: spacing[4] },
-    scrollContentCenter: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: 100, paddingBottom: spacing[4], justifyContent: 'center' },
+    scrollContent: { paddingHorizontal: spacing[4], paddingTop: 50, paddingBottom: spacing[4] },
+    scrollContentCenter: { flexGrow: 1, paddingHorizontal: spacing[4], paddingTop: 50, paddingBottom: spacing[4], justifyContent: 'center' },
     content: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing[5] },
 
     progressBarContainer: { position: 'absolute', top: 16, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },

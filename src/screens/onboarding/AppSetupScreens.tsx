@@ -144,9 +144,9 @@ export const AppAnalysisScreen: React.FC<AppAnalysisProps> = ({ onNext, onBack }
 
                 if (usageData && usageData.length > 0) {
                     fetchedApps = usageData
-                        .filter((a: AppUsage) => a.usageMinutes > 10)
+                        .filter((a: AppUsage) => a.usageMinutes > 5)
                         .sort((a: AppUsage, b: AppUsage) => b.usageMinutes - a.usageMinutes)
-                        .slice(0, 15);
+                        .slice(0, 100);
                 }
             } catch (e) {
                 console.log('Usage stats error:', e);
@@ -469,7 +469,7 @@ export const CommitmentScreen: React.FC<CommitmentProps> = ({ onComplete, onBack
 const styles = StyleSheet.create({
     container: { flex: 1 },
     scrollView: { flex: 1 },
-    scrollContent: { paddingHorizontal: spacing[4], paddingTop: 100, paddingBottom: spacing[4] },
+    scrollContent: { paddingHorizontal: spacing[4], paddingTop: 50, paddingBottom: spacing[4] },
     content: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing[5] },
 
     progressBarContainer: { position: 'absolute', top: 16, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },

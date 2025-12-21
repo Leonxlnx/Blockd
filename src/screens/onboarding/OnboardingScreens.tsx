@@ -294,6 +294,16 @@ export const OnboardingBenefits: React.FC<OnboardingBenefitsProps> = ({ onNext, 
                 <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }] }}>
                     <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>Focus, relax, and be present.{'\n'}See the magic in everyday life.</Text>
                 </Animated.View>
+
+                {/* Professional Quote */}
+                <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }], marginTop: spacing[6], paddingHorizontal: spacing[4] }}>
+                    <View style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', padding: spacing[4], borderRadius: 16, borderLeftWidth: 3, borderLeftColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }}>
+                        <Text variant="body" style={{ fontStyle: 'italic', lineHeight: 22 }} color={theme.colors.textSecondary}>
+                            "Blockd isn't like other blocking apps. It makes it genuinely hard to break your limits — and that's exactly why it saved me hundreds of hours."
+                        </Text>
+                        <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginTop: spacing[2] }}>— Alex, 23</Text>
+                    </View>
+                </Animated.View>
             </View>
 
             <BottomButtons onBack={onBack} onNext={onNext} isDark={isDark} />
@@ -482,7 +492,7 @@ const styles = StyleSheet.create({
     subtext: { lineHeight: 26, fontSize: 16 },
 
     // How Heard
-    howHeardScrollContent: { paddingHorizontal: spacing[4], paddingTop: 100, paddingBottom: spacing[4] },
+    howHeardScrollContent: { paddingHorizontal: spacing[4], paddingTop: 50, paddingBottom: spacing[4] },
     howHeardImageWrap: { alignItems: 'center', marginBottom: spacing[4] },
     howHeardImage: { width: width * 0.55, height: width * 0.4 },
     gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing[3], marginTop: spacing[4] },
