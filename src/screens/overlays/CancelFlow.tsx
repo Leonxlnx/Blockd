@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput, ScrollView, BackHandler } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, ScrollView, BackHandler, Dimensions } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Video from 'react-native-video';
 import { Text } from '../../components';
 import { spacing } from '../../theme/theme';
 
-// Cancel Flow Steps
+const { width } = Dimensions.get('window');
+
 type CancelStep = 'confirm' | 'read' | 'video' | 'math' | 'final';
 
 interface CancelFlowProps {
@@ -17,19 +19,17 @@ interface CancelFlowProps {
 
 export const CancelFlow: React.FC<CancelFlowProps> = ({ appName, mode, streak, onCancel, onKeep }) => {
     const [step, setStep] = useState<CancelStep>('confirm');
-    const [readComplete, setReadComplete] = useState(false);
     const [videoComplete, setVideoComplete] = useState(false);
     const [mathAnswer, setMathAnswer] = useState('');
     const [mathProblem, setMathProblem] = useState({ a: 0, b: 0, answer: 0 });
+    const videoRef = useRef<any>(null);
 
-    // Generate random math problem
     useEffect(() => {
         const a = Math.floor(Math.random() * 50) + 10;
         const b = Math.floor(Math.random() * 50) + 10;
         setMathProblem({ a, b, answer: a * b });
     }, []);
 
-    // Block back button
     useEffect(() => {
         const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
             onKeep();
@@ -101,24 +101,34 @@ export const CancelFlow: React.FC<CancelFlowProps> = ({ appName, mode, streak, o
                             A brief message before you proceed
                         </Text>
 
-                        {/* Video placeholder - user will add dummy.mp4 */}
-                        <View style={styles.videoPlaceholder}>
-                            <Text variant="h1" style={{ marginBottom: spacing[3] }}>📺</Text>
-                            <Text variant="body" color="rgba(255,255,255,0.5)" align="center">
-                                Video will play here{'\n'}(assets/videos/dummy.mp4)
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => setVideoComplete(true)}
-                                style={styles.skipVideoBtn}
-                            >
-                                <Text variant="caption" color="rgba(255,255,255,0.4)">Skip (for testing)</Text>
-                            </TouchableOpacity>
+                        <View style={styles.videoContainer}>
+                            <Video
+                                ref={videoRef}
+                                source={require('../../../assets/videos/dummy.mp4')}
+                                style={styles.video}
+                                resizeMode="contain"
+                                onEnd={() => setVideoComplete(true)}
+                                onError={(e: any) => {
+                                    console.log('Video error:', e);
+                                    setVideoComplete(true);
+                                }}
+                                controls={true}
+                            />
                         </View>
+
+                        {!videoComplete && (
+                            <TouchableOpacity onPress={() => setVideoComplete(true)} style={styles.skipVideoBtn}>
+                                <Text variant="caption" color="rgba(255,255,255,0.4)">Skip video (dev only)</Text>
+                            </TouchableOpacity>
+                        )}
 
                         {videoComplete && (
                             <View style={styles.buttonsColumn}>
                                 <TouchableOpacity onPress={() => setStep('math')} style={styles.dangerButton}>
                                     <Text variant="body" weight="bold" color="#FFF">Continue anyway</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={onKeep} style={styles.safeButton}>
+                                    <Text variant="body" weight="bold" color="#000">Changed my mind</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -200,10 +210,7 @@ export const CancelFlow: React.FC<CancelFlowProps> = ({ appName, mode, streak, o
 
     return (
         <View style={styles.container}>
-            <LinearGradient
-                colors={['#0A0A12', '#15151F', '#0D0D15']}
-                style={StyleSheet.absoluteFillObject}
-            />
+            <LinearGradient colors={['#0A0A12', '#15151F', '#0D0D15']} style={StyleSheet.absoluteFillObject} />
             {renderStep()}
         </View>
     );
@@ -219,7 +226,8 @@ const styles = StyleSheet.create({
     finalDangerButton: { backgroundColor: '#FF4444', paddingVertical: spacing[4], borderRadius: 16, alignItems: 'center' },
     safeButton: { backgroundColor: '#FFF', paddingVertical: spacing[4], borderRadius: 16, alignItems: 'center' },
     readBox: { backgroundColor: 'rgba(255,255,255,0.05)', padding: spacing[5], borderRadius: 16, marginBottom: spacing[4] },
-    videoPlaceholder: { width: '100%', height: 200, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: spacing[5] },
+    videoContainer: { width: width - 48, height: 220, borderRadius: 16, overflow: 'hidden', marginTop: spacing[5], backgroundColor: '#000' },
+    video: { width: '100%', height: '100%' },
     skipVideoBtn: { marginTop: spacing[4], padding: spacing[2] },
     mathBox: { marginTop: spacing[6], alignItems: 'center' },
     mathProblem: { fontSize: 36, marginBottom: spacing[5] },
