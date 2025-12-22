@@ -357,7 +357,7 @@ For questions, contact support@blockd.app`;
                 </View>
             </GlassCard>
 
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={[styles.sectionLabel, { marginTop: spacing[5] }]}>APP</Text>
+            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ ...styles.sectionLabel, marginTop: spacing[5] }}>APP</Text>
             <GlassCard>
                 <View style={styles.settingRow}>
                     <Text variant="body">Version</Text>
@@ -365,7 +365,7 @@ For questions, contact support@blockd.app`;
                 </View>
             </GlassCard>
 
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={[styles.sectionLabel, { marginTop: spacing[5] }]}>LEGAL</Text>
+            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ ...styles.sectionLabel, marginTop: spacing[5] }}>LEGAL</Text>
             <GlassCard>
                 <TouchableOpacity style={styles.settingRow} onPress={() => setPrivacyVisible(true)}>
                     <Text variant="body">Privacy Policy</Text>
@@ -377,7 +377,7 @@ For questions, contact support@blockd.app`;
                 </TouchableOpacity>
             </GlassCard>
 
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={[styles.sectionLabel, { marginTop: spacing[5] }]}>PERMISSIONS</Text>
+            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ ...styles.sectionLabel, marginTop: spacing[5] }}>PERMISSIONS</Text>
             <TouchableOpacity activeOpacity={0.7} onPress={openPermissions}>
                 <GlassCard>
                     <View style={styles.settingRow}>
