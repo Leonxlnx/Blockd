@@ -1,14 +1,22 @@
 package com.blockd.permissions;
 
 import android.app.AppOpsManager;
+import android.app.usage.UsageEvents;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Base64;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -18,7 +26,9 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +79,7 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
     }
 
     // ============================================
-    // OVERLAY (SYSTEM ALERT WINDOW) PERMISSION
+    // OVERLAY PERMISSION
     // ============================================
 
     @ReactMethod
@@ -103,7 +113,7 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
     }
 
     // ============================================
-    // BATTERY OPTIMIZATION PERMISSION
+    // BATTERY OPTIMIZATION
     // ============================================
 
     @ReactMethod
@@ -136,7 +146,7 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
     }
 
     // ============================================
-    // CHECK ALL PERMISSIONS AT ONCE
+    // CHECK ALL PERMISSIONS
     // ============================================
 
     @ReactMethod
@@ -144,7 +154,6 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
         try {
             WritableMap result = Arguments.createMap();
             
-            // Usage Stats
             AppOpsManager appOps = (AppOpsManager) reactContext.getSystemService(Context.APP_OPS_SERVICE);
             int mode = appOps.checkOpNoThrow(
                 AppOpsManager.OPSTR_GET_USAGE_STATS,
@@ -153,14 +162,12 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
             );
             result.putBoolean("usageStats", mode == AppOpsManager.MODE_ALLOWED);
             
-            // Overlay
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 result.putBoolean("overlay", Settings.canDrawOverlays(reactContext));
             } else {
                 result.putBoolean("overlay", true);
             }
             
-            // Battery
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PowerManager pm = (PowerManager) reactContext.getSystemService(Context.POWER_SERVICE);
                 result.putBoolean("battery", pm.isIgnoringBatteryOptimizations(reactContext.getPackageName()));
@@ -175,206 +182,289 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
     }
 
     // ============================================
-    // GET APP USAGE STATS - FIXED VERSION
+    // GET SCREEN UNLOCK COUNT TODAY
+    // ============================================
+
+    @ReactMethod
+    public void getUnlockCountToday(Promise promise) {
+        try {
+            UsageStatsManager usm = (UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
+            
+            // Start of today (00:00)
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            long startOfDay = cal.getTimeInMillis();
+            long now = System.currentTimeMillis();
+            
+            UsageEvents events = usm.queryEvents(startOfDay, now);
+            int unlockCount = 0;
+            
+            UsageEvents.Event event = new UsageEvents.Event();
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event);
+                // KEYGUARD_HIDDEN event type = 18
+                if (event.getEventType() == 18) {
+                    unlockCount++;
+                }
+            }
+            
+            promise.resolve(unlockCount);
+        } catch (Exception e) {
+            promise.resolve(0);
+        }
+    }
+
+    // ============================================
+    // GET TODAY'S APP USAGE (from 00:00)
+    // ============================================
+
+    @ReactMethod
+    public void getTodayUsage(Promise promise) {
+        try {
+            UsageStatsManager usm = (UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
+            PackageManager pm = reactContext.getPackageManager();
+            
+            // Start of today (00:00)
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            long startOfDay = cal.getTimeInMillis();
+            long now = System.currentTimeMillis();
+            
+            List<UsageStats> stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
+            
+            WritableArray result = Arguments.createArray();
+            
+            if (stats == null || stats.isEmpty()) {
+                promise.resolve(result);
+                return;
+            }
+            
+            // Sort by usage time
+            List<UsageStats> sortedStats = new ArrayList<>(stats);
+            Collections.sort(sortedStats, (a, b) -> Long.compare(b.getTotalTimeInForeground(), a.getTotalTimeInForeground()));
+            
+            for (UsageStats stat : sortedStats) {
+                String pkg = stat.getPackageName();
+                long timeMs = stat.getTotalTimeInForeground();
+                int minutes = (int) (timeMs / 1000 / 60);
+                
+                if (minutes < 1) continue;
+                
+                // Skip system apps
+                if (pkg.contains("launcher") || pkg.contains("systemui") || 
+                    pkg.startsWith("com.android.") || pkg.equals(reactContext.getPackageName())) {
+                    continue;
+                }
+                
+                try {
+                    ApplicationInfo appInfo = pm.getApplicationInfo(pkg, 0);
+                    if (pm.getLaunchIntentForPackage(pkg) == null) continue;
+                    
+                    String appName = (String) pm.getApplicationLabel(appInfo);
+                    String iconBase64 = getIconBase64(pm, pkg);
+                    
+                    WritableMap app = Arguments.createMap();
+                    app.putString("packageName", pkg);
+                    app.putString("appName", appName);
+                    app.putInt("usageMinutes", minutes);
+                    app.putString("icon", iconBase64);
+                    result.pushMap(app);
+                } catch (Exception ignored) {}
+            }
+            
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.resolve(Arguments.createArray());
+        }
+    }
+
+    // ============================================
+    // GET WEEKLY USAGE DATA (7 days)
+    // ============================================
+
+    @ReactMethod
+    public void getWeeklyUsage(Promise promise) {
+        try {
+            UsageStatsManager usm = (UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
+            WritableArray result = Arguments.createArray();
+            
+            // Go back 7 days
+            for (int i = 6; i >= 0; i--) {
+                Calendar cal = Calendar.getInstance();
+                cal.add(Calendar.DAY_OF_YEAR, -i);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                long dayStart = cal.getTimeInMillis();
+                
+                cal.add(Calendar.DAY_OF_YEAR, 1);
+                long dayEnd = cal.getTimeInMillis();
+                
+                if (i == 0) {
+                    dayEnd = System.currentTimeMillis();
+                }
+                
+                List<UsageStats> stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, dayStart, dayEnd);
+                
+                long totalMs = 0;
+                if (stats != null) {
+                    for (UsageStats stat : stats) {
+                        String pkg = stat.getPackageName();
+                        if (!pkg.contains("launcher") && !pkg.contains("systemui") && !pkg.startsWith("com.android.")) {
+                            totalMs += stat.getTotalTimeInForeground();
+                        }
+                    }
+                }
+                
+                result.pushInt((int) (totalMs / 1000 / 60)); // Minutes
+            }
+            
+            promise.resolve(result);
+        } catch (Exception e) {
+            WritableArray fallback = Arguments.createArray();
+            for (int i = 0; i < 7; i++) fallback.pushInt(0);
+            promise.resolve(fallback);
+        }
+    }
+
+    // ============================================
+    // GET ALL INSTALLED APPS (NO LIMIT)
+    // ============================================
+
+    @ReactMethod
+    public void getAllInstalledApps(Promise promise) {
+        try {
+            PackageManager pm = reactContext.getPackageManager();
+            WritableArray result = Arguments.createArray();
+            
+            Intent intent = new Intent(Intent.ACTION_MAIN, null);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            List<ResolveInfo> apps = pm.queryIntentActivities(intent, 0);
+            
+            for (ResolveInfo info : apps) {
+                String pkg = info.activityInfo.packageName;
+                
+                // Skip system apps
+                if (pkg.contains("launcher") || pkg.contains("systemui") || 
+                    pkg.startsWith("com.android.") || pkg.equals(reactContext.getPackageName())) {
+                    continue;
+                }
+                
+                try {
+                    String appName = (String) info.loadLabel(pm);
+                    String iconBase64 = getIconBase64(pm, pkg);
+                    
+                    WritableMap app = Arguments.createMap();
+                    app.putString("packageName", pkg);
+                    app.putString("appName", appName);
+                    app.putInt("usageMinutes", 0);
+                    app.putString("icon", iconBase64);
+                    result.pushMap(app);
+                } catch (Exception ignored) {}
+            }
+            
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.resolve(Arguments.createArray());
+        }
+    }
+
+    // ============================================
+    // GET APP USAGE STATS (Legacy method - fixed)
     // ============================================
 
     @ReactMethod
     public void getAppUsageStats(int days, Promise promise) {
+        if (days == 1) {
+            getTodayUsage(promise);
+            return;
+        }
+        
         try {
-            android.app.usage.UsageStatsManager usageStatsManager = 
-                (android.app.usage.UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
-            
+            UsageStatsManager usm = (UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
             PackageManager pm = reactContext.getPackageManager();
             WritableArray result = Arguments.createArray();
             
-            if (usageStatsManager == null) {
-                // Return installed apps as fallback
-                promise.resolve(getInstalledApps());
-                return;
-            }
-
             long endTime = System.currentTimeMillis();
             long startTime = endTime - ((long) days * 24 * 60 * 60 * 1000L);
-
-            List<android.app.usage.UsageStats> stats = usageStatsManager.queryUsageStats(
-                android.app.usage.UsageStatsManager.INTERVAL_DAILY,
-                startTime,
-                endTime
-            );
-
+            
+            List<UsageStats> stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, endTime);
+            
             if (stats == null || stats.isEmpty()) {
-                // Return installed apps as fallback
-                promise.resolve(getInstalledApps());
+                promise.resolve(result);
                 return;
             }
-
-            // Aggregate stats by package
+            
+            // Aggregate by package
             Map<String, Long> usageMap = new HashMap<>();
-            for (android.app.usage.UsageStats stat : stats) {
+            for (UsageStats stat : stats) {
                 String pkg = stat.getPackageName();
                 long time = stat.getTotalTimeInForeground();
                 Long existing = usageMap.get(pkg);
                 usageMap.put(pkg, (existing != null ? existing : 0L) + time);
             }
-
-            // Convert to list for sorting
+            
+            // Sort and return
             List<Map.Entry<String, Long>> sortedList = new ArrayList<>(usageMap.entrySet());
             Collections.sort(sortedList, (a, b) -> Long.compare(b.getValue(), a.getValue()));
-
-            // Get top 100 apps
-            int count = 0;
+            
             for (Map.Entry<String, Long> entry : sortedList) {
-                if (count >= 100) break;
+                String pkg = entry.getKey();
+                long totalMs = entry.getValue();
+                int avgMinutes = (int) ((totalMs / 1000 / 60) / Math.max(1, days));
+                
+                if (avgMinutes < 1) continue;
+                
+                if (pkg.contains("launcher") || pkg.contains("systemui") || 
+                    pkg.startsWith("com.android.") || pkg.equals(reactContext.getPackageName())) {
+                    continue;
+                }
                 
                 try {
-                    String packageName = entry.getKey();
-                    long totalMs = entry.getValue();
-                    int avgMinutesPerDay = (int) ((totalMs / 1000 / 60) / Math.max(1, days));
-                    
-                    // Skip apps with less than 5 minutes average
-                    if (avgMinutesPerDay < 5) continue;
-
-                    // Skip system apps, launchers, and our own app
-                    if (packageName.contains("launcher") || 
-                        packageName.contains("systemui") ||
-                        packageName.contains("com.android.") ||
-                        packageName.equals(reactContext.getPackageName())) {
-                        continue;
-                    }
-
-                    ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
-                    
-                    // Skip non-launchable apps
-                    if (pm.getLaunchIntentForPackage(packageName) == null) continue;
+                    ApplicationInfo appInfo = pm.getApplicationInfo(pkg, 0);
+                    if (pm.getLaunchIntentForPackage(pkg) == null) continue;
                     
                     String appName = (String) pm.getApplicationLabel(appInfo);
-
-                    // Get app icon as Base64
-                    String iconBase64 = "";
-                    try {
-                        android.graphics.drawable.Drawable icon = pm.getApplicationIcon(packageName);
-                        android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(
-                            64, 64, android.graphics.Bitmap.Config.ARGB_8888);
-                        android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
-                        icon.setBounds(0, 0, 64, 64);
-                        icon.draw(canvas);
-                        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-                        bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, baos);
-                        iconBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP);
-                    } catch (Exception iconEx) {
-                        // Icon extraction failed, continue without icon
-                    }
-
+                    String iconBase64 = getIconBase64(pm, pkg);
+                    
                     WritableMap app = Arguments.createMap();
-                    app.putString("packageName", packageName);
+                    app.putString("packageName", pkg);
                     app.putString("appName", appName);
-                    app.putInt("usageMinutes", avgMinutesPerDay);
+                    app.putInt("usageMinutes", avgMinutes);
                     app.putString("icon", iconBase64);
                     result.pushMap(app);
-                    count++;
-                } catch (Exception ignored) {
-                    // App not found, skip
-                }
+                } catch (Exception ignored) {}
             }
-
-            // If no apps found, return installed apps
-            if (result.size() == 0) {
-                promise.resolve(getInstalledApps());
-                return;
-            }
-
+            
             promise.resolve(result);
         } catch (Exception e) {
-            // Return installed apps as fallback
-            promise.resolve(getInstalledApps());
+            promise.resolve(Arguments.createArray());
         }
     }
 
     // ============================================
-    // GET INSTALLED APPS (Fallback)
+    // HELPER: Get Icon as Base64
     // ============================================
 
-    private WritableArray getInstalledApps() {
-        WritableArray result = Arguments.createArray();
-        PackageManager pm = reactContext.getPackageManager();
-        
-        // Get all installed apps that can be launched
-        Intent intent = new Intent(Intent.ACTION_MAIN, null);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<android.content.pm.ResolveInfo> apps = pm.queryIntentActivities(intent, 0);
-        
-        // Common social/entertainment apps to prioritize
-        String[] priorityApps = {
-            "com.instagram.android",
-            "com.zhiliaoapp.musically", // TikTok
-            "com.google.android.youtube",
-            "com.twitter.android",
-            "com.facebook.katana",
-            "com.snapchat.android",
-            "com.whatsapp",
-            "com.reddit.frontpage",
-            "com.spotify.music",
-            "com.netflix.mediaclient",
-            "com.discord",
-            "com.pinterest",
-            "com.linkedin.android",
-            "com.tumblr",
-            "tv.twitch.android.app"
-        };
-        
-        // First add priority apps if installed
-        for (String pkg : priorityApps) {
-            try {
-                ApplicationInfo appInfo = pm.getApplicationInfo(pkg, 0);
-                String appName = (String) pm.getApplicationLabel(appInfo);
-                
-                WritableMap app = Arguments.createMap();
-                app.putString("packageName", pkg);
-                app.putString("appName", appName);
-                app.putInt("usageMinutes", 60 + (int)(Math.random() * 60)); // Estimated
-                result.pushMap(app);
-            } catch (Exception ignored) {
-                // App not installed
-            }
+    private String getIconBase64(PackageManager pm, String packageName) {
+        try {
+            Drawable icon = pm.getApplicationIcon(packageName);
+            Bitmap bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            icon.setBounds(0, 0, 64, 64);
+            icon.draw(canvas);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            return Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
+        } catch (Exception e) {
+            return "";
         }
-        
-        // Then add other launchable apps
-        int count = result.size();
-        for (android.content.pm.ResolveInfo info : apps) {
-            if (count >= 15) break;
-            
-            String pkg = info.activityInfo.packageName;
-            
-            // Skip system apps and already added apps
-            if (pkg.contains("com.android.") || 
-                pkg.contains("launcher") ||
-                pkg.contains("com.google.android.apps.") ||
-                pkg.equals(reactContext.getPackageName())) {
-                continue;
-            }
-            
-            // Check if already added
-            boolean alreadyAdded = false;
-            for (String priorityPkg : priorityApps) {
-                if (pkg.equals(priorityPkg)) {
-                    alreadyAdded = true;
-                    break;
-                }
-            }
-            if (alreadyAdded) continue;
-            
-            try {
-                String appName = (String) info.loadLabel(pm);
-                
-                WritableMap app = Arguments.createMap();
-                app.putString("packageName", pkg);
-                app.putString("appName", appName);
-                app.putInt("usageMinutes", 30 + (int)(Math.random() * 30)); // Estimated
-                result.pushMap(app);
-                count++;
-            } catch (Exception ignored) {}
-        }
-        
-        return result;
     }
 }

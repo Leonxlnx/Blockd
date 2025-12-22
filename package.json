@@ -14,11 +14,10 @@
     "@react-native-firebase/app": "^23.7.0",
     "@react-native-firebase/auth": "^23.7.0",
     "@react-native-firebase/firestore": "^23.7.0",
-    "lucide-react-native": "^0.562.0",
     "react": "18.3.1",
     "react-native": "0.76.0",
     "react-native-linear-gradient": "^2.8.3",
-    "react-native-svg": "^15.12.1"
+    "react-native-video": "^6.18.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

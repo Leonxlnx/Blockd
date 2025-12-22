@@ -9,9 +9,8 @@ import {
     ScrollView,
     NativeModules,
     Linking,
-    Alert,
     Modal,
-    TextInput,
+    Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../theme';
@@ -19,9 +18,8 @@ import { spacing } from '../theme/theme';
 import { Text } from '../components';
 import { limitsService, AppLimit } from '../services/limitsService';
 import auth from '@react-native-firebase/auth';
-import { LayoutGrid, Shield, Settings, Plus, ChevronRight, Clock, Flame, X, Check, Trash2, LogOut } from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const { PermissionsModule, BlockingModule } = NativeModules;
 
 type Tab = 'dashboard' | 'limits' | 'settings';
@@ -34,46 +32,112 @@ interface AppData {
 }
 
 // ============================================
-// GLASS CARD COMPONENT
+// SIMPLE ICONS (View-based)
 // ============================================
-const GlassCard: React.FC<{ isDark: boolean; style?: any; children: React.ReactNode }> = ({ isDark, style, children }) => (
-    <View style={[styles.glassCard, {
-        backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)',
-        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-    }, style]}>
-        {children}
+
+const HomeIcon: React.FC<{ size: number; color: string; filled?: boolean }> = ({ size, color, filled }) => (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: size * 0.6, height: size * 0.5, borderWidth: filled ? 0 : 2, borderColor: color, backgroundColor: filled ? color : 'transparent', borderRadius: 3 }} />
+        <View style={{ width: size * 0.3, height: size * 0.35, backgroundColor: filled ? 'transparent' : color, position: 'absolute', bottom: 0, borderRadius: 2 }} />
+    </View>
+);
+
+const ShieldIcon: React.FC<{ size: number; color: string; filled?: boolean }> = ({ size, color, filled }) => (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: size * 0.6, height: size * 0.7, borderWidth: filled ? 0 : 2, borderColor: color, backgroundColor: filled ? color : 'transparent', borderRadius: 3, borderBottomLeftRadius: size * 0.3, borderBottomRightRadius: size * 0.3 }} />
+    </View>
+);
+
+const GearIcon: React.FC<{ size: number; color: string; filled?: boolean }> = ({ size, color, filled }) => (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: size * 0.5, height: size * 0.5, borderWidth: filled ? 0 : 2, borderColor: color, backgroundColor: filled ? color : 'transparent', borderRadius: size * 0.25 }} />
+    </View>
+);
+
+const PlusIcon: React.FC<{ size: number; color: string }> = ({ size, color }) => (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: size * 0.6, height: 2, backgroundColor: color, position: 'absolute' }} />
+        <View style={{ width: 2, height: size * 0.6, backgroundColor: color, position: 'absolute' }} />
+    </View>
+);
+
+const XIcon: React.FC<{ size: number; color: string }> = ({ size, color }) => (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: size * 0.7, height: 2, backgroundColor: color, transform: [{ rotate: '45deg' }], position: 'absolute' }} />
+        <View style={{ width: size * 0.7, height: 2, backgroundColor: color, transform: [{ rotate: '-45deg' }], position: 'absolute' }} />
+    </View>
+);
+
+const ChevronIcon: React.FC<{ size: number; color: string }> = ({ size, color }) => (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: size * 0.4, height: size * 0.4, borderRightWidth: 2, borderBottomWidth: 2, borderColor: color, transform: [{ rotate: '-45deg' }] }} />
+    </View>
+);
+
+const LockIcon: React.FC<{ size: number; color: string }> = ({ size, color }) => (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: size * 0.4, height: size * 0.25, borderWidth: 2, borderColor: color, borderTopLeftRadius: size * 0.2, borderTopRightRadius: size * 0.2, borderBottomWidth: 0, marginBottom: -1 }} />
+        <View style={{ width: size * 0.5, height: size * 0.4, backgroundColor: color, borderRadius: 3 }} />
     </View>
 );
 
 // ============================================
-// TAB BAR - PREMIUM
+// GLASS CARD
 // ============================================
-interface TabBarProps { activeTab: Tab; onTabPress: (tab: Tab) => void; isDark: boolean; }
 
-const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabPress, isDark }) => {
+const GlassCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ children, style }) => {
+    const { isDark } = useTheme();
+    return (
+        <View style={[styles.glassCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }, style]}>
+            {children}
+        </View>
+    );
+};
+
+// ============================================
+// TAB BAR
+// ============================================
+
+const TabBar: React.FC<{ activeTab: Tab; onTabPress: (tab: Tab) => void; isDark: boolean }> = ({ activeTab, onTabPress, isDark }) => {
     const accent = isDark ? '#FFFFFF' : '#1A1A1A';
     const inactive = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)';
 
-    const tabs = [
-        { key: 'dashboard' as Tab, label: 'Overview', Icon: LayoutGrid },
-        { key: 'limits' as Tab, label: 'Limits', Icon: Shield },
-        { key: 'settings' as Tab, label: 'Settings', Icon: Settings },
-    ];
+    return (
+        <View style={[styles.tabBar, { backgroundColor: isDark ? 'rgba(10,10,15,0.95)' : 'rgba(250,250,250,0.95)', borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]}>
+            <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('dashboard')} activeOpacity={0.7}>
+                <HomeIcon size={22} color={activeTab === 'dashboard' ? accent : inactive} filled={activeTab === 'dashboard'} />
+                <Text variant="caption" weight={activeTab === 'dashboard' ? 'bold' : 'medium'} color={activeTab === 'dashboard' ? accent : inactive} style={{ marginTop: 4, fontSize: 10 }}>Overview</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('limits')} activeOpacity={0.7}>
+                <ShieldIcon size={22} color={activeTab === 'limits' ? accent : inactive} filled={activeTab === 'limits'} />
+                <Text variant="caption" weight={activeTab === 'limits' ? 'bold' : 'medium'} color={activeTab === 'limits' ? accent : inactive} style={{ marginTop: 4, fontSize: 10 }}>Limits</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('settings')} activeOpacity={0.7}>
+                <GearIcon size={22} color={activeTab === 'settings' ? accent : inactive} filled={activeTab === 'settings'} />
+                <Text variant="caption" weight={activeTab === 'settings' ? 'bold' : 'medium'} color={activeTab === 'settings' ? accent : inactive} style={{ marginTop: 4, fontSize: 10 }}>Settings</Text>
+            </TouchableOpacity>
+        </View>
+    );
+};
+
+// ============================================
+// SIMPLE BAR CHART
+// ============================================
+
+const SimpleBarChart: React.FC<{ data: number[]; isDark: boolean }> = ({ data, isDark }) => {
+    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const maxVal = Math.max(...data, 1);
 
     return (
-        <View style={[styles.tabBar, {
-            backgroundColor: isDark ? 'rgba(10,10,15,0.95)' : 'rgba(250,250,250,0.95)',
-            borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-        }]}>
-            {tabs.map((tab) => {
-                const isActive = activeTab === tab.key;
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, paddingHorizontal: spacing[2] }}>
+            {data.map((val, i) => {
+                const barHeight = Math.max(10, (val / maxVal) * 100);
+                const isToday = i === 6;
                 return (
-                    <TouchableOpacity key={tab.key} onPress={() => onTabPress(tab.key)} style={styles.tabItem} activeOpacity={0.7}>
-                        <tab.Icon size={22} color={isActive ? accent : inactive} strokeWidth={isActive ? 2.5 : 2} />
-                        <Text variant="caption" weight={isActive ? 'bold' : 'medium'} color={isActive ? accent : inactive} style={{ fontSize: 10, marginTop: 4 }}>
-                            {tab.label}
-                        </Text>
-                    </TouchableOpacity>
+                    <View key={i} style={{ alignItems: 'center', flex: 1 }}>
+                        <View style={{ height: barHeight, width: 20, backgroundColor: isToday ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'), borderRadius: 4 }} />
+                        <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} style={{ marginTop: 6, fontSize: 10 }}>{days[i]}</Text>
+                    </View>
                 );
             })}
         </View>
@@ -81,18 +145,46 @@ const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabPress, isDark }) => {
 };
 
 // ============================================
-// DASHBOARD TAB - BENTO GRID + REAL DATA
+// DASHBOARD TAB
 // ============================================
-const DashboardTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimit[] }> = ({ isDark, apps, limits }) => {
+
+const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     const { theme } = useTheme();
+    const [todayUsage, setTodayUsage] = useState<AppData[]>([]);
+    const [unlockCount, setUnlockCount] = useState(0);
+    const [weeklyData, setWeeklyData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+    const [limits, setLimits] = useState<AppLimit[]>([]);
     const [showAllApps, setShowAllApps] = useState(false);
 
-    // Real data calculations
-    const totalMinutes = apps.reduce((sum, app) => sum + app.usageMinutes, 0);
+    useEffect(() => {
+        loadData();
+        limitsService.loadLimits();
+        const unsub = limitsService.subscribe(setLimits);
+        return unsub;
+    }, []);
+
+    const loadData = async () => {
+        try {
+            const usage = await PermissionsModule.getTodayUsage();
+            if (usage) setTodayUsage(usage);
+
+            const unlocks = await PermissionsModule.getUnlockCountToday();
+            setUnlockCount(unlocks || 0);
+
+            const weekly = await PermissionsModule.getWeeklyUsage();
+            if (weekly && weekly.length === 7) setWeeklyData(weekly);
+        } catch (e) {
+            console.log('Load data error:', e);
+        }
+    };
+
+    const totalMinutes = todayUsage.reduce((sum, app) => sum + app.usageMinutes, 0);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    const activeLimitsCount = limits.filter(l => l.isActive && l.mode === 'limit').length;
-    const activeDetoxCount = limits.filter(l => l.isActive && l.mode === 'detox').length;
+    const activeLimits = limits.filter(l => l.isActive && l.mode === 'limit').length;
+    const activeDetox = limits.filter(l => l.isActive && l.mode === 'detox').length;
+
+    const top5Apps = todayUsage.slice(0, 5);
 
     const formatTime = (mins: number) => {
         const h = Math.floor(mins / 60);
@@ -100,53 +192,41 @@ const DashboardTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimi
         return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
 
-    const top5Apps = apps.slice(0, 5);
-    const maxUsage = apps[0]?.usageMinutes || 1;
-
     return (
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner} showsVerticalScrollIndicator={false}>
-            {/* Header */}
-            <Text variant="h2" weight="bold">Today's Focus</Text>
-            <Text variant="caption" color={theme.colors.textSecondary} style={{ marginTop: 4, marginBottom: spacing[4] }}>
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-            </Text>
-
             {/* Bento Grid */}
             <View style={styles.bentoGrid}>
-                {/* Big Card - Screen Time */}
-                <GlassCard isDark={isDark} style={styles.bentoBig}>
-                    <Clock size={20} color={theme.colors.textSecondary} />
-                    <Text variant="caption" color={theme.colors.textSecondary} style={{ marginTop: 8 }}>Screen Time</Text>
-                    <Text variant="h1" weight="bold" style={{ fontSize: 48, marginTop: 4 }}>{hours}h {minutes}m</Text>
+                <GlassCard style={styles.bentoBig}>
+                    <Text variant="caption" color={theme.colors.textSecondary}>Today's Screen Time</Text>
+                    <Text variant="h1" weight="bold" style={{ fontSize: 48, marginTop: 8 }}>{hours}h {minutes}m</Text>
                 </GlassCard>
-
-                {/* Small Cards Row */}
                 <View style={styles.bentoSmallRow}>
-                    <GlassCard isDark={isDark} style={styles.bentoSmall}>
-                        <Shield size={18} color="#007AFF" />
-                        <Text variant="h2" weight="bold" style={{ marginTop: 8 }}>{activeLimitsCount}</Text>
-                        <Text variant="caption" color={theme.colors.textSecondary}>Limits</Text>
+                    <GlassCard style={styles.bentoSmall}>
+                        <Text variant="caption" color={theme.colors.textSecondary}>Unlocks</Text>
+                        <Text variant="h2" weight="bold" style={{ marginTop: 4 }}>{unlockCount}</Text>
                     </GlassCard>
-                    <GlassCard isDark={isDark} style={styles.bentoSmall}>
-                        <Flame size={18} color="#FF4444" />
-                        <Text variant="h2" weight="bold" style={{ marginTop: 8 }}>{activeDetoxCount}</Text>
+                    <GlassCard style={styles.bentoSmall}>
+                        <Text variant="caption" color={theme.colors.textSecondary}>Limits</Text>
+                        <Text variant="h2" weight="bold" style={{ marginTop: 4 }}>{activeLimits}</Text>
+                    </GlassCard>
+                    <GlassCard style={styles.bentoSmall}>
                         <Text variant="caption" color={theme.colors.textSecondary}>Detox</Text>
+                        <Text variant="h2" weight="bold" style={{ marginTop: 4 }}>{activeDetox}</Text>
                     </GlassCard>
                 </View>
             </View>
 
             {/* Top Apps */}
-            <View style={{ marginTop: spacing[5] }}>
+            <View style={styles.section}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[3] }}>
                     <Text variant="body" weight="semibold">App Usage Today</Text>
                     <TouchableOpacity onPress={() => setShowAllApps(true)}>
-                        <Text variant="caption" weight="semibold" color="#007AFF">View All</Text>
+                        <Text variant="caption" weight="semibold" color={theme.colors.primary}>View All</Text>
                     </TouchableOpacity>
                 </View>
-
-                <GlassCard isDark={isDark} style={{ padding: 0 }}>
+                <GlassCard>
                     {top5Apps.map((app, i) => (
-                        <View key={i} style={[styles.appItem, i < top5Apps.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+                        <View key={i} style={[styles.appRow, i < top5Apps.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
                             {app.icon ? (
                                 <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
                             ) : (
@@ -154,71 +234,46 @@ const DashboardTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimi
                                     <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
                                 </View>
                             )}
-                            <View style={{ flex: 1, marginLeft: spacing[3] }}>
-                                <Text variant="body" weight="medium" numberOfLines={1}>{app.appName}</Text>
-                                <View style={[styles.usageBar, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', marginTop: 6 }]}>
-                                    <View style={[styles.usageBarFill, { width: `${(app.usageMinutes / maxUsage) * 100}%`, backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
-                                </View>
-                            </View>
-                            <Text variant="caption" weight="semibold" color={theme.colors.textSecondary} style={{ marginLeft: spacing[3] }}>
-                                {formatTime(app.usageMinutes)}
-                            </Text>
+                            <Text variant="body" weight="medium" numberOfLines={1} style={{ flex: 1, marginLeft: spacing[3] }}>{app.appName}</Text>
+                            <Text variant="caption" weight="semibold" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)}</Text>
                         </View>
                     ))}
+                    {top5Apps.length === 0 && (
+                        <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ padding: spacing[4] }}>No usage data yet</Text>
+                    )}
                 </GlassCard>
             </View>
 
-            {/* Weekly Overview - Simple Bars */}
-            <View style={{ marginTop: spacing[5] }}>
-                <Text variant="body" weight="semibold" style={{ marginBottom: spacing[3] }}>This Week</Text>
-                <GlassCard isDark={isDark}>
-                    <View style={styles.weeklyChart}>
-                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                            const isToday = i === new Date().getDay() - 1 || (new Date().getDay() === 0 && i === 6);
-                            const barHeight = 20 + Math.random() * 50; // TODO: Replace with real weekly data
-                            return (
-                                <View key={i} style={styles.weeklyBarWrap}>
-                                    <View style={[styles.weeklyBar, {
-                                        height: barHeight,
-                                        backgroundColor: isToday ? (isDark ? '#FFF' : '#1A1A1A') : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'),
-                                        borderRadius: 4,
-                                    }]} />
-                                    <Text variant="caption" color={isToday ? (isDark ? '#FFF' : '#1A1A1A') : theme.colors.textTertiary} style={{ marginTop: 6 }}>{day}</Text>
-                                </View>
-                            );
-                        })}
-                    </View>
+            {/* Weekly Chart */}
+            <View style={styles.section}>
+                <Text variant="body" weight="semibold" style={{ marginBottom: spacing[3] }}>Weekly Overview</Text>
+                <GlassCard>
+                    <SimpleBarChart data={weeklyData} isDark={isDark} />
                 </GlassCard>
             </View>
 
             {/* All Apps Modal */}
             <Modal visible={showAllApps} animationType="slide" transparent>
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: isDark ? '#0A0A0F' : '#FAFAFA' }]}>
-                        <View style={styles.modalHeader}>
-                            <Text variant="h3" weight="bold">All Apps</Text>
-                            <TouchableOpacity onPress={() => setShowAllApps(false)}>
-                                <X size={24} color={isDark ? '#FFF' : '#1A1A1A'} />
-                            </TouchableOpacity>
-                        </View>
-                        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                            {apps.map((app, i) => (
-                                <View key={i} style={[styles.appItem, { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
-                                    {app.icon ? (
-                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
-                                    ) : (
-                                        <View style={[styles.appIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                                            <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
-                                        </View>
-                                    )}
-                                    <View style={{ flex: 1, marginLeft: spacing[3] }}>
-                                        <Text variant="body" weight="medium" numberOfLines={1}>{app.appName}</Text>
-                                    </View>
-                                    <Text variant="caption" weight="semibold" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)}</Text>
-                                </View>
-                            ))}
-                        </ScrollView>
+                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text variant="h3" weight="bold">All Apps</Text>
+                        <TouchableOpacity onPress={() => setShowAllApps(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
                     </View>
+                    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
+                        {todayUsage.map((app, i) => (
+                            <View key={i} style={[styles.appRow, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: 12, marginBottom: spacing[2], padding: spacing[3] }]}>
+                                {app.icon ? (
+                                    <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
+                                ) : (
+                                    <View style={[styles.appIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                                        <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
+                                    </View>
+                                )}
+                                <Text variant="body" weight="medium" numberOfLines={1} style={{ flex: 1, marginLeft: spacing[3] }}>{app.appName}</Text>
+                                <Text variant="caption" weight="semibold" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)}</Text>
+                            </View>
+                        ))}
+                    </ScrollView>
                 </View>
             </Modal>
         </ScrollView>
@@ -226,31 +281,174 @@ const DashboardTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimi
 };
 
 // ============================================
-// LIMITS TAB - FULL FUNCTIONALITY
+// SETTINGS TAB
 // ============================================
-const LimitsTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimit[]; onLimitsChange: () => void }> = ({ isDark, apps, limits, onLimitsChange }) => {
+
+const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDark, onLogout }) => {
     const { theme } = useTheme();
+    const user = auth().currentUser;
+    const [privacyVisible, setPrivacyVisible] = useState(false);
+    const [termsVisible, setTermsVisible] = useState(false);
+
+    const handleLogout = async () => {
+        Alert.alert('Logout', 'Are you sure?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Logout', style: 'destructive', onPress: async () => { await auth().signOut(); onLogout(); } },
+        ]);
+    };
+
+    const openPermissions = () => Linking.openSettings();
+
+    const privacyText = `Privacy Policy for Blockd
+
+Last updated: December 2024
+
+1. Information We Collect
+We collect usage statistics to help you track your screen time. This includes:
+- App usage duration
+- Screen unlock frequency
+- Blocked app attempts
+
+2. How We Use Your Information
+Your data is used solely to provide app functionality and is stored securely.
+
+3. Data Storage
+All data is stored locally on your device and in your Firebase account.
+
+4. Third-Party Services
+We use Firebase for authentication and data sync.
+
+5. Contact
+For questions, contact support@blockd.app`;
+
+    const termsText = `Terms of Service for Blockd
+
+Last updated: December 2024
+
+1. Acceptance of Terms
+By using Blockd, you agree to these terms.
+
+2. Description of Service
+Blockd helps you manage screen time through app limits and detox challenges.
+
+3. User Responsibilities
+You are responsible for your own usage of the app.
+
+4. Limitations
+Blockd is provided "as is" without warranty.
+
+5. Modifications
+We may update these terms at any time.
+
+6. Contact
+For questions, contact support@blockd.app`;
+
+    return (
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner} showsVerticalScrollIndicator={false}>
+            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={styles.sectionLabel}>ACCOUNT</Text>
+            <GlassCard>
+                <View style={styles.settingRow}>
+                    <Text variant="body">Email</Text>
+                    <Text variant="body" color={theme.colors.textSecondary} numberOfLines={1} style={{ maxWidth: 180 }}>{user?.email || 'Not logged in'}</Text>
+                </View>
+                <View style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+                    <Text variant="body">Member Since</Text>
+                    <Text variant="body" color={theme.colors.textSecondary}>{user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : '-'}</Text>
+                </View>
+            </GlassCard>
+
+            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={[styles.sectionLabel, { marginTop: spacing[5] }]}>APP</Text>
+            <GlassCard>
+                <View style={styles.settingRow}>
+                    <Text variant="body">Version</Text>
+                    <Text variant="body" color={theme.colors.textSecondary}>1.0.0</Text>
+                </View>
+            </GlassCard>
+
+            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={[styles.sectionLabel, { marginTop: spacing[5] }]}>LEGAL</Text>
+            <GlassCard>
+                <TouchableOpacity style={styles.settingRow} onPress={() => setPrivacyVisible(true)}>
+                    <Text variant="body">Privacy Policy</Text>
+                    <ChevronIcon size={18} color={theme.colors.textTertiary} />
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]} onPress={() => setTermsVisible(true)}>
+                    <Text variant="body">Terms of Service</Text>
+                    <ChevronIcon size={18} color={theme.colors.textTertiary} />
+                </TouchableOpacity>
+            </GlassCard>
+
+            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={[styles.sectionLabel, { marginTop: spacing[5] }]}>PERMISSIONS</Text>
+            <TouchableOpacity activeOpacity={0.7} onPress={openPermissions}>
+                <GlassCard>
+                    <View style={styles.settingRow}>
+                        <Text variant="body">Manage Permissions</Text>
+                        <ChevronIcon size={18} color={theme.colors.textTertiary} />
+                    </View>
+                </GlassCard>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handleLogout} style={[styles.logoutBtn, { backgroundColor: isDark ? 'rgba(255,68,68,0.12)' : 'rgba(255,68,68,0.08)', marginTop: spacing[6] }]} activeOpacity={0.7}>
+                <Text variant="body" weight="semibold" color="#FF4444">Logout</Text>
+            </TouchableOpacity>
+
+            <Modal visible={privacyVisible} animationType="slide" transparent>
+                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text variant="h3" weight="bold">Privacy Policy</Text>
+                        <TouchableOpacity onPress={() => setPrivacyVisible(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
+                    </View>
+                    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
+                        <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>{privacyText}</Text>
+                    </ScrollView>
+                </View>
+            </Modal>
+
+            <Modal visible={termsVisible} animationType="slide" transparent>
+                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text variant="h3" weight="bold">Terms of Service</Text>
+                        <TouchableOpacity onPress={() => setTermsVisible(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
+                    </View>
+                    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
+                        <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>{termsText}</Text>
+                    </ScrollView>
+                </View>
+            </Modal>
+        </ScrollView>
+    );
+};
+
+// ============================================
+// LIMITS TAB
+// ============================================
+
+const LimitsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+    const { theme } = useTheme();
+    const [limits, setLimits] = useState<AppLimit[]>([]);
     const [showPicker, setShowPicker] = useState(false);
-    const [showSetup, setShowSetup] = useState(false);
-    const [showEdit, setShowEdit] = useState(false);
+    const [allApps, setAllApps] = useState<AppData[]>([]);
     const [selectedApp, setSelectedApp] = useState<AppData | null>(null);
-    const [editingLimit, setEditingLimit] = useState<AppLimit | null>(null);
+    const [showSetup, setShowSetup] = useState(false);
     const [mode, setMode] = useState<'limit' | 'detox'>('limit');
     const [limitValue, setLimitValue] = useState(30);
     const [detoxDays, setDetoxDays] = useState(7);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [showDetail, setShowDetail] = useState(false);
+    const [detailLimit, setDetailLimit] = useState<AppLimit | null>(null);
 
-    const activeLimits = limits.filter(l => l.isActive);
-    const existingPackages = limits.map(l => l.packageName);
-    const availableApps = apps.filter(a => !existingPackages.includes(a.packageName));
-    const filteredApps = searchQuery
-        ? availableApps.filter(a => a.appName.toLowerCase().includes(searchQuery.toLowerCase()))
-        : availableApps;
+    useEffect(() => {
+        limitsService.loadLimits();
+        const unsub = limitsService.subscribe(setLimits);
+        loadAllApps();
+        return unsub;
+    }, []);
 
-    const formatTime = (mins: number) => {
-        const h = Math.floor(mins / 60);
-        const m = mins % 60;
-        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    const loadAllApps = async () => {
+        try {
+            const apps = await PermissionsModule.getAllInstalledApps();
+            if (apps) setAllApps(apps);
+        } catch (e) {
+            console.log('Load apps error:', e);
+        }
     };
 
     const handleSelectApp = (app: AppData) => {
@@ -261,7 +459,6 @@ const LimitsTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimit[]
 
     const handleConfirmLimit = async () => {
         if (!selectedApp) return;
-
         const newLimit: AppLimit = {
             packageName: selectedApp.packageName,
             appName: selectedApp.appName,
@@ -275,47 +472,53 @@ const LimitsTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimit[]
             lastResetDate: new Date().toISOString().split('T')[0],
             isActive: true,
         };
-
         await limitsService.saveLimit(newLimit);
-        BlockingModule?.addBlockedApp?.(selectedApp.packageName, mode, mode === 'detox' ? new Date(newLimit.detoxEndDate!).getTime() : 0, mode === 'limit' ? limitValue : 0);
-
-        setShowSetup(false);
+        if (mode === 'detox') {
+            BlockingModule?.addBlockedApp?.(selectedApp.packageName, 'detox', new Date(newLimit.detoxEndDate!).getTime(), 0);
+        } else {
+            BlockingModule?.addBlockedApp?.(selectedApp.packageName, 'limit', 0, limitValue);
+        }
         setSelectedApp(null);
-        onLimitsChange();
+        setShowSetup(false);
     };
 
     const handleLimitPress = (limit: AppLimit) => {
-        setEditingLimit(limit);
-        setShowEdit(true);
+        setDetailLimit(limit);
+        setShowDetail(true);
     };
 
     const handleRemoveLimit = async () => {
-        if (!editingLimit) return;
-        await limitsService.deleteLimit(editingLimit.packageName);
-        BlockingModule?.removeBlockedApp?.(editingLimit.packageName);
-        setShowEdit(false);
-        setEditingLimit(null);
-        onLimitsChange();
+        if (!detailLimit) return;
+        await limitsService.deleteLimit(detailLimit.packageName);
+        BlockingModule?.removeBlockedApp?.(detailLimit.packageName);
+        setShowDetail(false);
+        setDetailLimit(null);
     };
 
+    const activeLimits = limits.filter(l => l.isActive);
+    const existingPackages = limits.map(l => l.packageName);
+    const availableApps = allApps.filter(a => !existingPackages.includes(a.packageName));
+
     const formatDaysRemaining = (endDate: string) => {
-        const days = Math.max(0, Math.ceil((new Date(endDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
-        return `${days} days left`;
+        const days = Math.ceil((new Date(endDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+        return `${days}d left`;
     };
 
     return (
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner} showsVerticalScrollIndicator={false}>
-            <Text variant="h2" weight="bold">App Limits</Text>
-            <Text variant="caption" color={theme.colors.textSecondary} style={{ marginTop: 4, marginBottom: spacing[4] }}>
-                {activeLimits.length === 0 ? 'Set limits to control usage' : `${activeLimits.length} active`}
-            </Text>
-
-            {/* Active Limits */}
-            {activeLimits.length > 0 && (
-                <View style={{ gap: spacing[3], marginBottom: spacing[4] }}>
+            {activeLimits.length === 0 ? (
+                <View style={[styles.emptyState, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}>
+                    <LockIcon size={48} color={theme.colors.textTertiary} />
+                    <Text variant="h3" weight="bold" align="center" style={{ marginTop: spacing[4] }}>No Limits Yet</Text>
+                    <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[2] }}>
+                        Add your first limit to start{'\n'}controlling your screen time
+                    </Text>
+                </View>
+            ) : (
+                <View style={{ gap: spacing[3] }}>
                     {activeLimits.map((limit, i) => (
                         <TouchableOpacity key={i} activeOpacity={0.7} onPress={() => handleLimitPress(limit)}>
-                            <GlassCard isDark={isDark} style={styles.limitCard}>
+                            <GlassCard style={{ flexDirection: 'row', alignItems: 'center', padding: spacing[4] }}>
                                 {limit.icon ? (
                                     <Image source={{ uri: `data:image/png;base64,${limit.icon}` }} style={styles.limitIcon} />
                                 ) : (
@@ -327,13 +530,9 @@ const LimitsTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimit[]
                                     <Text variant="body" weight="semibold">{limit.appName}</Text>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2], marginTop: 4 }}>
                                         <View style={[styles.modeTag, { backgroundColor: limit.mode === 'detox' ? 'rgba(255,68,68,0.15)' : 'rgba(0,122,255,0.15)' }]}>
-                                            <Text variant="caption" weight="bold" color={limit.mode === 'detox' ? '#FF4444' : '#007AFF'}>
-                                                {limit.mode === 'detox' ? 'DETOX' : 'LIMIT'}
-                                            </Text>
+                                            <Text variant="caption" weight="bold" color={limit.mode === 'detox' ? '#FF4444' : '#007AFF'}>{limit.mode === 'detox' ? 'DETOX' : 'LIMIT'}</Text>
                                         </View>
-                                        <Text variant="caption" color={theme.colors.textSecondary}>
-                                            {limit.mode === 'detox' ? formatDaysRemaining(limit.detoxEndDate!) : `${limit.dailyLimitMinutes}m/day`}
-                                        </Text>
+                                        <Text variant="caption" color={theme.colors.textSecondary}>{limit.mode === 'detox' ? formatDaysRemaining(limit.detoxEndDate!) : `${limit.dailyLimitMinutes}m/day`}</Text>
                                     </View>
                                 </View>
                                 {limit.streak > 0 && (
@@ -342,279 +541,153 @@ const LimitsTab: React.FC<{ isDark: boolean; apps: AppData[]; limits: AppLimit[]
                                         <Text variant="caption" color={theme.colors.textTertiary}>days</Text>
                                     </View>
                                 )}
-                                <ChevronRight size={20} color={theme.colors.textTertiary} style={{ marginLeft: spacing[2] }} />
+                                <ChevronIcon size={20} color={theme.colors.textTertiary} />
                             </GlassCard>
                         </TouchableOpacity>
                     ))}
                 </View>
             )}
 
-            {/* Empty State */}
-            {activeLimits.length === 0 && (
-                <GlassCard isDark={isDark} style={styles.emptyState}>
-                    <Shield size={40} color={theme.colors.textTertiary} />
-                    <Text variant="h3" weight="bold" align="center" style={{ marginTop: spacing[4] }}>No Limits Yet</Text>
-                    <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[2] }}>
-                        Add your first limit to start
-                    </Text>
-                </GlassCard>
-            )}
-
-            {/* Add Button */}
-            <TouchableOpacity onPress={() => setShowPicker(true)} activeOpacity={0.7}>
-                <GlassCard isDark={isDark} style={styles.addButton}>
-                    <View style={[styles.addIconCircle, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                        <Plus size={24} color={isDark ? '#FFF' : '#1A1A1A'} />
-                    </View>
-                    <Text variant="body" weight="semibold" style={{ marginLeft: spacing[3] }}>Add App Limit</Text>
-                </GlassCard>
+            <TouchableOpacity onPress={() => setShowPicker(true)} style={[styles.addButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]} activeOpacity={0.7}>
+                <PlusIcon size={24} color={isDark ? '#FFF' : '#000'} />
+                <Text variant="body" weight="semibold" style={{ marginLeft: spacing[3] }}>Add Limit</Text>
             </TouchableOpacity>
 
             {/* App Picker Modal */}
             <Modal visible={showPicker} animationType="slide" transparent>
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: isDark ? '#0A0A0F' : '#FAFAFA' }]}>
-                        <View style={styles.modalHeader}>
-                            <Text variant="h3" weight="bold">Select App</Text>
-                            <TouchableOpacity onPress={() => setShowPicker(false)}>
-                                <X size={24} color={isDark ? '#FFF' : '#1A1A1A'} />
-                            </TouchableOpacity>
-                        </View>
-                        <TextInput
-                            placeholder="Search apps..."
-                            placeholderTextColor={theme.colors.textTertiary}
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                            style={[styles.searchInput, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: isDark ? '#FFF' : '#1A1A1A' }]}
-                        />
-                        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                            {filteredApps.map((app, i) => (
-                                <TouchableOpacity key={i} onPress={() => handleSelectApp(app)} activeOpacity={0.7}>
-                                    <View style={[styles.appItem, { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
-                                        {app.icon ? (
-                                            <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
-                                        ) : (
-                                            <View style={[styles.appIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                                                <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
-                                            </View>
-                                        )}
-                                        <View style={{ flex: 1, marginLeft: spacing[3] }}>
-                                            <Text variant="body" weight="medium" numberOfLines={1}>{app.appName}</Text>
-                                            <Text variant="caption" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)} today</Text>
-                                        </View>
-                                    </View>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
+                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text variant="h3" weight="bold">Select App</Text>
+                        <TouchableOpacity onPress={() => setShowPicker(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
                     </View>
+                    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
+                        {availableApps.map((app, i) => (
+                            <TouchableOpacity key={i} onPress={() => handleSelectApp(app)} activeOpacity={0.7}>
+                                <View style={[styles.appRow, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: 12, marginBottom: spacing[2], padding: spacing[3] }]}>
+                                    {app.icon ? (
+                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
+                                    ) : (
+                                        <View style={[styles.appIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                                            <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
+                                        </View>
+                                    )}
+                                    <Text variant="body" weight="medium" numberOfLines={1} style={{ flex: 1, marginLeft: spacing[3] }}>{app.appName}</Text>
+                                    <ChevronIcon size={18} color={theme.colors.textTertiary} />
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                        {availableApps.length === 0 && <Text variant="body" color={theme.colors.textSecondary} align="center">No apps available</Text>}
+                    </ScrollView>
                 </View>
             </Modal>
 
             {/* Setup Modal */}
             <Modal visible={showSetup} animationType="slide" transparent>
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: isDark ? '#0A0A0F' : '#FAFAFA', maxHeight: '70%' }]}>
-                        <View style={styles.modalHeader}>
-                            <Text variant="h3" weight="bold">{selectedApp?.appName}</Text>
-                            <TouchableOpacity onPress={() => { setShowSetup(false); setSelectedApp(null); }}>
-                                <X size={24} color={isDark ? '#FFF' : '#1A1A1A'} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Mode Selection */}
-                        <View style={{ flexDirection: 'row', gap: spacing[3], marginBottom: spacing[5] }}>
-                            <TouchableOpacity
-                                onPress={() => setMode('limit')}
-                                style={[styles.modeOption, { flex: 1, backgroundColor: mode === 'limit' ? 'rgba(0,122,255,0.15)' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), borderColor: mode === 'limit' ? '#007AFF' : 'transparent' }]}
-                            >
-                                <Clock size={24} color={mode === 'limit' ? '#007AFF' : theme.colors.textSecondary} />
-                                <Text variant="body" weight={mode === 'limit' ? 'bold' : 'medium'} color={mode === 'limit' ? '#007AFF' : theme.colors.text} style={{ marginTop: 8 }}>Daily Limit</Text>
-                                <Text variant="caption" color={theme.colors.textSecondary} align="center" style={{ marginTop: 4 }}>Set max time per day</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => setMode('detox')}
-                                style={[styles.modeOption, { flex: 1, backgroundColor: mode === 'detox' ? 'rgba(255,68,68,0.15)' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), borderColor: mode === 'detox' ? '#FF4444' : 'transparent' }]}
-                            >
-                                <Flame size={24} color={mode === 'detox' ? '#FF4444' : theme.colors.textSecondary} />
-                                <Text variant="body" weight={mode === 'detox' ? 'bold' : 'medium'} color={mode === 'detox' ? '#FF4444' : theme.colors.text} style={{ marginTop: 8 }}>Detox</Text>
-                                <Text variant="caption" color={theme.colors.textSecondary} align="center" style={{ marginTop: 4 }}>Block completely</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Value Selection */}
-                        {mode === 'limit' ? (
-                            <View>
-                                <Text variant="body" weight="semibold" style={{ marginBottom: spacing[3] }}>Daily limit (minutes)</Text>
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] }}>
-                                    {[15, 30, 45, 60, 90, 120].map(v => (
-                                        <TouchableOpacity key={v} onPress={() => setLimitValue(v)} style={[styles.valueChip, { backgroundColor: limitValue === v ? '#007AFF' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)') }]}>
-                                            <Text variant="body" weight={limitValue === v ? 'bold' : 'medium'} color={limitValue === v ? '#FFF' : theme.colors.text}>{v}m</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-                        ) : (
-                            <View>
-                                <Text variant="body" weight="semibold" style={{ marginBottom: spacing[3] }}>Detox duration (days)</Text>
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] }}>
-                                    {[3, 7, 14, 21, 30].map(d => (
-                                        <TouchableOpacity key={d} onPress={() => setDetoxDays(d)} style={[styles.valueChip, { backgroundColor: detoxDays === d ? '#FF4444' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)') }]}>
-                                            <Text variant="body" weight={detoxDays === d ? 'bold' : 'medium'} color={detoxDays === d ? '#FFF' : theme.colors.text}>{d}d</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-                        )}
-
-                        {/* Confirm Button */}
-                        <TouchableOpacity onPress={handleConfirmLimit} style={[styles.confirmButton, { backgroundColor: mode === 'limit' ? '#007AFF' : '#FF4444' }]} activeOpacity={0.8}>
-                            <Check size={20} color="#FFF" />
-                            <Text variant="body" weight="bold" color="#FFF" style={{ marginLeft: 8 }}>Start {mode === 'limit' ? 'Limit' : 'Detox'}</Text>
-                        </TouchableOpacity>
+                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text variant="h3" weight="bold">Setup Limit</Text>
+                        <TouchableOpacity onPress={() => setShowSetup(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
                     </View>
-                </View>
-            </Modal>
+                    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
+                        {selectedApp && (
+                            <>
+                                <View style={{ alignItems: 'center', marginBottom: spacing[6] }}>
+                                    {selectedApp.icon ? (
+                                        <Image source={{ uri: `data:image/png;base64,${selectedApp.icon}` }} style={{ width: 64, height: 64, borderRadius: 16 }} />
+                                    ) : (
+                                        <View style={[styles.limitIconPlaceholder, { width: 64, height: 64, borderRadius: 16 }]}>
+                                            <Text variant="h2" weight="bold">{selectedApp.appName.charAt(0)}</Text>
+                                        </View>
+                                    )}
+                                    <Text variant="h3" weight="bold" style={{ marginTop: spacing[3] }}>{selectedApp.appName}</Text>
+                                </View>
 
-            {/* Edit Modal */}
-            <Modal visible={showEdit} animationType="slide" transparent>
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: isDark ? '#0A0A0F' : '#FAFAFA', maxHeight: '50%' }]}>
-                        <View style={styles.modalHeader}>
-                            <Text variant="h3" weight="bold">{editingLimit?.appName}</Text>
-                            <TouchableOpacity onPress={() => { setShowEdit(false); setEditingLimit(null); }}>
-                                <X size={24} color={isDark ? '#FFF' : '#1A1A1A'} />
-                            </TouchableOpacity>
-                        </View>
+                                <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginBottom: spacing[2] }}>MODE</Text>
+                                <View style={{ flexDirection: 'row', gap: spacing[3], marginBottom: spacing[5] }}>
+                                    <TouchableOpacity onPress={() => setMode('limit')} style={[styles.modeButton, { backgroundColor: mode === 'limit' ? 'rgba(0,122,255,0.2)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'), borderColor: mode === 'limit' ? '#007AFF' : 'transparent' }]}>
+                                        <Text variant="body" weight="semibold" color={mode === 'limit' ? '#007AFF' : theme.colors.text}>Daily Limit</Text>
+                                        <Text variant="caption" color={theme.colors.textSecondary}>Set max time/day</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => setMode('detox')} style={[styles.modeButton, { backgroundColor: mode === 'detox' ? 'rgba(255,68,68,0.2)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'), borderColor: mode === 'detox' ? '#FF4444' : 'transparent' }]}>
+                                        <Text variant="body" weight="semibold" color={mode === 'detox' ? '#FF4444' : theme.colors.text}>Detox</Text>
+                                        <Text variant="caption" color={theme.colors.textSecondary}>Full block</Text>
+                                    </TouchableOpacity>
+                                </View>
 
-                        {editingLimit && (
-                            <View>
-                                <GlassCard isDark={isDark} style={{ marginBottom: spacing[4] }}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        <Text variant="caption" color={theme.colors.textSecondary}>Mode</Text>
-                                        <Text variant="body" weight="semibold" color={editingLimit.mode === 'detox' ? '#FF4444' : '#007AFF'}>
-                                            {editingLimit.mode === 'detox' ? 'Detox' : 'Daily Limit'}
-                                        </Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing[3] }}>
-                                        <Text variant="caption" color={theme.colors.textSecondary}>
-                                            {editingLimit.mode === 'detox' ? 'Ends' : 'Limit'}
-                                        </Text>
-                                        <Text variant="body" weight="semibold">
-                                            {editingLimit.mode === 'detox' ? new Date(editingLimit.detoxEndDate!).toLocaleDateString() : `${editingLimit.dailyLimitMinutes}m/day`}
-                                        </Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing[3] }}>
-                                        <Text variant="caption" color={theme.colors.textSecondary}>Streak</Text>
-                                        <Text variant="body" weight="semibold" color="#FFD700">{editingLimit.streak} days</Text>
-                                    </View>
-                                </GlassCard>
+                                {mode === 'limit' ? (
+                                    <>
+                                        <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginBottom: spacing[2] }}>DAILY LIMIT</Text>
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}>
+                                            {[15, 30, 45, 60, 90, 120].map(v => (
+                                                <TouchableOpacity key={v} onPress={() => setLimitValue(v)} style={[styles.timeButton, { backgroundColor: limitValue === v ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') }]}>
+                                                    <Text variant="body" weight="semibold" color={limitValue === v ? (isDark ? '#000' : '#FFF') : theme.colors.text}>{v}m</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginBottom: spacing[2] }}>DETOX DURATION</Text>
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}>
+                                            {[3, 7, 14, 21, 30].map(v => (
+                                                <TouchableOpacity key={v} onPress={() => setDetoxDays(v)} style={[styles.timeButton, { backgroundColor: detoxDays === v ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') }]}>
+                                                    <Text variant="body" weight="semibold" color={detoxDays === v ? (isDark ? '#000' : '#FFF') : theme.colors.text}>{v}d</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </>
+                                )}
 
-                                <TouchableOpacity onPress={handleRemoveLimit} style={styles.removeButton} activeOpacity={0.7}>
-                                    <Trash2 size={20} color="#FF4444" />
-                                    <Text variant="body" weight="semibold" color="#FF4444" style={{ marginLeft: 8 }}>Remove Limit</Text>
+                                <TouchableOpacity onPress={handleConfirmLimit} style={[styles.confirmButton, { backgroundColor: isDark ? '#FFF' : '#000' }]} activeOpacity={0.8}>
+                                    <Text variant="body" weight="bold" color={isDark ? '#000' : '#FFF'}>Set Limit</Text>
                                 </TouchableOpacity>
-                            </View>
+                            </>
                         )}
-                    </View>
+                    </ScrollView>
                 </View>
             </Modal>
-        </ScrollView>
-    );
-};
 
-// ============================================
-// SETTINGS TAB
-// ============================================
-const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDark, onLogout }) => {
-    const { theme } = useTheme();
-    const user = auth().currentUser;
-    const [email, setEmail] = useState(user?.email || '');
-    const [isEditingEmail, setIsEditingEmail] = useState(false);
+            {/* Detail Modal */}
+            <Modal visible={showDetail} animationType="slide" transparent>
+                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text variant="h3" weight="bold">Limit Details</Text>
+                        <TouchableOpacity onPress={() => setShowDetail(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
+                    </View>
+                    {detailLimit && (
+                        <View style={{ flex: 1, padding: spacing[4] }}>
+                            <View style={{ alignItems: 'center', marginBottom: spacing[6] }}>
+                                {detailLimit.icon ? (
+                                    <Image source={{ uri: `data:image/png;base64,${detailLimit.icon}` }} style={{ width: 64, height: 64, borderRadius: 16 }} />
+                                ) : (
+                                    <View style={[styles.limitIconPlaceholder, { width: 64, height: 64, borderRadius: 16 }]}>
+                                        <Text variant="h2" weight="bold">{detailLimit.appName.charAt(0)}</Text>
+                                    </View>
+                                )}
+                                <Text variant="h3" weight="bold" style={{ marginTop: spacing[3] }}>{detailLimit.appName}</Text>
+                                <View style={[styles.modeTag, { backgroundColor: detailLimit.mode === 'detox' ? 'rgba(255,68,68,0.15)' : 'rgba(0,122,255,0.15)', marginTop: spacing[2] }]}>
+                                    <Text variant="caption" weight="bold" color={detailLimit.mode === 'detox' ? '#FF4444' : '#007AFF'}>{detailLimit.mode === 'detox' ? 'DETOX MODE' : 'DAILY LIMIT'}</Text>
+                                </View>
+                            </View>
 
-    const handleLogout = async () => {
-        await auth().signOut();
-        onLogout();
-    };
+                            <GlassCard style={{ marginBottom: spacing[4] }}>
+                                <View style={styles.settingRow}>
+                                    <Text variant="body">Streak</Text>
+                                    <Text variant="body" weight="bold" color="#FFD700">{detailLimit.streak} days</Text>
+                                </View>
+                                <View style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+                                    <Text variant="body">{detailLimit.mode === 'detox' ? 'Ends' : 'Limit'}</Text>
+                                    <Text variant="body" color={theme.colors.textSecondary}>{detailLimit.mode === 'detox' ? new Date(detailLimit.detoxEndDate!).toLocaleDateString() : `${detailLimit.dailyLimitMinutes}m/day`}</Text>
+                                </View>
+                            </GlassCard>
 
-    const handleUpdateEmail = async () => {
-        if (email && email !== user?.email) {
-            try {
-                await user?.updateEmail(email);
-                setIsEditingEmail(false);
-            } catch (e: any) {
-                Alert.alert('Error', e.message);
-            }
-        } else {
-            setIsEditingEmail(false);
-        }
-    };
-
-    return (
-        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner} showsVerticalScrollIndicator={false}>
-            <Text variant="h2" weight="bold">Settings</Text>
-            <Text variant="caption" color={theme.colors.textSecondary} style={{ marginTop: 4, marginBottom: spacing[4] }} />
-
-            {/* Account */}
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={styles.sectionLabel}>ACCOUNT</Text>
-            <GlassCard isDark={isDark} style={{ marginBottom: spacing[5] }}>
-                <View style={[styles.settingsRow, { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
-                    <Text variant="body">Email</Text>
-                    {isEditingEmail ? (
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <TextInput
-                                value={email}
-                                onChangeText={setEmail}
-                                style={[styles.emailInput, { color: isDark ? '#FFF' : '#1A1A1A', borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }]}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                            />
-                            <TouchableOpacity onPress={handleUpdateEmail} style={{ marginLeft: 8 }}>
-                                <Check size={20} color="#007AFF" />
+                            <TouchableOpacity onPress={handleRemoveLimit} style={[styles.logoutBtn, { backgroundColor: isDark ? 'rgba(255,68,68,0.12)' : 'rgba(255,68,68,0.08)' }]} activeOpacity={0.7}>
+                                <Text variant="body" weight="semibold" color="#FF4444">Remove Limit</Text>
                             </TouchableOpacity>
                         </View>
-                    ) : (
-                        <TouchableOpacity onPress={() => setIsEditingEmail(true)}>
-                            <Text variant="body" color="#007AFF">{user?.email || 'Not set'}</Text>
-                        </TouchableOpacity>
                     )}
                 </View>
-                <View style={styles.settingsRow}>
-                    <Text variant="body">Member Since</Text>
-                    <Text variant="body" color={theme.colors.textSecondary}>
-                        {user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : '-'}
-                    </Text>
-                </View>
-            </GlassCard>
-
-            {/* Permissions */}
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={styles.sectionLabel}>PERMISSIONS</Text>
-            <TouchableOpacity onPress={() => Linking.openSettings()} activeOpacity={0.7}>
-                <GlassCard isDark={isDark} style={{ marginBottom: spacing[5] }}>
-                    <View style={styles.settingsRow}>
-                        <Text variant="body">Manage Permissions</Text>
-                        <ChevronRight size={20} color={theme.colors.textTertiary} />
-                    </View>
-                </GlassCard>
-            </TouchableOpacity>
-
-            {/* Legal */}
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={styles.sectionLabel}>LEGAL</Text>
-            <GlassCard isDark={isDark} style={{ marginBottom: spacing[5] }}>
-                <TouchableOpacity style={[styles.settingsRow, { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
-                    <Text variant="body">Privacy Policy</Text>
-                    <ChevronRight size={20} color={theme.colors.textTertiary} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.settingsRow}>
-                    <Text variant="body">Terms of Service</Text>
-                    <ChevronRight size={20} color={theme.colors.textTertiary} />
-                </TouchableOpacity>
-            </GlassCard>
-
-            {/* Logout */}
-            <TouchableOpacity onPress={handleLogout} style={[styles.logoutButton, { backgroundColor: isDark ? 'rgba(255,68,68,0.12)' : 'rgba(255,68,68,0.08)' }]} activeOpacity={0.7}>
-                <LogOut size={20} color="#FF4444" />
-                <Text variant="body" weight="semibold" color="#FF4444" style={{ marginLeft: 8 }}>Logout</Text>
-            </TouchableOpacity>
+            </Modal>
         </ScrollView>
     );
 };
@@ -622,105 +695,57 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
 // ============================================
 // MAIN APP
 // ============================================
+
 const MainApp: React.FC = () => {
-    const { isDark } = useTheme();
+    const { theme, isDark } = useTheme();
     const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-    const [apps, setApps] = useState<AppData[]>([]);
-    const [limits, setLimits] = useState<AppLimit[]>([]);
-
-    const loadData = async () => {
-        try {
-            const data = await PermissionsModule.getAppUsageStats(1);
-            if (data && data.length > 0) {
-                const sorted = data.sort((a: AppData, b: AppData) => b.usageMinutes - a.usageMinutes);
-                setApps(sorted);
-            }
-        } catch (e) {
-            console.log('Error fetching apps:', e);
-        }
-
-        await limitsService.loadLimits();
-    };
 
     useEffect(() => {
-        loadData();
         BlockingModule?.startMonitoring?.();
-        const unsub = limitsService.subscribe(setLimits);
-        return () => {
-            unsub();
-            BlockingModule?.stopMonitoring?.();
-        };
+        return () => { BlockingModule?.stopMonitoring?.(); };
     }, []);
 
     return (
         <View style={styles.container}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F'] : ['#F8F8FA', '#F0F0F2']} style={StyleSheet.absoluteFillObject} />
-
-            {activeTab === 'dashboard' && <DashboardTab isDark={isDark} apps={apps} limits={limits} />}
-            {activeTab === 'limits' && <LimitsTab isDark={isDark} apps={apps} limits={limits} onLimitsChange={loadData} />}
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#0C0C12'] : ['#FAFAFA', '#F5F5F7', '#F0F0F2']} style={StyleSheet.absoluteFillObject} />
+            {activeTab === 'dashboard' && <DashboardTab isDark={isDark} />}
+            {activeTab === 'limits' && <LimitsTab isDark={isDark} />}
             {activeTab === 'settings' && <SettingsTab isDark={isDark} onLogout={() => setActiveTab('dashboard')} />}
-
             <TabBar activeTab={activeTab} onTabPress={setActiveTab} isDark={isDark} />
         </View>
     );
 };
 
-// ============================================
-// STYLES
-// ============================================
 const styles = StyleSheet.create({
     container: { flex: 1 },
     tabBar: { flexDirection: 'row', paddingBottom: 28, paddingTop: 12, borderTopWidth: 1 },
     tabItem: { flex: 1, alignItems: 'center' },
     tabContent: { flex: 1 },
-    tabContentInner: { padding: spacing[4], paddingTop: 20, paddingBottom: 20 },
-
-    // Glass Card
-    glassCard: { padding: spacing[4], borderRadius: 20, borderWidth: 1 },
-
-    // Bento
-    bentoGrid: { gap: spacing[3] },
-    bentoBig: { padding: spacing[5] },
+    tabContentInner: { paddingHorizontal: spacing[4], paddingTop: 56, paddingBottom: 20 },
+    glassCard: { borderRadius: 20, padding: spacing[4], overflow: 'hidden' },
+    bentoGrid: { marginBottom: spacing[4] },
+    bentoBig: { marginBottom: spacing[3] },
     bentoSmallRow: { flexDirection: 'row', gap: spacing[3] },
-    bentoSmall: { flex: 1, alignItems: 'center', paddingVertical: spacing[4] },
-
-    // Apps
-    appItem: { flexDirection: 'row', alignItems: 'center', padding: spacing[3] },
+    bentoSmall: { flex: 1 },
+    section: { marginTop: spacing[4] },
+    sectionLabel: { marginBottom: spacing[2], letterSpacing: 0.5 },
+    appRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing[3] },
     appIcon: { width: 40, height: 40, borderRadius: 10 },
     appIconPlaceholder: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-    usageBar: { height: 4, borderRadius: 2, width: '100%' },
-    usageBarFill: { height: 4, borderRadius: 2 },
-
-    // Weekly
-    weeklyChart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingTop: 10 },
-    weeklyBarWrap: { alignItems: 'center', flex: 1 },
-    weeklyBar: { width: 20 },
-
-    // Limits
-    emptyState: { alignItems: 'center', paddingVertical: spacing[6] },
-    limitCard: { flexDirection: 'row', alignItems: 'center' },
+    emptyState: { padding: spacing[6], borderRadius: 20, alignItems: 'center', marginTop: spacing[4] },
     limitIcon: { width: 48, height: 48, borderRadius: 12 },
-    limitIconPlaceholder: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    limitIconPlaceholder: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' },
     modeTag: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: 6 },
-    addButton: { flexDirection: 'row', alignItems: 'center' },
-    addIconCircle: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-
-    // Modal
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-    modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing[4], maxHeight: '80%' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] },
-    searchInput: { height: 44, borderRadius: 12, paddingHorizontal: spacing[4], marginBottom: spacing[3] },
-    modeOption: { padding: spacing[4], borderRadius: 16, alignItems: 'center', borderWidth: 2 },
-    valueChip: { paddingVertical: spacing[2], paddingHorizontal: spacing[4], borderRadius: 12 },
-    confirmButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 14, marginTop: spacing[5] },
-    removeButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 14, backgroundColor: 'rgba(255,68,68,0.1)' },
-
-    // Settings
-    sectionLabel: { marginBottom: spacing[2], marginLeft: spacing[1], letterSpacing: 0.5 },
-    settingsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing[3] },
-    emailInput: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, width: 180 },
-    logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 14 },
+    addButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', marginTop: spacing[4] },
+    settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing[3] },
+    settingRowBorder: { borderTopWidth: 1 },
+    logoutBtn: { flexDirection: 'row', padding: spacing[4], borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+    modalOverlay: { flex: 1, paddingTop: 50 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing[4], paddingVertical: spacing[4], borderBottomWidth: 1, borderBottomColor: 'rgba(128,128,128,0.2)' },
+    modeButton: { flex: 1, padding: spacing[4], borderRadius: 16, borderWidth: 2, alignItems: 'center' },
+    timeButton: { paddingVertical: spacing[3], paddingHorizontal: spacing[4], borderRadius: 12 },
+    confirmButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 16, marginTop: spacing[4] },
 });
 
 export default MainApp;
