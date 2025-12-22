@@ -5,24 +5,32 @@ import {
     StyleSheet,
     Dimensions,
     TouchableOpacity,
-    StatusBar,
     Animated,
     Easing,
     ScrollView,
     NativeModules,
+    ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../theme';
 import { spacing } from '../../theme/theme';
 import { Text } from '../../components';
+import { Check, Clock, Smartphone } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 const { PermissionsModule } = NativeModules;
 
+// App Usage Interface
+export interface AppUsage {
+    packageName: string;
+    appName: string;
+    usageMinutes: number;
+    icon?: string;
+}
+
 // ============================================
 // ENTRANCE ANIMATION
 // ============================================
-
 const useEntranceAnimation = (delay: number = 0) => {
     const opacity = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(35)).current;
@@ -40,423 +48,307 @@ const useEntranceAnimation = (delay: number = 0) => {
 // ============================================
 // PROGRESS BAR
 // ============================================
-
-const ProgressBar: React.FC<{ current: number; total: number }> = ({ current, total }) => {
-    const { isDark } = useTheme();
-    return (
-        <View style={styles.progressBarContainer}>
-            {Array.from({ length: total }).map((_, index) => (
-                <View key={index} style={[styles.progressSegment, { backgroundColor: index < current ? (isDark ? '#FFFFFF' : '#1A1A1A') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') }]} />
-            ))}
-        </View>
-    );
-};
-
-// ============================================
-// PREMIUM BUTTONS  
-// ============================================
-
-interface BottomButtonsProps {
-    onBack?: () => void;
-    onNext: () => void;
-    nextLabel?: string;
-    nextDisabled?: boolean;
-    showBack?: boolean;
-    isDark: boolean;
-}
-
-const BottomButtons: React.FC<BottomButtonsProps> = ({ onBack, onNext, nextLabel = 'Continue', nextDisabled = false, showBack = true, isDark }) => (
-    <View style={styles.bottomButtonsContainer}>
-        {showBack && onBack ? (
-            <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backButtonWrapper}>
-                <LinearGradient colors={isDark ? ['#1A1A1A', '#282828', '#1A1A1A'] : ['#F5F5F5', '#FFFFFF', '#F5F5F5']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[styles.buttonBase, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)' }]}>
-                    <Text variant="body" weight="semibold" color={isDark ? '#FFFFFF' : '#1A1A1A'}>Back</Text>
-                </LinearGradient>
-            </TouchableOpacity>
-        ) : (
-            <View style={styles.backButtonWrapper} />
-        )}
-        <TouchableOpacity onPress={onNext} activeOpacity={0.8} disabled={nextDisabled} style={[styles.nextButtonWrapper, { opacity: nextDisabled ? 0.3 : 1 }]}>
-            <LinearGradient colors={isDark ? ['#FFFFFF', '#F0F0F0', '#DFDFDF'] : ['#2A2A2A', '#1A1A1A', '#0A0A0A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.nextButtonBase}>
-                <Text variant="body" weight="bold" color={isDark ? '#0A0A0A' : '#FFFFFF'}>{nextLabel}</Text>
-            </LinearGradient>
-        </TouchableOpacity>
+const ProgressBar: React.FC<{ step: number; totalSteps: number; isDark: boolean }> = ({ step, totalSteps, isDark }) => (
+    <View style={[styles.progressContainer, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
+        <Animated.View style={[styles.progressFill, { width: `${(step / totalSteps) * 100}%`, backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
     </View>
 );
 
 // ============================================
-// APP TYPE WITH USAGE DATA
+// BUTTON COMPONENTS
 // ============================================
-
-export interface AppUsage {
-    packageName: string;
-    appName: string;
-    usageMinutes: number;
-    icon?: string;
-}
+const FullWidthButton: React.FC<{ title: string; onPress: () => void; isDark: boolean; disabled?: boolean }> = ({ title, onPress, isDark, disabled }) => (
+    <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.85}
+        style={[styles.fullButton, { backgroundColor: isDark ? '#FFF' : '#1A1A1A', opacity: disabled ? 0.5 : 1 }]}
+    >
+        <Text variant="body" weight="bold" color={isDark ? '#1A1A1A' : '#FFF'}>{title}</Text>
+    </TouchableOpacity>
+);
 
 // ============================================
-// SCREEN 1: APP ANALYSIS (Real)
+// APP ANALYSIS SCREEN - Loading Animation
 // ============================================
-
-interface AppAnalysisProps {
-    onNext: (apps: AppUsage[]) => void;
-    onBack: () => void;
-}
-
-export const AppAnalysisScreen: React.FC<AppAnalysisProps> = ({ onNext, onBack }) => {
+export const AppAnalysisScreen: React.FC<{ onComplete: (apps: AppUsage[]) => void }> = ({ onComplete }) => {
     const { theme, isDark } = useTheme();
-    const [apps, setApps] = useState<AppUsage[]>([]);
-    const titleAnim = useEntranceAnimation(0);
-    const scanAnim = useRef(new Animated.Value(0)).current;
+    const [stage, setStage] = useState(0);
+    const spinAnim = useRef(new Animated.Value(0)).current;
+    const progressAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
+        // Start spinning animation
         Animated.loop(
-            Animated.timing(scanAnim, { toValue: 1, duration: 2000, easing: Easing.linear, useNativeDriver: true })
+            Animated.timing(spinAnim, { toValue: 1, duration: 1500, easing: Easing.linear, useNativeDriver: true })
         ).start();
-    }, []);
 
-    const spin = scanAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg']
-    });
+        // Progress through stages
+        const stages = [
+            { delay: 800, text: 'Scanning installed apps...' },
+            { delay: 1600, text: 'Analyzing usage patterns...' },
+            { delay: 2400, text: 'Calculating statistics...' },
+        ];
 
-    // Animated dots
-    const dot1 = useRef(new Animated.Value(0.3)).current;
-    const dot2 = useRef(new Animated.Value(0.3)).current;
-    const dot3 = useRef(new Animated.Value(0.3)).current;
-
-    useEffect(() => {
-        // Animate loading dots
-        [dot1, dot2, dot3].forEach((dot, i) => {
-            Animated.loop(Animated.sequence([
-                Animated.timing(dot, { toValue: 1, duration: 400, delay: i * 150, useNativeDriver: true }),
-                Animated.timing(dot, { toValue: 0.3, duration: 400, useNativeDriver: true }),
-            ])).start();
+        stages.forEach((s, i) => {
+            setTimeout(() => setStage(i + 1), s.delay);
         });
 
-        // Fetch real app usage data
+        // Animate progress bar
+        Animated.timing(progressAnim, { toValue: 1, duration: 3000, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+
+        // Fetch real data and complete
         const fetchApps = async () => {
-            let fetchedApps: AppUsage[] = [];
-
             try {
-                const usageData = await PermissionsModule.getAppUsageStats(14);
-
-                if (usageData && usageData.length > 0) {
-                    fetchedApps = usageData
-                        .filter((a: AppUsage) => a.usageMinutes > 5)
-                        .sort((a: AppUsage, b: AppUsage) => b.usageMinutes - a.usageMinutes)
-                        .slice(0, 100);
+                const data = await PermissionsModule.getAppUsageStats(7); // Get 7 days for better average
+                if (data && data.length > 0) {
+                    const sorted = data.sort((a: AppUsage, b: AppUsage) => b.usageMinutes - a.usageMinutes);
+                    setTimeout(() => onComplete(sorted), 3200);
+                } else {
+                    setTimeout(() => onComplete([]), 3200);
                 }
             } catch (e) {
-                console.log('Usage stats error:', e);
+                console.log('Error:', e);
+                setTimeout(() => onComplete([]), 3200);
             }
-
-            // Fallback to common apps if no data
-            if (fetchedApps.length === 0) {
-                fetchedApps = [
-                    { packageName: 'com.instagram.android', appName: 'Instagram', usageMinutes: 120 },
-                    { packageName: 'com.zhiliaoapp.musically', appName: 'TikTok', usageMinutes: 90 },
-                    { packageName: 'com.google.android.youtube', appName: 'YouTube', usageMinutes: 75 },
-                    { packageName: 'com.twitter.android', appName: 'X (Twitter)', usageMinutes: 55 },
-                    { packageName: 'com.facebook.katana', appName: 'Facebook', usageMinutes: 45 },
-                    { packageName: 'com.snapchat.android', appName: 'Snapchat', usageMinutes: 40 },
-                    { packageName: 'com.whatsapp', appName: 'WhatsApp', usageMinutes: 35 },
-                    { packageName: 'com.reddit.frontpage', appName: 'Reddit', usageMinutes: 30 },
-                ];
-            }
-
-            setApps(fetchedApps);
-
-            // Auto-advance after 2.5 seconds
-            setTimeout(() => {
-                onNext(fetchedApps);
-            }, 2500);
         };
-
         fetchApps();
     }, []);
 
+    const spin = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+    const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+
+    const stageTexts = ['Initializing...', 'Scanning installed apps...', 'Analyzing usage patterns...', 'Calculating statistics...'];
+
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient
-                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
-                locations={[0, 0.25, 0.5, 0.75, 1]}
-                style={StyleSheet.absoluteFillObject}
-            />
+        <View style={[styles.container, { backgroundColor: isDark ? '#050508' : '#FAFAFA' }]}>
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F'] : ['#F8F8FA', '#F0F0F2']} style={StyleSheet.absoluteFillObject} />
 
-            <View style={styles.content}>
-                {/* Premium Scanning Radar Icon */}
-                <View style={[styles.radarContainer, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                    <View style={[styles.radarCircle, { borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }]} />
-                    <View style={[styles.radarCircleInner, { borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)' }]} />
-
-                    <View style={styles.radarLineContainer}>
-                        <Animated.View style={[styles.radarLineContainer, { transform: [{ rotate: spin }] }]}>
-                            <LinearGradient
-                                colors={isDark ? ['rgba(255,255,255,0.5)', 'transparent'] : ['rgba(0,0,0,0.4)', 'transparent']}
-                                style={styles.radarGradient}
-                            />
-                        </Animated.View>
-                    </View>
-                    <View style={[styles.radarDot, { backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
-                </View>
-
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], marginTop: spacing[6] }}>
-                    <Text variant="h2" weight="bold" align="center" style={styles.headline}>Analyzing your{'\n'}digital habits...</Text>
+            <View style={styles.analysisContent}>
+                <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                    <Smartphone size={64} color={isDark ? '#FFF' : '#1A1A1A'} />
                 </Animated.View>
 
-                <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginTop: spacing[4] }}>
-                    Finding your most used apps...
+                <Text variant="h2" weight="bold" align="center" style={{ marginTop: spacing[6] }}>Analyzing Your Apps</Text>
+                <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[2] }}>
+                    {stageTexts[stage]}
                 </Text>
+
+                <View style={[styles.analysisProgress, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                    <Animated.View style={[styles.analysisProgressFill, { width: progressWidth, backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
+                </View>
             </View>
         </View>
     );
 };
 
 // ============================================
-// SCREEN 2: APP SELECTION
+// APP SELECTION SCREEN - ALL APPS SHOWN
 // ============================================
-
-interface AppSelectionProps {
+export const AppSelectionScreen: React.FC<{
     apps: AppUsage[];
-    onNext: (selectedApps: AppUsage[]) => void;
+    onNext: (selected: AppUsage[]) => void;
     onBack: () => void;
-}
-
-export const AppSelectionScreen: React.FC<AppSelectionProps> = ({ apps, onNext, onBack }) => {
+}> = ({ apps, onNext, onBack }) => {
     const { theme, isDark } = useTheme();
-    const [selected, setSelected] = useState<string[]>([]);
+    const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
     const titleAnim = useEntranceAnimation(0);
+    const listAnim = useEntranceAnimation(150);
 
-    const toggleApp = (pkg: string) => {
-        setSelected(prev => prev.includes(pkg) ? prev.filter(p => p !== pkg) : [...prev, pkg]);
+    const toggleApp = (packageName: string) => {
+        const newSet = new Set(selectedApps);
+        if (newSet.has(packageName)) {
+            newSet.delete(packageName);
+        } else {
+            newSet.add(packageName);
+        }
+        setSelectedApps(newSet);
     };
 
-    const selectedApps = apps.filter(a => selected.includes(a.packageName));
+    const handleNext = () => {
+        const selected = apps.filter(app => selectedApps.has(app.packageName));
+        onNext(selected);
+    };
 
     const formatTime = (mins: number) => {
-        if (mins < 60) return `${mins}m`;
         const h = Math.floor(mins / 60);
         const m = mins % 60;
-        return m > 0 ? `${h}h ${m}m` : `${h}h`;
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
 
-    return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient
-                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
-                locations={[0, 0.25, 0.5, 0.75, 1]}
-                style={StyleSheet.absoluteFillObject}
-            />
-            <ProgressBar current={1} total={3} />
+    // Show ALL apps - no slicing/limiting
+    const allApps = apps;
 
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+    return (
+        <View style={[styles.container, { backgroundColor: isDark ? '#050508' : '#FAFAFA' }]}>
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F'] : ['#F8F8FA', '#F0F0F2']} style={StyleSheet.absoluteFillObject} />
+
+            <ProgressBar step={2} totalSteps={4} isDark={isDark} />
+
+            <View style={styles.content}>
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h2" weight="bold" align="center" style={styles.headlineSmaller}>Which apps distract{'\n'}you the most?</Text>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary}>Select at least one app to limit</Text>
+                    <Text variant="h2" weight="bold">Select Apps to Focus On</Text>
+                    <Text variant="body" color={theme.colors.textSecondary} style={{ marginTop: spacing[2] }}>
+                        Choose the apps you want to limit ({selectedApps.size} selected)
+                    </Text>
                 </Animated.View>
 
-                <View style={styles.appsList}>
-                    {apps.map((app) => {
-                        const isSelected = selected.includes(app.packageName);
-
-                        return (
-                            <TouchableOpacity
-                                key={app.packageName}
-                                onPress={() => toggleApp(app.packageName)}
-                                activeOpacity={0.7}
-                                style={[
-                                    styles.appItem,
-                                    {
-                                        backgroundColor: isSelected ? (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
-                                        borderColor: isSelected ? (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)') : 'transparent',
-                                    },
-                                ]}
-                            >
-                                <View style={styles.appInfo}>
+                <Animated.View style={[styles.appListContainer, { opacity: listAnim.opacity, transform: [{ translateY: listAnim.translateY }] }]}>
+                    <ScrollView style={styles.appList} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+                        {allApps.map((app, i) => {
+                            const isSelected = selectedApps.has(app.packageName);
+                            return (
+                                <TouchableOpacity
+                                    key={i}
+                                    onPress={() => toggleApp(app.packageName)}
+                                    activeOpacity={0.7}
+                                    style={[styles.appItem, {
+                                        backgroundColor: isSelected
+                                            ? (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)')
+                                            : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'),
+                                        borderColor: isSelected
+                                            ? (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)')
+                                            : 'transparent',
+                                    }]}
+                                >
                                     {app.icon ? (
-                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIconImage} />
+                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
                                     ) : (
-                                        <View style={[styles.appIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                                            <Text variant="body" weight="bold">{app.appName.charAt(0)}</Text>
+                                        <View style={[styles.appIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                                            <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
                                         </View>
                                     )}
-                                    <View>
-                                        <Text variant="body" weight={isSelected ? 'bold' : 'medium'}>{app.appName}</Text>
-                                        <Text variant="caption" color={theme.colors.textTertiary}>{formatTime(app.usageMinutes)}/day avg</Text>
+                                    <View style={{ flex: 1, marginLeft: spacing[3] }}>
+                                        <Text variant="body" weight="medium" numberOfLines={1}>{app.appName}</Text>
+                                        <Text variant="caption" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)} / week</Text>
                                     </View>
-                                </View>
-                                {isSelected && (
-                                    <View style={[styles.checkmark, { backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]}>
-                                        <Text variant="caption" color={isDark ? '#0A0A0A' : '#FFF'}>✓</Text>
+                                    <View style={[styles.checkbox, {
+                                        backgroundColor: isSelected ? (isDark ? '#FFF' : '#1A1A1A') : 'transparent',
+                                        borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
+                                    }]}>
+                                        {isSelected && <Check size={14} color={isDark ? '#1A1A1A' : '#FFF'} strokeWidth={3} />}
                                     </View>
-                                )}
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-            </ScrollView>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </Animated.View>
 
-            {/* No Back button - only Continue (full width) */}
-            <View style={styles.bottomButtonsContainer}>
-                <TouchableOpacity onPress={() => onNext(selectedApps)} activeOpacity={0.8} disabled={selected.length === 0} style={[{ flex: 1, opacity: selected.length === 0 ? 0.3 : 1 }]}>
-                    <LinearGradient colors={isDark ? ['#FFFFFF', '#F0F0F0', '#DFDFDF'] : ['#2A2A2A', '#1A1A1A', '#0A0A0A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.nextButtonBase}>
-                        <Text variant="body" weight="bold" color={isDark ? '#0A0A0A' : '#FFFFFF'}>{selected.length > 0 ? `Continue (${selected.length})` : 'Select apps'}</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+                <View style={styles.buttonRow}>
+                    <TouchableOpacity onPress={onBack} style={styles.backButton}>
+                        <Text variant="body" weight="medium" color={theme.colors.textSecondary}>Back</Text>
+                    </TouchableOpacity>
+                    <View style={{ flex: 1, marginLeft: spacing[3] }}>
+                        <FullWidthButton title="Continue" onPress={handleNext} isDark={isDark} disabled={selectedApps.size === 0} />
+                    </View>
+                </View>
             </View>
         </View>
     );
 };
 
 // ============================================
-// SCREEN 3: TIME CALCULATION
+// TIME CALCULATION SCREEN
 // ============================================
-
-interface TimeCalculationProps {
+export const TimeCalculationScreen: React.FC<{
     selectedApps: AppUsage[];
     onNext: () => void;
     onBack: () => void;
-}
-
-export const TimeCalculationScreen: React.FC<TimeCalculationProps> = ({ selectedApps, onNext, onBack }) => {
+}> = ({ selectedApps, onNext, onBack }) => {
     const { theme, isDark } = useTheme();
     const titleAnim = useEntranceAnimation(0);
-    const numberAnim = useEntranceAnimation(200);
-    const subAnim = useEntranceAnimation(350);
+    const statsAnim = useEntranceAnimation(200);
+    const buttonAnim = useEntranceAnimation(400);
 
-    // Calculate time saved with 75% reduction (e.g., 60min -> 15min = 45min saved)
-    const totalDailyMinutes = selectedApps.reduce((sum, app) => sum + app.usageMinutes, 0);
-    const savedDailyMinutes = Math.round(totalDailyMinutes * 0.75);
-    const savedYearlyHours = Math.round((savedDailyMinutes * 365) / 60);
-    const savedYearlyDays = Math.round(savedYearlyHours / 24);
-
-    // Singular vs plural
-    const isSingle = selectedApps.length === 1;
-    const appText = isSingle ? 'this app' : 'these apps';
+    const totalMinutes = selectedApps.reduce((sum, app) => sum + app.usageMinutes, 0);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const dailyAvg = Math.round(totalMinutes / 7);
+    const dailyHours = Math.floor(dailyAvg / 60);
+    const dailyMins = dailyAvg % 60;
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient
-                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
-                locations={[0, 0.25, 0.5, 0.75, 1]}
-                style={StyleSheet.absoluteFillObject}
-            />
-            <ProgressBar current={2} total={3} />
+        <View style={[styles.container, { backgroundColor: isDark ? '#050508' : '#FAFAFA' }]}>
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F'] : ['#F8F8FA', '#F0F0F2']} style={StyleSheet.absoluteFillObject} />
+
+            <ProgressBar step={3} totalSteps={4} isDark={isDark} />
 
             <View style={styles.content}>
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary}>By cutting {appText} down to just 25% of current use...</Text>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], alignItems: 'center' }}>
+                    <Clock size={48} color={theme.colors.textSecondary} />
+                    <Text variant="h2" weight="bold" align="center" style={{ marginTop: spacing[4] }}>Your Weekly Usage</Text>
                 </Animated.View>
 
-                <Animated.View style={[styles.bigNumberWrap, { opacity: numberAnim.opacity, transform: [{ translateY: numberAnim.translateY }] }]}>
-                    <Text variant="h1" weight="bold" align="center" style={styles.bigNumber}>{savedYearlyDays}</Text>
-                    <Text variant="h3" weight="semibold" align="center" color={theme.colors.textSecondary}>days per year</Text>
+                <Animated.View style={[styles.statsContainer, { opacity: statsAnim.opacity, transform: [{ translateY: statsAnim.translateY }] }]}>
+                    <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
+                        <Text variant="h1" weight="bold" style={{ fontSize: 48 }}>{hours}h {minutes}m</Text>
+                        <Text variant="body" color={theme.colors.textSecondary}>Total this week on {selectedApps.length} apps</Text>
+                    </View>
+
+                    <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', marginTop: spacing[3] }]}>
+                        <Text variant="h2" weight="bold">{dailyHours}h {dailyMins}m</Text>
+                        <Text variant="body" color={theme.colors.textSecondary}>Daily average</Text>
+                    </View>
                 </Animated.View>
 
-                <Animated.View style={{ opacity: subAnim.opacity, transform: [{ translateY: subAnim.translateY }] }}>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={styles.subtext}>
-                        That's {savedYearlyHours} hours you could reclaim for what truly matters.
-                    </Text>
+                <Animated.View style={[styles.buttonContainer, { opacity: buttonAnim.opacity, transform: [{ translateY: buttonAnim.translateY }] }]}>
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+                            <Text variant="body" weight="medium" color={theme.colors.textSecondary}>Back</Text>
+                        </TouchableOpacity>
+                        <View style={{ flex: 1, marginLeft: spacing[3] }}>
+                            <FullWidthButton title="I'm Ready to Change" onPress={onNext} isDark={isDark} />
+                        </View>
+                    </View>
                 </Animated.View>
             </View>
-
-            <BottomButtons onBack={onBack} onNext={onNext} nextLabel="Let's do this" isDark={isDark} />
         </View>
     );
 };
 
 // ============================================
-// SCREEN 4: COMMITMENT (Hold to Promise)
+// COMMITMENT SCREEN
 // ============================================
-
-interface CommitmentProps {
+export const CommitmentScreen: React.FC<{
     onComplete: () => void;
     onBack: () => void;
-}
-
-export const CommitmentScreen: React.FC<CommitmentProps> = ({ onComplete, onBack }) => {
+}> = ({ onComplete, onBack }) => {
     const { theme, isDark } = useTheme();
-    const [holding, setHolding] = useState(false);
-    const progressAnim = useRef(new Animated.Value(0)).current;
     const titleAnim = useEntranceAnimation(0);
-
-    const handlePressIn = () => {
-        setHolding(true);
-        Animated.timing(progressAnim, {
-            toValue: 1,
-            duration: 2000,
-            useNativeDriver: false,
-        }).start(({ finished }) => {
-            if (finished) {
-                onComplete();
-            }
-        });
-    };
-
-    const handlePressOut = () => {
-        setHolding(false);
-        progressAnim.stopAnimation();
-        Animated.timing(progressAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: false,
-        }).start();
-    };
-
-    const buttonWidth = progressAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0%', '100%'],
-    });
+    const contentAnim = useEntranceAnimation(200);
+    const buttonAnim = useEntranceAnimation(400);
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient
-                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
-                locations={[0, 0.25, 0.5, 0.75, 1]}
-                style={StyleSheet.absoluteFillObject}
-            />
-            <ProgressBar current={3} total={3} />
+        <View style={[styles.container, { backgroundColor: isDark ? '#050508' : '#FAFAFA' }]}>
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F'] : ['#F8F8FA', '#F0F0F2']} style={StyleSheet.absoluteFillObject} />
+
+            <ProgressBar step={4} totalSteps={4} isDark={isDark} />
 
             <View style={styles.content}>
-                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
-                    <Text variant="h1" weight="bold" align="center" style={styles.headline}>Make a promise{'\n'}to yourself</Text>
-                    <Text variant="body" align="center" color={theme.colors.textSecondary} style={{ marginTop: spacing[3] }}>
-                        Hold the button to commit to{'\n'}reclaiming your time
-                    </Text>
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }], alignItems: 'center' }}>
+                    <Text variant="h1" weight="bold" align="center" style={{ fontSize: 42 }}>You've Got This</Text>
                 </Animated.View>
 
-                <View style={styles.holdButtonWrap}>
-                    <TouchableOpacity
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        activeOpacity={1}
-                        style={styles.holdButtonOuter}
-                    >
-                        <LinearGradient
-                            colors={isDark ? ['#1A1A1A', '#282828'] : ['#F5F5F5', '#E8E8E8']}
-                            style={[styles.holdButton, { borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)' }]}
-                        >
-                            <Animated.View style={[styles.holdProgress, { width: buttonWidth, backgroundColor: isDark ? '#FFFFFF' : '#1A1A1A' }]} />
-                            <Text variant="body" weight="bold" color={isDark ? '#FFFFFF' : '#1A1A1A'} style={{ zIndex: 2 }}>
-                                {holding ? 'Keep holding...' : 'Hold to commit'}
-                            </Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </View>
-            </View>
-            {/* Only Back button - full width */}
-            <View style={styles.bottomButtonsContainer}>
-                <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={{ flex: 1 }}>
-                    <LinearGradient colors={isDark ? ['#1A1A1A', '#282828', '#1A1A1A'] : ['#F5F5F5', '#FFFFFF', '#F5F5F5']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[styles.buttonBase, { borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)' }]}>
-                        <Text variant="body" weight="semibold" color={isDark ? '#FFFFFF' : '#1A1A1A'}>Go Back</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+                <Animated.View style={[styles.commitmentContent, { opacity: contentAnim.opacity, transform: [{ translateY: contentAnim.translateY }] }]}>
+                    <View style={[styles.commitmentCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
+                        <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ lineHeight: 24 }}>
+                            Taking control of your screen time is a journey.{'\n\n'}
+                            Blockd will help you build healthier habits one day at a time.{'\n\n'}
+                            Let's start with a simple commitment: be mindful of how you spend your time.
+                        </Text>
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={[styles.buttonContainer, { opacity: buttonAnim.opacity, transform: [{ translateY: buttonAnim.translateY }] }]}>
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+                            <Text variant="body" weight="medium" color={theme.colors.textSecondary}>Back</Text>
+                        </TouchableOpacity>
+                        <View style={{ flex: 1, marginLeft: spacing[3] }}>
+                            <FullWidthButton title="I Commit" onPress={onComplete} isDark={isDark} />
+                        </View>
+                    </View>
+                </Animated.View>
             </View>
         </View>
     );
@@ -465,51 +357,38 @@ export const CommitmentScreen: React.FC<CommitmentProps> = ({ onComplete, onBack
 // ============================================
 // STYLES
 // ============================================
-
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    scrollView: { flex: 1 },
-    scrollContent: { paddingHorizontal: spacing[4], paddingTop: 50, paddingBottom: spacing[4] },
-    content: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing[5] },
+    content: { flex: 1, paddingHorizontal: spacing[5], paddingTop: spacing[4] },
 
-    progressBarContainer: { position: 'absolute', top: 16, left: spacing[5], right: spacing[5], flexDirection: 'row', gap: 6, zIndex: 10 },
-    progressSegment: { flex: 1, height: 3, borderRadius: 1.5 },
-
-    headline: { marginBottom: spacing[2], fontSize: 32, lineHeight: 42 },
-    headlineSmaller: { marginBottom: spacing[2], fontSize: 26, lineHeight: 34 },
-    subtext: { lineHeight: 26, fontSize: 16 },
-
-    // App Analysis
-    // App Analysis - Premium Radar
-    radarContainer: { width: 140, height: 140, borderRadius: 70, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-    radarCircle: { width: 100, height: 100, borderRadius: 50, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-    radarCircleInner: { width: 60, height: 60, borderRadius: 30, borderWidth: 1 },
-    radarLineContainer: { position: 'absolute', width: 140, height: 140, borderRadius: 70, overflow: 'hidden' },
-    radarGradient: { width: 140, height: 70, opacity: 0.8 },
-    radarDot: { position: 'absolute', width: 8, height: 8, borderRadius: 4 },
-
-    // App Selection
-    appsList: { marginTop: spacing[5], gap: spacing[3] },
-    appItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing[4], paddingHorizontal: spacing[4], borderRadius: 16, borderWidth: 2 },
-    appInfo: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
-    appIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    appIconImage: { width: 44, height: 44, borderRadius: 12 },
-    checkmark: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-
-    // Time Calculation
-    bigNumberWrap: { marginVertical: spacing[6] },
-    bigNumber: { fontSize: 80, lineHeight: 90 },
-
-    // Commitment
-    holdButtonWrap: { marginTop: spacing[8] },
-    holdButtonOuter: { width: width * 0.7 },
-    holdButton: { height: 70, borderRadius: 35, alignItems: 'center', justifyContent: 'center', borderWidth: 2, overflow: 'hidden' },
-    holdProgress: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 35 },
+    // Progress
+    progressContainer: { height: 3, marginHorizontal: spacing[5], marginTop: 50, borderRadius: 2 },
+    progressFill: { height: 3, borderRadius: 2 },
 
     // Buttons
-    bottomButtonsContainer: { flexDirection: 'row', paddingHorizontal: spacing[4], paddingBottom: spacing[4], gap: spacing[3] },
-    backButtonWrapper: { flex: 1 },
-    buttonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
-    nextButtonWrapper: { flex: 2 },
-    nextButtonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 },
+    fullButton: { height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    buttonRow: { flexDirection: 'row', alignItems: 'center', marginTop: 'auto', paddingBottom: spacing[6] },
+    backButton: { paddingVertical: spacing[4], paddingHorizontal: spacing[4] },
+    buttonContainer: { marginTop: 'auto' },
+
+    // Analysis
+    analysisContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[5] },
+    analysisProgress: { width: '80%', height: 6, borderRadius: 3, marginTop: spacing[6], overflow: 'hidden' },
+    analysisProgressFill: { height: 6, borderRadius: 3 },
+
+    // App List
+    appListContainer: { flex: 1, marginTop: spacing[4] },
+    appList: { flex: 1 },
+    appItem: { flexDirection: 'row', alignItems: 'center', padding: spacing[3], borderRadius: 14, marginBottom: spacing[2], borderWidth: 1.5 },
+    appIcon: { width: 44, height: 44, borderRadius: 12 },
+    appIconPlaceholder: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+
+    // Stats
+    statsContainer: { flex: 1, justifyContent: 'center' },
+    statCard: { padding: spacing[5], borderRadius: 20, alignItems: 'center' },
+
+    // Commitment
+    commitmentContent: { flex: 1, justifyContent: 'center' },
+    commitmentCard: { padding: spacing[6], borderRadius: 24 },
 });
