@@ -130,9 +130,7 @@ export const AppSelectionScreen: React.FC<ScreenProps & { apps: AppData[]; selec
                 })}
             </ScrollView>
             <View style={styles.bottomButtons}>
-                <Button variant="primary" onPress={onNext} disabled={selectedApps.length === 0}>
-                    Continue ({selectedApps.length} selected)
-                </Button>
+                <Button variant="primary" onPress={onNext} disabled={selectedApps.length === 0} title={`Continue (${selectedApps.length} selected)`} />
             </View>
         </View>
     );
@@ -167,7 +165,7 @@ export const TimeCalculationScreen: React.FC<ScreenProps & { apps: AppData[]; se
                 </View>
             </View>
             <View style={styles.bottomButtons}>
-                <Button variant="primary" onPress={onNext}>I'm Ready to Change</Button>
+                <Button variant="primary" onPress={onNext} title="I'm Ready to Change" />
             </View>
         </View>
     );
@@ -195,7 +193,7 @@ export const CommitmentScreen: React.FC<ScreenProps> = ({ onNext }) => {
                 </View>
             </View>
             <View style={styles.bottomButtons}>
-                <Button variant="primary" onPress={onNext}>I Commit</Button>
+                <Button variant="primary" onPress={onNext} title="I Commit" />
             </View>
         </View>
     );
@@ -218,7 +216,7 @@ export const AppUsage: React.FC<ScreenProps> = ({ onNext }) => {
                 </Text>
             </View>
             <View style={styles.bottomButtons}>
-                <Button variant="primary" onPress={onNext}>Continue</Button>
+                <Button variant="primary" onPress={onNext} title="Continue" />
             </View>
         </View>
     );
