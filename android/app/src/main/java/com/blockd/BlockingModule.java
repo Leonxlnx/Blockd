@@ -285,4 +285,102 @@ public class BlockingModule extends ReactContextBaseJavaModule {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
         return sdf.format(new java.util.Date());
     }
+    
+    // =====================================================
+    // NEW: Accessibility Service & Foreground Service Control
+    // =====================================================
+    
+    @ReactMethod
+    public void isAccessibilityEnabled(Promise promise) {
+        try {
+            boolean enabled = BlockingAccessibilityService.isRunning();
+            promise.resolve(enabled);
+        } catch (Exception e) {
+            promise.resolve(false);
+        }
+    }
+    
+    @ReactMethod
+    public void openAccessibilitySettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            reactContext.startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening accessibility settings: " + e.getMessage());
+        }
+    }
+    
+    @ReactMethod
+    public void openAppSettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(android.net.Uri.parse("package:" + reactContext.getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            reactContext.startActivity(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening app settings: " + e.getMessage());
+        }
+    }
+    
+    @ReactMethod
+    public void startForegroundService() {
+        try {
+            Intent intent = new Intent(reactContext, AppBlockForegroundService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                reactContext.startForegroundService(intent);
+            } else {
+                reactContext.startService(intent);
+            }
+            Log.d(TAG, "Started foreground service");
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting foreground service: " + e.getMessage());
+        }
+    }
+    
+    @ReactMethod
+    public void stopForegroundService() {
+        try {
+            Intent intent = new Intent(reactContext, AppBlockForegroundService.class);
+            reactContext.stopService(intent);
+            Log.d(TAG, "Stopped foreground service");
+        } catch (Exception e) {
+            Log.e(TAG, "Error stopping foreground service: " + e.getMessage());
+        }
+    }
+    
+    @ReactMethod
+    public void isForegroundServiceRunning(Promise promise) {
+        try {
+            boolean running = AppBlockForegroundService.isServiceRunning();
+            promise.resolve(running);
+        } catch (Exception e) {
+            promise.resolve(false);
+        }
+    }
+    
+    @ReactMethod
+    public void syncBlockedAppsToAccessibility() {
+        // Sync blocked apps to the accessibility service
+        if (BlockingAccessibilityService.isRunning()) {
+            BlockingAccessibilityService service = BlockingAccessibilityService.getInstance();
+            if (service != null) {
+                for (String pkg : blockedApps.keySet()) {
+                    service.addBlockedApp(pkg);
+                }
+                Log.d(TAG, "Synced " + blockedApps.size() + " apps to accessibility service");
+            }
+        }
+    }
+    
+    @ReactMethod
+    public void addListener(String eventName) {
+        // Required for RN event emitter
+    }
+    
+    @ReactMethod
+    public void removeListeners(int count) {
+        // Required for RN event emitter
+    }
 }
+

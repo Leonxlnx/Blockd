@@ -36,6 +36,7 @@ import {
   AuthScreen,
   WelcomeFirstTimeScreen,
 } from './src/screens/onboarding/PersonalizationScreens';
+import { PermissionSetupScreen } from './src/screens/onboarding/PermissionSetupScreen';
 import MainApp from './src/screens/MainApp';
 import { OverlayManager } from './src/screens/overlays/OverlayManager';
 import auth from '@react-native-firebase/auth';
@@ -55,6 +56,7 @@ type Screen =
   | 'permissions-usage'
   | 'permissions-overlay'
   | 'permissions-battery'
+  | 'permissions-accessibility'
   // App Setup (4 screens)
   | 'app-analysis'
   | 'app-selection'
@@ -155,13 +157,20 @@ const AppContent: React.FC = () => {
       case 'permissions-overlay':
         return <OnboardingOverlay onNext={() => setCurrentScreen('permissions-battery')} onBack={() => setCurrentScreen('permissions-usage')} />;
       case 'permissions-battery':
-        return <OnboardingBattery onComplete={() => setCurrentScreen('app-analysis')} onBack={() => setCurrentScreen('permissions-overlay')} />;
+        return <OnboardingBattery onComplete={() => setCurrentScreen('permissions-accessibility')} onBack={() => setCurrentScreen('permissions-overlay')} />;
+      case 'permissions-accessibility':
+        return (
+          <PermissionSetupScreen
+            onComplete={() => setCurrentScreen('app-analysis')}
+            onSkip={() => setCurrentScreen('app-analysis')}
+          />
+        );
 
       // ==========================================
       // APP SETUP (4 screens)
       // ==========================================
       case 'app-analysis':
-        return <AppAnalysisScreen onNext={(apps) => { setAnalyzedApps(apps); setCurrentScreen('app-selection'); }} onBack={() => setCurrentScreen('permissions-battery')} />;
+        return <AppAnalysisScreen onNext={(apps) => { setAnalyzedApps(apps); setCurrentScreen('app-selection'); }} onBack={() => setCurrentScreen('permissions-accessibility')} />;
       case 'app-selection':
         return (
           <AppSelectionScreen

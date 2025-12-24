@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Blockd</string>
+    <string name="accessibility_service_description">Blockd needs this permission to detect when you open blocked apps and show you a focus reminder. This helps you stay on track with your screen time goals.</string>
 </resources>
