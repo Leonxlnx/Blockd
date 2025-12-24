@@ -168,6 +168,7 @@ public class BlockingModule extends ReactContextBaseJavaModule {
         }
     }
 
+
     private void checkCurrentApp() {
         String currentPackage = getForegroundApp();
         if (currentPackage == null || currentPackage.isEmpty()) return;
@@ -190,13 +191,12 @@ public class BlockingModule extends ReactContextBaseJavaModule {
                 remainingDays = (int) ((blockedApp.detoxEndTime - System.currentTimeMillis()) / (24 * 60 * 60 * 1000));
             }
         } else if ("limit".equals(blockedApp.mode)) {
-            String today = getCurrentDate();
-            if (!today.equals(blockedApp.lastResetDate)) {
-                blockedApp.usedTodayMinutes = 0;
-                blockedApp.lastResetDate = today;
-            }
+            // Get REAL usage from UsageStatsManager
+            int usedMinutesToday = getAppUsageToday(currentPackage);
             
-            remainingMinutes = blockedApp.dailyLimitMinutes - blockedApp.usedTodayMinutes;
+            remainingMinutes = blockedApp.dailyLimitMinutes - usedMinutesToday;
+            
+            Log.d(TAG, "App: " + currentPackage + " used: " + usedMinutesToday + "m, limit: " + blockedApp.dailyLimitMinutes + "m, remaining: " + remainingMinutes + "m");
             
             if (remainingMinutes <= 0) {
                 shouldBlock = true;
@@ -217,6 +217,35 @@ public class BlockingModule extends ReactContextBaseJavaModule {
             
             sendEvent("onAppBlocked", params);
         }
+    }
+    
+    private int getAppUsageToday(String packageName) {
+        try {
+            UsageStatsManager usm = (UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
+            
+            // Get start of today
+            java.util.Calendar calendar = java.util.Calendar.getInstance();
+            calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+            calendar.set(java.util.Calendar.MINUTE, 0);
+            calendar.set(java.util.Calendar.SECOND, 0);
+            calendar.set(java.util.Calendar.MILLISECOND, 0);
+            long startOfDay = calendar.getTimeInMillis();
+            long now = System.currentTimeMillis();
+            
+            List<UsageStats> stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
+            
+            if (stats != null) {
+                for (UsageStats stat : stats) {
+                    if (stat.getPackageName().equals(packageName)) {
+                        long totalTimeMs = stat.getTotalTimeInForeground();
+                        return (int) (totalTimeMs / 60000); // Convert to minutes
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting app usage: " + e.getMessage());
+        }
+        return 0;
     }
 
     private void sendEvent(String eventName, WritableMap params) {

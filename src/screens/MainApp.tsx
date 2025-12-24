@@ -11,6 +11,7 @@ import {
     Linking,
     Modal,
     Alert,
+    TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../theme';
@@ -616,24 +617,48 @@ const LimitsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 
                                 {mode === 'limit' ? (
                                     <>
-                                        <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginBottom: spacing[2] }}>DAILY LIMIT</Text>
-                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}>
-                                            {[15, 30, 45, 60, 90, 120].map(v => (
+                                        <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginBottom: spacing[2] }}>DAILY LIMIT (minutes)</Text>
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[3] }}>
+                                            {[15, 30, 60, 120].map(v => (
                                                 <TouchableOpacity key={v} onPress={() => setLimitValue(v)} style={[styles.timeButton, { backgroundColor: limitValue === v ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') }]}>
                                                     <Text variant="body" weight="semibold" color={limitValue === v ? (isDark ? '#000' : '#FFF') : theme.colors.text}>{v}m</Text>
                                                 </TouchableOpacity>
                                             ))}
                                         </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2], marginBottom: spacing[4] }}>
+                                            <Text variant="body" color={theme.colors.textSecondary}>Custom:</Text>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderRadius: 12, paddingHorizontal: spacing[3] }}>
+                                                <TextInput
+                                                    value={String(limitValue)}
+                                                    onChangeText={(t) => setLimitValue(parseInt(t) || 0)}
+                                                    keyboardType="number-pad"
+                                                    style={{ color: isDark ? '#FFF' : '#000', fontSize: 18, fontWeight: '600', paddingVertical: spacing[2], minWidth: 50, textAlign: 'center' }}
+                                                />
+                                                <Text variant="body" weight="semibold" color={theme.colors.textSecondary}>min</Text>
+                                            </View>
+                                        </View>
                                     </>
                                 ) : (
                                     <>
-                                        <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginBottom: spacing[2] }}>DETOX DURATION</Text>
-                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}>
-                                            {[3, 7, 14, 21, 30].map(v => (
+                                        <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ marginBottom: spacing[2] }}>DETOX DURATION (days)</Text>
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[3] }}>
+                                            {[3, 7, 14, 30].map(v => (
                                                 <TouchableOpacity key={v} onPress={() => setDetoxDays(v)} style={[styles.timeButton, { backgroundColor: detoxDays === v ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') }]}>
                                                     <Text variant="body" weight="semibold" color={detoxDays === v ? (isDark ? '#000' : '#FFF') : theme.colors.text}>{v}d</Text>
                                                 </TouchableOpacity>
                                             ))}
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2], marginBottom: spacing[4] }}>
+                                            <Text variant="body" color={theme.colors.textSecondary}>Custom:</Text>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderRadius: 12, paddingHorizontal: spacing[3] }}>
+                                                <TextInput
+                                                    value={String(detoxDays)}
+                                                    onChangeText={(t) => setDetoxDays(parseInt(t) || 0)}
+                                                    keyboardType="number-pad"
+                                                    style={{ color: isDark ? '#FFF' : '#000', fontSize: 18, fontWeight: '600', paddingVertical: spacing[2], minWidth: 50, textAlign: 'center' }}
+                                                />
+                                                <Text variant="body" weight="semibold" color={theme.colors.textSecondary}>days</Text>
+                                            </View>
                                         </View>
                                     </>
                                 )}
