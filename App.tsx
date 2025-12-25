@@ -11,6 +11,7 @@ import {
   OnboardingName,
 } from './src/screens/onboarding/OnboardingScreens';
 import {
+  OnboardingRestrictedIntro,
   OnboardingUsageStats,
   OnboardingOverlay,
   OnboardingBattery,
@@ -52,7 +53,8 @@ type Screen =
   | 'onboarding-name'
   // Hello Transition
   | 'hello-name'
-  // PERMISSIONS (3 screens - all together)
+  // PERMISSIONS (5 screens - all together)
+  | 'permissions-intro'
   | 'permissions-usage'
   | 'permissions-overlay'
   | 'permissions-battery'
@@ -147,13 +149,15 @@ const AppContent: React.FC = () => {
       // TRANSITION: "Hi {Name}!"
       // ==========================================
       case 'hello-name':
-        return <HelloNameScreen name={userName} onNext={() => setCurrentScreen('permissions-usage')} />;
+        return <HelloNameScreen name={userName} onNext={() => setCurrentScreen('permissions-intro')} />;
 
       // ==========================================
-      // PERMISSIONS (3 screens - ALL TOGETHER)
+      // PERMISSIONS (5 screens - ALL TOGETHER)
       // ==========================================
+      case 'permissions-intro':
+        return <OnboardingRestrictedIntro onNext={() => setCurrentScreen('permissions-usage')} onBack={() => setCurrentScreen('hello-name')} />;
       case 'permissions-usage':
-        return <OnboardingUsageStats onNext={() => setCurrentScreen('permissions-overlay')} onBack={() => setCurrentScreen('hello-name')} />;
+        return <OnboardingUsageStats onNext={() => setCurrentScreen('permissions-overlay')} onBack={() => setCurrentScreen('permissions-intro')} />;
       case 'permissions-overlay':
         return <OnboardingOverlay onNext={() => setCurrentScreen('permissions-battery')} onBack={() => setCurrentScreen('permissions-usage')} />;
       case 'permissions-battery':

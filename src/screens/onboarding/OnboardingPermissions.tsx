@@ -171,6 +171,64 @@ const LargeIcon: React.FC<{ type: 'usage' | 'overlay' | 'battery' | 'accessibili
 };
 
 // ============================================
+// RESTRICTED SETTINGS INTRO (NEW - FIRST SCREEN)
+// ============================================
+
+interface RestrictedIntroProps {
+    onNext: () => void;
+    onBack?: () => void;
+}
+
+export const OnboardingRestrictedIntro: React.FC<RestrictedIntroProps> = ({ onNext, onBack }) => {
+    const { theme, isDark } = useTheme();
+    const iconAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(100);
+    const cardAnim = useEntranceAnimation(200);
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+            <ProgressBar current={1} total={5} />
+
+            <View style={styles.permissionContent}>
+                <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
+                    {/* Warning/Info Icon */}
+                    <View style={styles.iconBox}>
+                        <View style={[styles.infoIcon, { borderColor: isDark ? '#FFB800' : '#FF9500' }]}>
+                            <View style={[styles.infoIconDot, { backgroundColor: isDark ? '#FFB800' : '#FF9500' }]} />
+                            <View style={[styles.infoIconLine, { backgroundColor: isDark ? '#FFB800' : '#FF9500' }]} />
+                        </View>
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.title}>Important Setup</Text>
+                </Animated.View>
+
+                <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] }}>
+                    <View style={[styles.card, { backgroundColor: isDark ? 'rgba(255,200,0,0.08)' : 'rgba(255,150,0,0.08)' }]}>
+                        <Text variant="body" weight="semibold" align="center" style={{ marginBottom: spacing[3] }}>
+                            Android 13+ requires extra steps
+                        </Text>
+                        <Text variant="body" color={theme.colors.textSecondary} align="left" style={{ lineHeight: 28 }}>
+                            Before we begin, please:{"\n\n"}
+                            1. Open Settings → Apps → Blockd{"\n"}
+                            2. Tap ⋮ (three dots) at top-right{"\n"}
+                            3. Select "Allow restricted settings"{"\n"}
+                            4. Return here and continue
+                        </Text>
+                    </View>
+                </Animated.View>
+            </View>
+
+            <BottomButtons onBack={onBack || (() => { })} onPrimary={onNext} primaryLabel="I Understand" isDark={isDark} />
+        </View>
+    );
+};
+
+// ============================================
 // USAGE STATS PERMISSION
 // ============================================
 
@@ -199,7 +257,7 @@ export const OnboardingUsageStats: React.FC<UsageStatsScreenProps> = ({ onNext, 
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <FlowingBackground isDark={isDark} />
-            <ProgressBar current={1} total={4} />
+            <ProgressBar current={2} total={5} />
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
@@ -252,7 +310,7 @@ export const OnboardingOverlay: React.FC<OverlayScreenProps> = ({ onNext, onBack
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <FlowingBackground isDark={isDark} />
-            <ProgressBar current={2} total={4} />
+            <ProgressBar current={3} total={5} />
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
@@ -305,7 +363,7 @@ export const OnboardingBattery: React.FC<BatteryScreenProps> = ({ onComplete, on
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <FlowingBackground isDark={isDark} />
-            <ProgressBar current={3} total={4} />
+            <ProgressBar current={4} total={5} />
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
@@ -364,8 +422,8 @@ export const OnboardingAccessibility: React.FC<AccessibilityScreenProps> = ({ on
     }, []);
 
     const handleGrantAccess = () => {
-        // Show alert with instructions for Android 13+
-        BlockingModule.openAppSettings();
+        // Open Accessibility Settings directly
+        BlockingModule.openAccessibilitySettings();
     };
 
     return (
@@ -373,7 +431,7 @@ export const OnboardingAccessibility: React.FC<AccessibilityScreenProps> = ({ on
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <FlowingBackground isDark={isDark} />
-            <ProgressBar current={4} total={4} />
+            <ProgressBar current={5} total={5} />
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
@@ -467,6 +525,11 @@ const styles = StyleSheet.create({
     eyeInner: { width: 18, height: 18, borderRadius: 9 },
     personHead: { width: 16, height: 16, borderRadius: 8, marginTop: 12 },
     personBody: { width: 28, height: 18, borderWidth: 3, borderTopWidth: 0, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, marginTop: -2 },
+
+    // Info Icon (for Restricted Settings Intro)
+    infoIcon: { width: 60, height: 60, borderWidth: 3, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
+    infoIconDot: { width: 8, height: 8, borderRadius: 4, position: 'absolute', top: 12 },
+    infoIconLine: { width: 4, height: 20, borderRadius: 2, position: 'absolute', top: 26 },
 });
 
 export default OnboardingUsageStats;

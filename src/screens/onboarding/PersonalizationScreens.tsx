@@ -543,20 +543,43 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onDemo, onLogin, onSignu
 
     const renderSelection = () => (
         <View style={styles.authButtons}>
-            {/* Google Button (Placeholder for now) */}
-            <TouchableOpacity onPress={() => {/* Implement Google Sign In later */ }} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                <View style={styles.authButtonContent}>
-                    <Image source={require('../../../assets/images/icon-google.png')} style={styles.authIconLarge} resizeMode="contain" />
-                    <Text variant="body" weight="semibold">Continue with Google</Text>
+            {/* Apple Button - Black */}
+            <TouchableOpacity onPress={() => {/* Apple Sign In */ }} activeOpacity={0.8} style={[styles.socialButtonFull, { backgroundColor: isDark ? '#FFF' : '#000' }]}>
+                <View style={styles.socialButtonIcon}>
+                    <Text style={{ fontSize: 22, color: isDark ? '#000' : '#FFF' }}></Text>
                 </View>
+                <Text variant="body" weight="semibold" color={isDark ? '#000' : '#FFF'} style={styles.socialButtonText}>Continue with Apple</Text>
             </TouchableOpacity>
 
-            {/* Email Button */}
-            <TouchableOpacity onPress={() => setMode('email_login')} activeOpacity={0.8} style={[styles.authButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                <View style={styles.authButtonContent}>
-                    <Image source={require('../../../assets/images/icon-email.png')} style={styles.authIconXL} resizeMode="contain" />
-                    <Text variant="body" weight="semibold">Continue with Email</Text>
+            {/* Google Button - White with border */}
+            <TouchableOpacity onPress={() => {/* Google Sign In */ }} activeOpacity={0.8} style={[styles.socialButtonFull, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#FFF', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#E0E0E0' }]}>
+                <View style={styles.socialButtonIcon}>
+                    <Image source={require('../../../assets/images/icon-google.png')} style={{ width: 22, height: 22 }} resizeMode="contain" />
                 </View>
+                <Text variant="body" weight="medium" color={isDark ? '#FFF' : '#444'} style={styles.socialButtonText}>Continue with Google</Text>
+            </TouchableOpacity>
+
+            {/* Facebook Button - Blue */}
+            <TouchableOpacity onPress={() => {/* Facebook Sign In */ }} activeOpacity={0.8} style={[styles.socialButtonFull, { backgroundColor: '#1877F2' }]}>
+                <View style={styles.socialButtonIcon}>
+                    <Text style={{ fontSize: 22, color: '#FFF', fontWeight: 'bold' }}>f</Text>
+                </View>
+                <Text variant="body" weight="semibold" color="#FFF" style={styles.socialButtonText}>Continue with Facebook</Text>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: spacing[4] }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }} />
+                <Text variant="caption" color={theme.colors.textTertiary} style={{ marginHorizontal: spacing[3] }}>or</Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }} />
+            </View>
+
+            {/* Email Button */}
+            <TouchableOpacity onPress={() => setMode('email_login')} activeOpacity={0.8} style={[styles.socialButtonFull, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]}>
+                <View style={styles.socialButtonIcon}>
+                    <Text style={{ fontSize: 18 }}>✉️</Text>
+                </View>
+                <Text variant="body" weight="medium" style={styles.socialButtonText}>Continue with Email</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={onDemo} style={{ marginTop: spacing[6] }}>
@@ -739,12 +762,17 @@ const styles = StyleSheet.create({
 
     studyCard: { marginTop: spacing[5], padding: spacing[5], borderRadius: 20 },
 
-    authButtons: { marginTop: spacing[6], width: '100%', gap: spacing[3] },
+    authButtons: { marginTop: spacing[6], width: '100%', gap: spacing[3], paddingHorizontal: spacing[4] },
     authButton: { paddingVertical: spacing[4], paddingHorizontal: spacing[5], borderRadius: 16 },
     authButtonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing[3] },
     authIcon: { width: 24, height: 24 },
     authIconLarge: { width: 28, height: 28 },
     authIconXL: { width: 32, height: 32 },
+
+    // Social Auth Buttons (Vertical Stack like reference)
+    socialButtonFull: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing[4], paddingHorizontal: spacing[5], borderRadius: 14 },
+    socialButtonIcon: { width: 28, marginRight: spacing[3], alignItems: 'center' },
+    socialButtonText: { flex: 1 },
 
     fullButtonContainer: { paddingHorizontal: spacing[4], paddingBottom: spacing[4] },
     fullButtonWrapper: { width: '100%' },
