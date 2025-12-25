@@ -12,6 +12,7 @@ import {
     Modal,
     Alert,
     TextInput,
+    Text as RNText,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
@@ -241,20 +242,29 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     }
     const maxWeekly = Math.max(...reorderedData, 60);
 
-    // Metal card gradient component
+    // Metal card gradient component with metallic edge
     const MetalCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ children, style }) => (
-        <LinearGradient
-            colors={isDark
-                ? ['rgba(35,35,40,0.95)', 'rgba(15,15,18,0.98)']
-                : ['rgba(255,255,255,0.98)', 'rgba(245,245,248,0.95)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.premiumCard, style]}
-        >
-            <View style={[styles.cardInnerBorder, { borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' }]}>
-                {children}
-            </View>
-        </LinearGradient>
+        <View style={[styles.premiumCardOuter, style]}>
+            <LinearGradient
+                colors={isDark
+                    ? ['rgba(60,60,70,1)', 'rgba(30,30,35,1)', 'rgba(20,20,25,1)']
+                    : ['rgba(255,255,255,1)', 'rgba(240,240,245,1)', 'rgba(230,230,235,1)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.premiumCardBorder}
+            >
+                <LinearGradient
+                    colors={isDark
+                        ? ['rgba(25,25,30,0.98)', 'rgba(15,15,18,0.99)']
+                        : ['rgba(252,252,255,0.99)', 'rgba(245,245,250,0.98)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.premiumCardInner}
+                >
+                    {children}
+                </LinearGradient>
+            </LinearGradient>
+        </View>
     );
 
     return (
@@ -271,10 +281,10 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                     <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase' }}>Screen Time</Text>
                 </View>
                 <View style={styles.screenTimeRow}>
-                    <Text variant="h1" weight="bold" style={{ fontSize: 64, color: isDark ? '#FFF' : '#000' }}>{hours}</Text>
-                    <Text variant="h2" weight="medium" style={{ fontSize: 28, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>h</Text>
-                    <Text variant="h1" weight="bold" style={{ fontSize: 64, color: isDark ? '#FFF' : '#000', marginLeft: 12 }}>{minutes.toString().padStart(2, '0')}</Text>
-                    <Text variant="h2" weight="medium" style={{ fontSize: 28, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>m</Text>
+                    <RNText style={{ fontSize: 64, fontWeight: '700', color: isDark ? '#FFF' : '#000' }}>{hours}</RNText>
+                    <RNText style={{ fontSize: 28, fontWeight: '300', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>h</RNText>
+                    <RNText style={{ fontSize: 64, fontWeight: '700', color: isDark ? '#FFF' : '#000', marginLeft: 12 }}>{minutes.toString().padStart(2, '0')}</RNText>
+                    <RNText style={{ fontSize: 28, fontWeight: '300', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>m</RNText>
                 </View>
             </MetalCard>
 
@@ -946,14 +956,17 @@ const styles = StyleSheet.create({
     appSlotRight: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
     appProgressBar: { width: 60, height: 4, borderRadius: 2, overflow: 'hidden' },
     appProgressFill: { height: '100%', borderRadius: 2 },
-    weeklyChart: { flexDirection: 'row', height: 140 },
+    weeklyChart: { flexDirection: 'row', height: 140, marginTop: spacing[4] },
     weeklyLabels: { justifyContent: 'space-between', paddingBottom: 24, paddingRight: spacing[2] },
     weeklyBars: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 4 },
     weeklyBarContainer: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
     weeklyBar: { width: '100%', borderRadius: 4 },
     weeklyTooltip: { position: 'absolute', top: -28, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, zIndex: 10 },
 
-    // Premium Cards
+    // Premium Cards with Metallic Edge
+    premiumCardOuter: { marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.4, shadowRadius: 25, elevation: 10 },
+    premiumCardBorder: { borderRadius: 24, padding: 1.5 },
+    premiumCardInner: { borderRadius: 22, padding: spacing[4] },
     premiumCard: { borderRadius: 24, padding: spacing[4], marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.35, shadowRadius: 25, elevation: 8 },
     cardInnerBorder: { borderWidth: 1, borderRadius: 20, padding: spacing[4], margin: -spacing[4] },
     statContent: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing[2] },
