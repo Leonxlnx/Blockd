@@ -190,7 +190,7 @@ const AppContent: React.FC = () => {
           />
         );
       case 'commitment':
-        return <CommitmentScreen onComplete={() => setCurrentScreen('lets-personalize')} onBack={() => setCurrentScreen('time-calculation')} />;
+        return <CommitmentScreen onNext={() => setCurrentScreen('lets-personalize')} onBack={() => setCurrentScreen('time-calculation')} />;
 
       // ==========================================
       // PERSONALIZATION (8 screens)

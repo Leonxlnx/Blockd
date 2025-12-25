@@ -194,11 +194,11 @@ export const OnboardingRestrictedIntro: React.FC<RestrictedIntroProps> = ({ onNe
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
-                    {/* Warning/Info Icon */}
+                    {/* Info Icon */}
                     <View style={styles.iconBox}>
-                        <View style={[styles.infoIcon, { borderColor: isDark ? '#FFB800' : '#FF9500' }]}>
-                            <View style={[styles.infoIconDot, { backgroundColor: isDark ? '#FFB800' : '#FF9500' }]} />
-                            <View style={[styles.infoIconLine, { backgroundColor: isDark ? '#FFB800' : '#FF9500' }]} />
+                        <View style={[styles.infoIcon, { borderColor: isDark ? '#FFF' : '#1A1A1A' }]}>
+                            <View style={[styles.infoIconDot, { backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
+                            <View style={[styles.infoIconLine, { backgroundColor: isDark ? '#FFF' : '#1A1A1A' }]} />
                         </View>
                     </View>
                 </Animated.View>
@@ -208,16 +208,17 @@ export const OnboardingRestrictedIntro: React.FC<RestrictedIntroProps> = ({ onNe
                 </Animated.View>
 
                 <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] }}>
-                    <View style={[styles.card, { backgroundColor: isDark ? 'rgba(255,200,0,0.08)' : 'rgba(255,150,0,0.08)' }]}>
+                    <View style={[styles.card, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }]}>
                         <Text variant="body" weight="semibold" align="center" style={{ marginBottom: spacing[3] }}>
                             Android 13+ requires extra steps
                         </Text>
                         <Text variant="body" color={theme.colors.textSecondary} align="left" style={{ lineHeight: 28 }}>
                             Before we begin, please:{"\n\n"}
-                            1. Open Settings → Apps → Blockd{"\n"}
-                            2. Tap ⋮ (three dots) at top-right{"\n"}
-                            3. Select "Allow restricted settings"{"\n"}
-                            4. Return here and continue
+                            1. Open Settings{"\n"}
+                            2. Go to Apps{"\n"}
+                            3. Find and tap Blockd{"\n"}
+                            4. Enable "Allow restricted settings"{"\n"}
+                            5. Return here and continue
                         </Text>
                     </View>
                 </Animated.View>
@@ -450,7 +451,7 @@ export const OnboardingAccessibility: React.FC<AccessibilityScreenProps> = ({ on
                         </Text>
                         {!granted && (
                             <Text variant="caption" color={theme.colors.textTertiary} align="center" style={{ marginTop: spacing[3], lineHeight: 20 }}>
-                                Android 13+: Tap ⋮ → "Allow restricted settings" first, then enable Blockd in Accessibility.
+                                Under Downloaded Apps, find Blockd and enable it.
                             </Text>
                         )}
                     </View>

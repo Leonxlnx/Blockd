@@ -335,9 +335,9 @@ export const CommitmentScreen: React.FC<{ onNext: () => void; onBack?: () => voi
                                     }]} />
                                 </View>
                                 <View style={styles.holdButtonContent}>
-                                    <Text variant="h2" weight="bold" align="center">{isHolding ? `${holdProgress}%` : '🤝'}</Text>
+                                    <Text variant="h2" weight="bold" align="center">{isHolding ? `${holdProgress}%` : 'Hold'}</Text>
                                     <Text variant="caption" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[1] }}>
-                                        {isHolding ? 'Keep holding...' : 'Hold to Commit'}
+                                        {isHolding ? 'Keep holding...' : 'to Commit'}
                                     </Text>
                                 </View>
                             </View>
