@@ -34,7 +34,7 @@ interface ScreenProps {
 // APP ANALYSIS SCREEN
 // ============================================
 
-export const AppAnalysisScreen: React.FC<ScreenProps & { setApps: (apps: AppData[]) => void }> = ({ onNext, setApps }) => {
+export const AppAnalysisScreen: React.FC<{ onNext: (apps: AppData[]) => void; onBack?: () => void }> = ({ onNext }) => {
     const { theme, isDark } = useTheme();
     const [progress] = useState(new Animated.Value(0));
 
@@ -46,15 +46,16 @@ export const AppAnalysisScreen: React.FC<ScreenProps & { setApps: (apps: AppData
         }).start();
 
         const loadApps = async () => {
+            let loadedApps: AppData[] = [];
             try {
                 const apps = await PermissionsModule.getTodayUsage();
                 if (apps && apps.length > 0) {
-                    setApps(apps);
+                    loadedApps = apps;
                 }
             } catch (e) {
                 console.log('Load apps error:', e);
             }
-            setTimeout(onNext, 3500);
+            setTimeout(() => onNext(loadedApps), 3500);
         };
         loadApps();
     }, []);
@@ -87,11 +88,15 @@ export const AppAnalysisScreen: React.FC<ScreenProps & { setApps: (apps: AppData
 export const AppSelectionScreen: React.FC<ScreenProps & { apps: AppData[]; selectedApps: string[]; setSelectedApps: (apps: string[]) => void }> = ({ onNext, onBack, apps, selectedApps, setSelectedApps }) => {
     const { theme, isDark } = useTheme();
 
+    // Safe defaults to prevent crashes
+    const safeApps = apps || [];
+    const safeSelectedApps = selectedApps || [];
+
     const toggleApp = (packageName: string) => {
-        if (selectedApps.includes(packageName)) {
-            setSelectedApps(selectedApps.filter(p => p !== packageName));
+        if (safeSelectedApps.includes(packageName)) {
+            setSelectedApps(safeSelectedApps.filter(p => p !== packageName));
         } else {
-            setSelectedApps([...selectedApps, packageName]);
+            setSelectedApps([...safeSelectedApps, packageName]);
         }
     };
 
@@ -105,8 +110,8 @@ export const AppSelectionScreen: React.FC<ScreenProps & { apps: AppData[]; selec
                 </Text>
             </View>
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }} showsVerticalScrollIndicator={false}>
-                {(apps || []).map((app, i) => {
-                    const isSelected = selectedApps.includes(app.packageName);
+                {safeApps.map((app, i) => {
+                    const isSelected = safeSelectedApps.includes(app.packageName);
                     return (
                         <TouchableOpacity key={i} onPress={() => toggleApp(app.packageName)} activeOpacity={0.7}>
                             <View style={[styles.appItem, { backgroundColor: isSelected ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'), borderColor: isSelected ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'transparent' }]}>
@@ -130,7 +135,7 @@ export const AppSelectionScreen: React.FC<ScreenProps & { apps: AppData[]; selec
                 })}
             </ScrollView>
             <View style={styles.bottomButtons}>
-                <Button variant="primary" onPress={onNext} disabled={selectedApps.length === 0} title={`Continue (${selectedApps.length} selected)`} />
+                <Button variant="primary" onPress={onNext} disabled={safeSelectedApps.length === 0} title={`Continue (${safeSelectedApps.length} selected)`} />
             </View>
         </View>
     );

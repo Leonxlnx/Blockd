@@ -105,8 +105,8 @@ const AppContent: React.FC = () => {
   // State
   const [userName, setUserName] = useState<string>('');
   const [heardFrom, setHeardFrom] = useState<string>('');
-  const [analyzedApps, setAnalyzedApps] = useState<AppUsage[]>([]);
-  const [selectedApps, setSelectedApps] = useState<AppUsage[]>([]);
+  const [analyzedApps, setAnalyzedApps] = useState<any[]>([]);
+  const [selectedAppPackages, setSelectedAppPackages] = useState<string[]>([]);
   const [userAge, setUserAge] = useState<string>('');
   const [userGender, setUserGender] = useState<string>('');
   const [concentrationLevel, setConcentrationLevel] = useState<number>(0);
@@ -170,14 +170,17 @@ const AppContent: React.FC = () => {
         return (
           <AppSelectionScreen
             apps={analyzedApps}
-            onNext={(selected) => { setSelectedApps(selected); setCurrentScreen('time-calculation'); }}
+            selectedApps={selectedAppPackages}
+            setSelectedApps={setSelectedAppPackages}
+            onNext={() => setCurrentScreen('time-calculation')}
             onBack={() => setCurrentScreen('app-analysis')}
           />
         );
       case 'time-calculation':
         return (
           <TimeCalculationScreen
-            selectedApps={selectedApps}
+            apps={analyzedApps}
+            selectedApps={selectedAppPackages}
             onNext={() => setCurrentScreen('commitment')}
             onBack={() => setCurrentScreen('app-selection')}
           />
