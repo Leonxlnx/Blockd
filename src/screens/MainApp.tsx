@@ -14,11 +14,13 @@ import {
     TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../theme';
 import { spacing } from '../theme/theme';
 import { Text } from '../components';
 import { limitsService, AppLimit } from '../services/limitsService';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 const { width, height } = Dimensions.get('window');
 const { PermissionsModule, BlockingModule } = NativeModules;
@@ -96,27 +98,38 @@ const GlassCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ ch
 };
 
 // ============================================
-// TAB BAR
+// FLOATING TAB BAR (Premium Glass)
 // ============================================
 
 const TabBar: React.FC<{ activeTab: Tab; onTabPress: (tab: Tab) => void; isDark: boolean }> = ({ activeTab, onTabPress, isDark }) => {
-    const accent = isDark ? '#FFFFFF' : '#1A1A1A';
-    const inactive = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)';
-
     return (
-        <View style={[styles.tabBar, { backgroundColor: isDark ? 'rgba(10,10,15,0.95)' : 'rgba(250,250,250,0.95)', borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]}>
-            <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('dashboard')} activeOpacity={0.7}>
-                <HomeIcon size={22} color={activeTab === 'dashboard' ? accent : inactive} filled={activeTab === 'dashboard'} />
-                <Text variant="caption" weight={activeTab === 'dashboard' ? 'bold' : 'medium'} color={activeTab === 'dashboard' ? accent : inactive} style={{ marginTop: 4, fontSize: 10 }}>Overview</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('limits')} activeOpacity={0.7}>
-                <ShieldIcon size={22} color={activeTab === 'limits' ? accent : inactive} filled={activeTab === 'limits'} />
-                <Text variant="caption" weight={activeTab === 'limits' ? 'bold' : 'medium'} color={activeTab === 'limits' ? accent : inactive} style={{ marginTop: 4, fontSize: 10 }}>Limits</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.tabItem} onPress={() => onTabPress('settings')} activeOpacity={0.7}>
-                <GearIcon size={22} color={activeTab === 'settings' ? accent : inactive} filled={activeTab === 'settings'} />
-                <Text variant="caption" weight={activeTab === 'settings' ? 'bold' : 'medium'} color={activeTab === 'settings' ? accent : inactive} style={{ marginTop: 4, fontSize: 10 }}>Settings</Text>
-            </TouchableOpacity>
+        <View style={styles.floatingNavContainer}>
+            <View style={[styles.floatingNavBar, {
+                backgroundColor: isDark ? 'rgba(15,15,20,0.9)' : 'rgba(255,255,255,0.95)',
+                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            }]}>
+                <TouchableOpacity
+                    style={[styles.floatingNavItem, activeTab === 'dashboard' && styles.floatingNavItemActive, activeTab === 'dashboard' && { backgroundColor: isDark ? '#FFF' : '#000' }]}
+                    onPress={() => onTabPress('dashboard')}
+                    activeOpacity={0.7}
+                >
+                    <Icon name="home" size={22} color={activeTab === 'dashboard' ? (isDark ? '#000' : '#FFF') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.floatingNavItem, activeTab === 'limits' && styles.floatingNavItemActive, activeTab === 'limits' && { backgroundColor: isDark ? '#FFF' : '#000' }]}
+                    onPress={() => onTabPress('limits')}
+                    activeOpacity={0.7}
+                >
+                    <Icon name="shield" size={22} color={activeTab === 'limits' ? (isDark ? '#000' : '#FFF') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.floatingNavItem, activeTab === 'settings' && styles.floatingNavItemActive, activeTab === 'settings' && { backgroundColor: isDark ? '#FFF' : '#000' }]}
+                    onPress={() => onTabPress('settings')}
+                    activeOpacity={0.7}
+                >
+                    <Icon name="settings" size={22} color={activeTab === 'settings' ? (isDark ? '#000' : '#FFF') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -146,23 +159,41 @@ const SimpleBarChart: React.FC<{ data: number[]; isDark: boolean }> = ({ data, i
 };
 
 // ============================================
-// DASHBOARD TAB (Liquid Metal Redesign)
+// DASHBOARD TAB (Premium Metal Design)
 // ============================================
 
-const DashboardTab: React.FC<{ isDark: boolean; userName?: string }> = ({ isDark, userName = 'User' }) => {
+const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     const { theme } = useTheme();
     const [todayUsage, setTodayUsage] = useState<AppData[]>([]);
     const [unlockCount, setUnlockCount] = useState(0);
     const [weeklyData, setWeeklyData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
     const [limits, setLimits] = useState<AppLimit[]>([]);
     const [showAllApps, setShowAllApps] = useState(false);
+    const [userName, setUserName] = useState('');
+    const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
     useEffect(() => {
         loadData();
+        loadUserName();
         limitsService.loadLimits();
         const unsub = limitsService.subscribe(setLimits);
         return unsub;
     }, []);
+
+    const loadUserName = async () => {
+        try {
+            const user = auth().currentUser;
+            if (user) {
+                const doc = await firestore().collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    setUserName(data?.name || data?.displayName || 'User');
+                }
+            }
+        } catch (e) {
+            console.log('Load user name error:', e);
+        }
+    };
 
     const loadData = async () => {
         try {
@@ -195,89 +226,120 @@ const DashboardTab: React.FC<{ isDark: boolean; userName?: string }> = ({ isDark
         return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
 
-    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    // Weekly chart - reorder so today is always rightmost
+    const dayLabels = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
     const today = new Date().getDay();
-    const todayIndex = today === 0 ? 6 : today - 1;
-    const maxWeekly = Math.max(...weeklyData, 60);
+    const todayIdx = today === 0 ? 6 : today - 1;
+
+    // Reorder data so today is last
+    const reorderedData: number[] = [];
+    const reorderedLabels: string[] = [];
+    for (let i = 0; i < 7; i++) {
+        const idx = (todayIdx + 1 + i) % 7;
+        reorderedData.push(weeklyData[idx] || 0);
+        reorderedLabels.push(dayLabels[idx]);
+    }
+    const maxWeekly = Math.max(...reorderedData, 60);
+
+    // Metal card gradient component
+    const MetalCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ children, style }) => (
+        <LinearGradient
+            colors={isDark
+                ? ['rgba(35,35,40,0.95)', 'rgba(15,15,18,0.98)']
+                : ['rgba(255,255,255,0.98)', 'rgba(245,245,248,0.95)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.premiumCard, style]}
+        >
+            <View style={[styles.cardInnerBorder, { borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' }]}>
+                {children}
+            </View>
+        </LinearGradient>
+    );
 
     return (
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.dashboardContent} showsVerticalScrollIndicator={false}>
-            {/* Header */}
+            {/* Header - Hello {Name} */}
             <View style={styles.dashboardHeader}>
-                <Text variant="caption" weight="semibold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ letterSpacing: 2, textTransform: 'uppercase', fontSize: 10 }}>Dashboard</Text>
-                <Text variant="h1" weight="bold" style={styles.liquidText}>{userName}</Text>
+                <Text variant="h1" weight="bold" style={{ fontSize: 34 }}>Hello, {userName || 'User'}</Text>
             </View>
 
             {/* Screen Time Card */}
-            <View style={[styles.metalCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
+            <MetalCard>
                 <View style={styles.screenTimeBadge}>
                     <View style={[styles.pulsingDot, { backgroundColor: isDark ? '#FFF' : '#000' }]} />
-                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} style={{ letterSpacing: 1.5, fontSize: 9, textTransform: 'uppercase' }}>Screen Time</Text>
+                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase' }}>Screen Time</Text>
                 </View>
                 <View style={styles.screenTimeRow}>
-                    <Text style={[styles.screenTimeNum, { color: isDark ? '#FFF' : '#000' }]}>{hours}</Text>
-                    <Text style={[styles.screenTimeUnit, { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>h</Text>
-                    <Text style={[styles.screenTimeNum, { color: isDark ? '#FFF' : '#000', marginLeft: 8 }]}>{minutes.toString().padStart(2, '0')}</Text>
-                    <Text style={[styles.screenTimeUnit, { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>m</Text>
+                    <Text variant="h1" weight="bold" style={{ fontSize: 64, color: isDark ? '#FFF' : '#000' }}>{hours}</Text>
+                    <Text variant="h2" weight="medium" style={{ fontSize: 28, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>h</Text>
+                    <Text variant="h1" weight="bold" style={{ fontSize: 64, color: isDark ? '#FFF' : '#000', marginLeft: 12 }}>{minutes.toString().padStart(2, '0')}</Text>
+                    <Text variant="h2" weight="medium" style={{ fontSize: 28, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>m</Text>
                 </View>
-            </View>
+            </MetalCard>
 
             {/* Stats Row */}
             <View style={styles.statsRow}>
-                <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
-                    <View style={[styles.statIconCircle, { backgroundColor: isDark ? '#000' : '#F5F5F5', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]}>
-                        <LockIcon size={18} color={isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)'} />
+                <MetalCard style={{ flex: 1, marginRight: spacing[2] }}>
+                    <View style={styles.statContent}>
+                        <View style={[styles.statIconCircle, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)' }]}>
+                            <Icon name="unlock" size={18} color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} />
+                        </View>
+                        <Text variant="h2" weight="bold" style={{ marginTop: spacing[2] }}>{unlockCount}</Text>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Unlocks</Text>
                     </View>
-                    <Text variant="h3" weight="bold" color={isDark ? '#FFF' : '#000'}>{unlockCount}</Text>
-                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Unlocks</Text>
-                </View>
-                <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
-                    <View style={[styles.statIconCircle, { backgroundColor: isDark ? '#000' : '#F5F5F5', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]}>
-                        <ShieldIcon size={18} color={isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)'} />
+                </MetalCard>
+                <MetalCard style={{ flex: 1, marginHorizontal: spacing[1] }}>
+                    <View style={styles.statContent}>
+                        <View style={[styles.statIconCircle, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)' }]}>
+                            <Icon name="shield" size={18} color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} />
+                        </View>
+                        <Text variant="h2" weight="bold" style={{ marginTop: spacing[2] }}>{activeLimits}</Text>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Limits</Text>
                     </View>
-                    <Text variant="h3" weight="bold" color={isDark ? '#FFF' : '#000'}>{activeLimits}</Text>
-                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Limits</Text>
-                </View>
-                <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
-                    <View style={[styles.statIconCircle, { backgroundColor: isDark ? '#000' : '#F5F5F5', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]}>
-                        <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }} />
+                </MetalCard>
+                <MetalCard style={{ flex: 1, marginLeft: spacing[2] }}>
+                    <View style={styles.statContent}>
+                        <View style={[styles.statIconCircle, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)' }]}>
+                            <Icon name="zap" size={18} color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} />
+                        </View>
+                        <Text variant="h2" weight="bold" style={{ marginTop: spacing[2] }}>{activeDetox}</Text>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Detox</Text>
                     </View>
-                    <Text variant="h3" weight="bold" color={isDark ? '#FFF' : '#000'}>{activeDetox}</Text>
-                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Detox</Text>
-                </View>
+                </MetalCard>
             </View>
 
             {/* Most Used Card */}
-            <View style={[styles.metalCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
+            <MetalCard>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] }}>
-                    <Text variant="body" weight="bold" color={isDark ? '#FFF' : '#000'}>Most Used</Text>
-                    <TouchableOpacity onPress={() => setShowAllApps(true)} style={[styles.viewAllBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
-                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' }}>View All</Text>
+                    <Text variant="body" weight="bold">Most Used</Text>
+                    <TouchableOpacity onPress={() => setShowAllApps(true)} style={[styles.viewAllBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' }}>View All</Text>
                     </TouchableOpacity>
                 </View>
                 {top3Apps.map((app, i) => {
                     const maxUsage = top3Apps[0]?.usageMinutes || 1;
                     const barWidth = Math.max(10, (app.usageMinutes / maxUsage) * 100);
                     return (
-                        <View key={i} style={[styles.appSlot, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.03)' }]}>
+                        <View key={i} style={[styles.appSlot, { backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.03)' }]}>
                             <View style={styles.appSlotLeft}>
                                 <View style={[styles.appSlotIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
                                     {app.icon ? (
-                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={{ width: 20, height: 20, borderRadius: 4 }} />
+                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={{ width: 22, height: 22, borderRadius: 5 }} />
                                     ) : (
                                         <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
                                     )}
                                 </View>
                                 <View>
-                                    <Text variant="body" weight="semibold" color={isDark ? '#FFF' : '#000'} numberOfLines={1} style={{ fontSize: 13 }}>{app.appName}</Text>
-                                    <Text variant="caption" weight="semibold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1, textTransform: 'uppercase' }}>App</Text>
+                                    <Text variant="body" weight="semibold" numberOfLines={1} style={{ fontSize: 14 }}>{app.appName}</Text>
+                                    <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' }}>App</Text>
                                 </View>
                             </View>
                             <View style={styles.appSlotRight}>
-                                <View style={[styles.appProgressBar, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.06)' }]}>
-                                    <View style={[styles.appProgressFill, { width: `${barWidth}%`, backgroundColor: i === 0 ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)') }]} />
+                                <View style={[styles.appProgressBar, { backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.08)' }]}>
+                                    <View style={[styles.appProgressFill, { width: `${barWidth}%`, backgroundColor: isDark ? '#FFF' : '#000' }]} />
                                 </View>
-                                <Text variant="body" weight="bold" color={isDark ? '#FFF' : '#000'} style={{ fontSize: 12, minWidth: 50, textAlign: 'right' }}>{formatTime(app.usageMinutes)}</Text>
+                                <Text variant="body" weight="bold" style={{ fontSize: 13, minWidth: 55, textAlign: 'right' }}>{formatTime(app.usageMinutes)}</Text>
                             </View>
                         </View>
                     );
@@ -285,13 +347,15 @@ const DashboardTab: React.FC<{ isDark: boolean; userName?: string }> = ({ isDark
                 {top3Apps.length === 0 && (
                     <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ padding: spacing[4] }}>No usage data yet</Text>
                 )}
-            </View>
+            </MetalCard>
 
             {/* Weekly Overview */}
-            <View style={[styles.metalCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)', marginBottom: spacing[8] }]}>
+            <MetalCard style={{ marginBottom: 120 }}>
                 <View style={{ marginBottom: spacing[4] }}>
-                    <Text variant="body" weight="bold" color={isDark ? '#FFF' : '#000'}>Weekly Overview</Text>
-                    <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ marginTop: 4 }}>Your average is <Text weight="bold" color={isDark ? '#FFF' : '#000'}>{avgHours}h</Text></Text>
+                    <Text variant="body" weight="bold">Weekly Overview</Text>
+                    <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ marginTop: 4 }}>
+                        Your average is <Text weight="bold" color={isDark ? '#FFF' : '#000'}>{avgHours}h</Text>
+                    </Text>
                 </View>
                 <View style={styles.weeklyChart}>
                     <View style={styles.weeklyLabels}>
@@ -300,26 +364,53 @@ const DashboardTab: React.FC<{ isDark: boolean; userName?: string }> = ({ isDark
                         <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 10 }}>0h</Text>
                     </View>
                     <View style={styles.weeklyBars}>
-                        {weeklyData.map((val, i) => {
+                        {reorderedData.map((val, i) => {
                             const barHeight = Math.max(8, (val / maxWeekly) * 100);
-                            const isToday = i === todayIndex;
+                            const isToday = i === 6; // Today is always last now
+                            const isSelected = selectedDay === i;
                             return (
-                                <View key={i} style={styles.weeklyBarContainer}>
-                                    <View style={[styles.weeklyBar, { height: `${barHeight}%`, backgroundColor: isToday ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)') }]} />
-                                    <Text variant="caption" weight={isToday ? 'bold' : 'medium'} color={isToday ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} style={{ fontSize: 9, marginTop: 6 }}>{days[i]}</Text>
-                                </View>
+                                <TouchableOpacity
+                                    key={i}
+                                    style={styles.weeklyBarContainer}
+                                    onPress={() => setSelectedDay(isSelected ? null : i)}
+                                    activeOpacity={0.7}
+                                >
+                                    {isSelected && (
+                                        <View style={[styles.weeklyTooltip, { backgroundColor: isDark ? '#FFF' : '#000' }]}>
+                                            <Text variant="caption" weight="bold" color={isDark ? '#000' : '#FFF'} style={{ fontSize: 10 }}>
+                                                {formatTime(val)}
+                                            </Text>
+                                        </View>
+                                    )}
+                                    <LinearGradient
+                                        colors={isToday
+                                            ? ['#FFFFFF', '#AAAAAA']
+                                            : isDark ? ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)'] : ['rgba(0,0,0,0.12)', 'rgba(0,0,0,0.06)']}
+                                        style={[styles.weeklyBar, { height: `${barHeight}%` }]}
+                                    />
+                                    <Text
+                                        variant="caption"
+                                        weight={isToday ? 'bold' : 'medium'}
+                                        color={isToday ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')}
+                                        style={{ fontSize: 9, marginTop: 8 }}
+                                    >
+                                        {reorderedLabels[i]}
+                                    </Text>
+                                </TouchableOpacity>
                             );
                         })}
                     </View>
                 </View>
-            </View>
+            </MetalCard>
 
             {/* All Apps Modal */}
             <Modal visible={showAllApps} animationType="slide" transparent>
                 <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.98)' : 'rgba(255,255,255,0.98)' }]}>
                     <View style={styles.modalHeader}>
                         <Text variant="h3" weight="bold">All Apps</Text>
-                        <TouchableOpacity onPress={() => setShowAllApps(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
+                        <TouchableOpacity onPress={() => setShowAllApps(false)}>
+                            <Icon name="x" size={24} color={isDark ? '#FFF' : '#000'} />
+                        </TouchableOpacity>
                     </View>
                     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
                         {todayUsage.map((app, i) => (
@@ -327,7 +418,7 @@ const DashboardTab: React.FC<{ isDark: boolean; userName?: string }> = ({ isDark
                                 <View style={styles.appSlotLeft}>
                                     <View style={[styles.appSlotIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
                                         {app.icon ? (
-                                            <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={{ width: 20, height: 20, borderRadius: 4 }} />
+                                            <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={{ width: 22, height: 22, borderRadius: 5 }} />
                                         ) : (
                                             <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
                                         )}
@@ -859,7 +950,19 @@ const styles = StyleSheet.create({
     weeklyLabels: { justifyContent: 'space-between', paddingBottom: 24, paddingRight: spacing[2] },
     weeklyBars: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 4 },
     weeklyBarContainer: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
-    weeklyBar: { width: '100%', borderRadius: 3 },
+    weeklyBar: { width: '100%', borderRadius: 4 },
+    weeklyTooltip: { position: 'absolute', top: -28, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, zIndex: 10 },
+
+    // Premium Cards
+    premiumCard: { borderRadius: 24, padding: spacing[4], marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.35, shadowRadius: 25, elevation: 8 },
+    cardInnerBorder: { borderWidth: 1, borderRadius: 20, padding: spacing[4], margin: -spacing[4] },
+    statContent: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing[2] },
+
+    // Floating Nav
+    floatingNavContainer: { position: 'absolute', bottom: 24, left: 24, right: 24 },
+    floatingNavBar: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 12, borderRadius: 24, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 15 },
+    floatingNavItem: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    floatingNavItemActive: { shadowColor: '#FFF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 10 },
 });
 
 export default MainApp;
