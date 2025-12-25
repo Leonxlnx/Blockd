@@ -14,6 +14,7 @@ import {
   OnboardingUsageStats,
   OnboardingOverlay,
   OnboardingBattery,
+  OnboardingAccessibility,
 } from './src/screens/onboarding/OnboardingPermissions';
 import {
   AppAnalysisScreen,
@@ -36,7 +37,6 @@ import {
   AuthScreen,
   WelcomeFirstTimeScreen,
 } from './src/screens/onboarding/PersonalizationScreens';
-import { PermissionSetupScreen } from './src/screens/onboarding/PermissionSetupScreen';
 import MainApp from './src/screens/MainApp';
 import { OverlayManager } from './src/screens/overlays/OverlayManager';
 import auth from '@react-native-firebase/auth';
@@ -159,12 +159,7 @@ const AppContent: React.FC = () => {
       case 'permissions-battery':
         return <OnboardingBattery onComplete={() => setCurrentScreen('permissions-accessibility')} onBack={() => setCurrentScreen('permissions-overlay')} />;
       case 'permissions-accessibility':
-        return (
-          <PermissionSetupScreen
-            onComplete={() => setCurrentScreen('app-analysis')}
-            onSkip={() => setCurrentScreen('app-analysis')}
-          />
-        );
+        return <OnboardingAccessibility onComplete={() => setCurrentScreen('app-analysis')} onBack={() => setCurrentScreen('permissions-battery')} />;
 
       // ==========================================
       // APP SETUP (4 screens)

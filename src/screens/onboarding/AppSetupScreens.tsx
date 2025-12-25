@@ -105,7 +105,7 @@ export const AppSelectionScreen: React.FC<ScreenProps & { apps: AppData[]; selec
                 </Text>
             </View>
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }} showsVerticalScrollIndicator={false}>
-                {apps.map((app, i) => {
+                {(apps || []).map((app, i) => {
                     const isSelected = selectedApps.includes(app.packageName);
                     return (
                         <TouchableOpacity key={i} onPress={() => toggleApp(app.packageName)} activeOpacity={0.7}>
@@ -143,7 +143,9 @@ export const AppSelectionScreen: React.FC<ScreenProps & { apps: AppData[]; selec
 export const TimeCalculationScreen: React.FC<ScreenProps & { apps: AppData[]; selectedApps: string[] }> = ({ onNext, apps, selectedApps }) => {
     const { theme, isDark } = useTheme();
 
-    const selectedAppData = apps.filter(a => selectedApps.includes(a.packageName));
+    const safeApps = apps || [];
+    const safeSelectedApps = selectedApps || [];
+    const selectedAppData = safeApps.filter(a => safeSelectedApps.includes(a.packageName));
     const totalMinutes = selectedAppData.reduce((sum, app) => sum + app.usageMinutes, 0);
     const hours = Math.floor(totalMinutes / 60);
     const mins = totalMinutes % 60;

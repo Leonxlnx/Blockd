@@ -15,6 +15,7 @@ import { useTheme } from '../../theme';
 import { spacing } from '../../theme/theme';
 import { Text } from '../../components';
 import { Permissions } from '../../native/Permissions';
+import { NativeModules } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -97,7 +98,7 @@ const BottomButtons: React.FC<BottomButtonsProps> = ({ onBack, onPrimary, primar
 // LARGE ICONS
 // ============================================
 
-const LargeIcon: React.FC<{ type: 'usage' | 'overlay' | 'battery'; isDark: boolean }> = ({ type, isDark }) => {
+const LargeIcon: React.FC<{ type: 'usage' | 'overlay' | 'battery' | 'accessibility'; isDark: boolean }> = ({ type, isDark }) => {
     const color = isDark ? '#FFFFFF' : '#1A1A1A';
     const secondaryColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
 
@@ -131,6 +132,22 @@ const LargeIcon: React.FC<{ type: 'usage' | 'overlay' | 'battery'; isDark: boole
                     <View style={[styles.overlayScreen, styles.overlayScreenFront, { borderColor: color }]}>
                         <View style={[styles.overlayDot, { backgroundColor: color }]} />
                     </View>
+                </View>
+            </View>
+        );
+    }
+    if (type === 'accessibility') {
+        // Accessibility Icon: Eye with person
+        return (
+            <View style={styles.iconBox}>
+                <View style={styles.accessibilityIconContainer}>
+                    {/* Eye outline */}
+                    <View style={[styles.eyeOuter, { borderColor: color }]}>
+                        <View style={[styles.eyeInner, { backgroundColor: color }]} />
+                    </View>
+                    {/* Person icon below */}
+                    <View style={[styles.personHead, { backgroundColor: color }]} />
+                    <View style={[styles.personBody, { borderColor: color }]} />
                 </View>
             </View>
         );
@@ -182,7 +199,7 @@ export const OnboardingUsageStats: React.FC<UsageStatsScreenProps> = ({ onNext, 
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <FlowingBackground isDark={isDark} />
-            <ProgressBar current={1} total={3} />
+            <ProgressBar current={1} total={4} />
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
@@ -235,7 +252,7 @@ export const OnboardingOverlay: React.FC<OverlayScreenProps> = ({ onNext, onBack
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <FlowingBackground isDark={isDark} />
-            <ProgressBar current={2} total={3} />
+            <ProgressBar current={2} total={4} />
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
@@ -288,7 +305,7 @@ export const OnboardingBattery: React.FC<BatteryScreenProps> = ({ onComplete, on
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
             <FlowingBackground isDark={isDark} />
-            <ProgressBar current={3} total={3} />
+            <ProgressBar current={3} total={4} />
 
             <View style={styles.permissionContent}>
                 <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
@@ -308,6 +325,81 @@ export const OnboardingBattery: React.FC<BatteryScreenProps> = ({ onComplete, on
             </View>
 
             <BottomButtons onBack={onBack} onPrimary={granted ? onComplete : () => Permissions.requestIgnoreBatteryOptimization()} primaryLabel={granted ? 'Complete' : 'Grant Access'} isDark={isDark} />
+        </View>
+    );
+};
+
+// ============================================
+// ACCESSIBILITY PERMISSION (NEW - STEP 4)
+// ============================================
+
+const { BlockingModule } = NativeModules;
+
+interface AccessibilityScreenProps {
+    onComplete: () => void;
+    onBack: () => void;
+}
+
+export const OnboardingAccessibility: React.FC<AccessibilityScreenProps> = ({ onComplete, onBack }) => {
+    const { theme, isDark } = useTheme();
+    const [granted, setGranted] = useState(false);
+    const iconAnim = useEntranceAnimation(0);
+    const titleAnim = useEntranceAnimation(100);
+    const cardAnim = useEntranceAnimation(200);
+
+    const checkPermission = async () => {
+        try {
+            const enabled = await BlockingModule.isAccessibilityEnabled();
+            setGranted(enabled);
+        } catch (e) {
+            console.log('Accessibility check error:', e);
+            setGranted(false);
+        }
+    };
+
+    useEffect(() => {
+        checkPermission();
+        const sub = AppState.addEventListener('change', (s: AppStateStatus) => { if (s === 'active') checkPermission(); });
+        return () => sub.remove();
+    }, []);
+
+    const handleGrantAccess = () => {
+        // Show alert with instructions for Android 13+
+        BlockingModule.openAppSettings();
+    };
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
+            <FlowingBackground isDark={isDark} />
+            <ProgressBar current={4} total={4} />
+
+            <View style={styles.permissionContent}>
+                <Animated.View style={{ opacity: iconAnim.opacity, transform: [{ translateY: iconAnim.translateY }] }}>
+                    <LargeIcon type="accessibility" isDark={isDark} />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+                    <Text variant="h1" weight="bold" align="center" style={styles.title}>Accessibility</Text>
+                    <StatusBadge granted={granted} isDark={isDark} />
+                </Animated.View>
+
+                <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] }}>
+                    <View style={[styles.card, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }]}>
+                        <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ lineHeight: 26 }}>
+                            Detect app launches instantly to block distractions in real-time.
+                        </Text>
+                        {!granted && (
+                            <Text variant="caption" color={theme.colors.textTertiary} align="center" style={{ marginTop: spacing[3], lineHeight: 20 }}>
+                                Android 13+: Tap ⋮ → "Allow restricted settings" first, then enable Blockd in Accessibility.
+                            </Text>
+                        )}
+                    </View>
+                </Animated.View>
+            </View>
+
+            <BottomButtons onBack={onBack} onPrimary={granted ? onComplete : handleGrantAccess} primaryLabel={granted ? 'Complete Setup' : 'Open Settings'} isDark={isDark} />
         </View>
     );
 };
@@ -368,6 +460,13 @@ const styles = StyleSheet.create({
     buttonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
     nextButtonWrapper: { flex: 2 },
     nextButtonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 },
+
+    // Accessibility Icon
+    accessibilityIconContainer: { alignItems: 'center', justifyContent: 'center' },
+    eyeOuter: { width: 70, height: 35, borderWidth: 3, borderRadius: 35, alignItems: 'center', justifyContent: 'center' },
+    eyeInner: { width: 18, height: 18, borderRadius: 9 },
+    personHead: { width: 16, height: 16, borderRadius: 8, marginTop: 12 },
+    personBody: { width: 28, height: 18, borderWidth: 3, borderTopWidth: 0, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, marginTop: -2 },
 });
 
 export default OnboardingUsageStats;
