@@ -146,10 +146,10 @@ const SimpleBarChart: React.FC<{ data: number[]; isDark: boolean }> = ({ data, i
 };
 
 // ============================================
-// DASHBOARD TAB
+// DASHBOARD TAB (Liquid Metal Redesign)
 // ============================================
 
-const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
+const DashboardTab: React.FC<{ isDark: boolean; userName?: string }> = ({ isDark, userName = 'User' }) => {
     const { theme } = useTheme();
     const [todayUsage, setTodayUsage] = useState<AppData[]>([]);
     const [unlockCount, setUnlockCount] = useState(0);
@@ -184,8 +184,10 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     const minutes = totalMinutes % 60;
     const activeLimits = limits.filter(l => l.isActive && l.mode === 'limit').length;
     const activeDetox = limits.filter(l => l.isActive && l.mode === 'detox').length;
+    const avgMinutes = weeklyData.reduce((a, b) => a + b, 0) / 7;
+    const avgHours = (avgMinutes / 60).toFixed(1);
 
-    const top5Apps = todayUsage.slice(0, 5);
+    const top3Apps = todayUsage.slice(0, 3);
 
     const formatTime = (mins: number) => {
         const h = Math.floor(mins / 60);
@@ -193,85 +195,146 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
 
+    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const today = new Date().getDay();
+    const todayIndex = today === 0 ? 6 : today - 1;
+    const maxWeekly = Math.max(...weeklyData, 60);
+
     return (
-        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner} showsVerticalScrollIndicator={false}>
-            {/* Bento Grid */}
-            <View style={styles.bentoGrid}>
-                <GlassCard style={styles.bentoBig}>
-                    <Text variant="caption" color={theme.colors.textSecondary}>Today's Screen Time</Text>
-                    <Text variant="h1" weight="bold" style={{ fontSize: 48, marginTop: 8 }}>{hours}h {minutes}m</Text>
-                </GlassCard>
-                <View style={styles.bentoSmallRow}>
-                    <GlassCard style={styles.bentoSmall}>
-                        <Text variant="caption" color={theme.colors.textSecondary}>Unlocks</Text>
-                        <Text variant="h2" weight="bold" style={{ marginTop: 4 }}>{unlockCount}</Text>
-                    </GlassCard>
-                    <GlassCard style={styles.bentoSmall}>
-                        <Text variant="caption" color={theme.colors.textSecondary}>Limits</Text>
-                        <Text variant="h2" weight="bold" style={{ marginTop: 4 }}>{activeLimits}</Text>
-                    </GlassCard>
-                    <GlassCard style={styles.bentoSmall}>
-                        <Text variant="caption" color={theme.colors.textSecondary}>Detox</Text>
-                        <Text variant="h2" weight="bold" style={{ marginTop: 4 }}>{activeDetox}</Text>
-                    </GlassCard>
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.dashboardContent} showsVerticalScrollIndicator={false}>
+            {/* Header */}
+            <View style={styles.dashboardHeader}>
+                <Text variant="caption" weight="semibold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ letterSpacing: 2, textTransform: 'uppercase', fontSize: 10 }}>Dashboard</Text>
+                <Text variant="h1" weight="bold" style={styles.liquidText}>{userName}</Text>
+            </View>
+
+            {/* Screen Time Card */}
+            <View style={[styles.metalCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
+                <View style={styles.screenTimeBadge}>
+                    <View style={[styles.pulsingDot, { backgroundColor: isDark ? '#FFF' : '#000' }]} />
+                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} style={{ letterSpacing: 1.5, fontSize: 9, textTransform: 'uppercase' }}>Screen Time</Text>
+                </View>
+                <View style={styles.screenTimeRow}>
+                    <Text style={[styles.screenTimeNum, { color: isDark ? '#FFF' : '#000' }]}>{hours}</Text>
+                    <Text style={[styles.screenTimeUnit, { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>h</Text>
+                    <Text style={[styles.screenTimeNum, { color: isDark ? '#FFF' : '#000', marginLeft: 8 }]}>{minutes.toString().padStart(2, '0')}</Text>
+                    <Text style={[styles.screenTimeUnit, { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }]}>m</Text>
                 </View>
             </View>
 
-            {/* Top Apps */}
-            <View style={styles.section}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[3] }}>
-                    <Text variant="body" weight="semibold">App Usage Today</Text>
-                    <TouchableOpacity onPress={() => setShowAllApps(true)}>
-                        <Text variant="caption" weight="semibold" color={theme.colors.primary}>View All</Text>
+            {/* Stats Row */}
+            <View style={styles.statsRow}>
+                <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
+                    <View style={[styles.statIconCircle, { backgroundColor: isDark ? '#000' : '#F5F5F5', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]}>
+                        <LockIcon size={18} color={isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)'} />
+                    </View>
+                    <Text variant="h3" weight="bold" color={isDark ? '#FFF' : '#000'}>{unlockCount}</Text>
+                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Unlocks</Text>
+                </View>
+                <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
+                    <View style={[styles.statIconCircle, { backgroundColor: isDark ? '#000' : '#F5F5F5', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]}>
+                        <ShieldIcon size={18} color={isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)'} />
+                    </View>
+                    <Text variant="h3" weight="bold" color={isDark ? '#FFF' : '#000'}>{activeLimits}</Text>
+                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Limits</Text>
+                </View>
+                <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
+                    <View style={[styles.statIconCircle, { backgroundColor: isDark ? '#000' : '#F5F5F5', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]}>
+                        <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }} />
+                    </View>
+                    <Text variant="h3" weight="bold" color={isDark ? '#FFF' : '#000'}>{activeDetox}</Text>
+                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Detox</Text>
+                </View>
+            </View>
+
+            {/* Most Used Card */}
+            <View style={[styles.metalCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)' }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] }}>
+                    <Text variant="body" weight="bold" color={isDark ? '#FFF' : '#000'}>Most Used</Text>
+                    <TouchableOpacity onPress={() => setShowAllApps(true)} style={[styles.viewAllBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' }}>View All</Text>
                     </TouchableOpacity>
                 </View>
-                <GlassCard>
-                    {top5Apps.map((app, i) => (
-                        <View key={i} style={[styles.appRow, i < top5Apps.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }]}>
-                            {app.icon ? (
-                                <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
-                            ) : (
-                                <View style={[styles.appIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                                    <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
+                {top3Apps.map((app, i) => {
+                    const maxUsage = top3Apps[0]?.usageMinutes || 1;
+                    const barWidth = Math.max(10, (app.usageMinutes / maxUsage) * 100);
+                    return (
+                        <View key={i} style={[styles.appSlot, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.03)' }]}>
+                            <View style={styles.appSlotLeft}>
+                                <View style={[styles.appSlotIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
+                                    {app.icon ? (
+                                        <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={{ width: 20, height: 20, borderRadius: 4 }} />
+                                    ) : (
+                                        <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
+                                    )}
                                 </View>
-                            )}
-                            <Text variant="body" weight="medium" numberOfLines={1} style={{ flex: 1, marginLeft: spacing[3] }}>{app.appName}</Text>
-                            <Text variant="caption" weight="semibold" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)}</Text>
+                                <View>
+                                    <Text variant="body" weight="semibold" color={isDark ? '#FFF' : '#000'} numberOfLines={1} style={{ fontSize: 13 }}>{app.appName}</Text>
+                                    <Text variant="caption" weight="semibold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1, textTransform: 'uppercase' }}>App</Text>
+                                </View>
+                            </View>
+                            <View style={styles.appSlotRight}>
+                                <View style={[styles.appProgressBar, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.06)' }]}>
+                                    <View style={[styles.appProgressFill, { width: `${barWidth}%`, backgroundColor: i === 0 ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)') }]} />
+                                </View>
+                                <Text variant="body" weight="bold" color={isDark ? '#FFF' : '#000'} style={{ fontSize: 12, minWidth: 50, textAlign: 'right' }}>{formatTime(app.usageMinutes)}</Text>
+                            </View>
                         </View>
-                    ))}
-                    {top5Apps.length === 0 && (
-                        <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ padding: spacing[4] }}>No usage data yet</Text>
-                    )}
-                </GlassCard>
+                    );
+                })}
+                {top3Apps.length === 0 && (
+                    <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ padding: spacing[4] }}>No usage data yet</Text>
+                )}
             </View>
 
-            {/* Weekly Chart */}
-            <View style={styles.section}>
-                <Text variant="body" weight="semibold" style={{ marginBottom: spacing[3] }}>Weekly Overview</Text>
-                <GlassCard>
-                    <SimpleBarChart data={weeklyData} isDark={isDark} />
-                </GlassCard>
+            {/* Weekly Overview */}
+            <View style={[styles.metalCard, { backgroundColor: isDark ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.9)', marginBottom: spacing[8] }]}>
+                <View style={{ marginBottom: spacing[4] }}>
+                    <Text variant="body" weight="bold" color={isDark ? '#FFF' : '#000'}>Weekly Overview</Text>
+                    <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ marginTop: 4 }}>Your average is <Text weight="bold" color={isDark ? '#FFF' : '#000'}>{avgHours}h</Text></Text>
+                </View>
+                <View style={styles.weeklyChart}>
+                    <View style={styles.weeklyLabels}>
+                        <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 10 }}>4h</Text>
+                        <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 10 }}>2h</Text>
+                        <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 10 }}>0h</Text>
+                    </View>
+                    <View style={styles.weeklyBars}>
+                        {weeklyData.map((val, i) => {
+                            const barHeight = Math.max(8, (val / maxWeekly) * 100);
+                            const isToday = i === todayIndex;
+                            return (
+                                <View key={i} style={styles.weeklyBarContainer}>
+                                    <View style={[styles.weeklyBar, { height: `${barHeight}%`, backgroundColor: isToday ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)') }]} />
+                                    <Text variant="caption" weight={isToday ? 'bold' : 'medium'} color={isToday ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} style={{ fontSize: 9, marginTop: 6 }}>{days[i]}</Text>
+                                </View>
+                            );
+                        })}
+                    </View>
+                </View>
             </View>
 
             {/* All Apps Modal */}
             <Modal visible={showAllApps} animationType="slide" transparent>
-                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
+                <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.98)' : 'rgba(255,255,255,0.98)' }]}>
                     <View style={styles.modalHeader}>
                         <Text variant="h3" weight="bold">All Apps</Text>
                         <TouchableOpacity onPress={() => setShowAllApps(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
                     </View>
                     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
                         {todayUsage.map((app, i) => (
-                            <View key={i} style={[styles.appRow, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: 12, marginBottom: spacing[2], padding: spacing[3] }]}>
-                                {app.icon ? (
-                                    <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={styles.appIcon} />
-                                ) : (
-                                    <View style={[styles.appIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
-                                        <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
+                            <View key={i} style={[styles.appSlot, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', marginBottom: spacing[2] }]}>
+                                <View style={styles.appSlotLeft}>
+                                    <View style={[styles.appSlotIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
+                                        {app.icon ? (
+                                            <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={{ width: 20, height: 20, borderRadius: 4 }} />
+                                        ) : (
+                                            <Text variant="caption" weight="bold">{app.appName.charAt(0)}</Text>
+                                        )}
                                     </View>
-                                )}
-                                <Text variant="body" weight="medium" numberOfLines={1} style={{ flex: 1, marginLeft: spacing[3] }}>{app.appName}</Text>
-                                <Text variant="caption" weight="semibold" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)}</Text>
+                                    <Text variant="body" weight="medium" numberOfLines={1}>{app.appName}</Text>
+                                </View>
+                                <Text variant="body" weight="semibold" color={theme.colors.textSecondary}>{formatTime(app.usageMinutes)}</Text>
                             </View>
                         ))}
                     </ScrollView>
@@ -771,6 +834,32 @@ const styles = StyleSheet.create({
     modeButton: { flex: 1, padding: spacing[4], borderRadius: 16, borderWidth: 2, alignItems: 'center' },
     timeButton: { paddingVertical: spacing[3], paddingHorizontal: spacing[4], borderRadius: 12 },
     confirmButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 16, marginTop: spacing[4] },
+
+    // ========== NEW LIQUID METAL DASHBOARD STYLES ==========
+    dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 56, paddingBottom: 100 },
+    dashboardHeader: { marginBottom: spacing[5] },
+    liquidText: { fontSize: 40, letterSpacing: -1 },
+    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: spacing[4], shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
+    screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[3] },
+    pulsingDot: { width: 6, height: 6, borderRadius: 3 },
+    screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: spacing[2] },
+    screenTimeNum: { fontSize: 72, fontWeight: '600', letterSpacing: -2 },
+    screenTimeUnit: { fontSize: 28, fontWeight: '300', marginLeft: 4 },
+    statsRow: { flexDirection: 'row', gap: spacing[3], marginBottom: spacing[4] },
+    statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
+    statIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: spacing[3] },
+    viewAllBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: 20, borderWidth: 1 },
+    appSlot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[3], borderRadius: 18, marginBottom: spacing[2] },
+    appSlotLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing[3], flex: 1 },
+    appSlotIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    appSlotRight: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
+    appProgressBar: { width: 60, height: 4, borderRadius: 2, overflow: 'hidden' },
+    appProgressFill: { height: '100%', borderRadius: 2 },
+    weeklyChart: { flexDirection: 'row', height: 140 },
+    weeklyLabels: { justifyContent: 'space-between', paddingBottom: 24, paddingRight: spacing[2] },
+    weeklyBars: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 4 },
+    weeklyBarContainer: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
+    weeklyBar: { width: '100%', borderRadius: 3 },
 });
 
 export default MainApp;

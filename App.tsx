@@ -22,6 +22,7 @@ import {
   AppSelectionScreen,
   TimeCalculationScreen,
   CommitmentScreen,
+  YouGotThisScreen,
   AppUsage,
 } from './src/screens/onboarding/AppSetupScreens';
 import {
@@ -59,11 +60,12 @@ type Screen =
   | 'permissions-overlay'
   | 'permissions-battery'
   | 'permissions-accessibility'
-  // App Setup (4 screens)
+  // App Setup (5 screens)
   | 'app-analysis'
   | 'app-selection'
   | 'time-calculation'
   | 'commitment'
+  | 'you-got-this'
   // Personalization (8 screens)
   | 'lets-personalize'
   | 'personalize-age'
@@ -190,7 +192,9 @@ const AppContent: React.FC = () => {
           />
         );
       case 'commitment':
-        return <CommitmentScreen onNext={() => setCurrentScreen('lets-personalize')} onBack={() => setCurrentScreen('time-calculation')} />;
+        return <CommitmentScreen onNext={() => setCurrentScreen('you-got-this')} onBack={() => setCurrentScreen('time-calculation')} />;
+      case 'you-got-this':
+        return <YouGotThisScreen onNext={() => setCurrentScreen('lets-personalize')} />;
 
       // ==========================================
       // PERSONALIZATION (8 screens)

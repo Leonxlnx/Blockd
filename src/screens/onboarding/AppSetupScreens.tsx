@@ -356,6 +356,50 @@ export const CommitmentScreen: React.FC<{ onNext: () => void; onBack?: () => voi
 };
 
 // ============================================
+// YOU GOT THIS SCREEN (After Commit)
+// ============================================
+
+export const YouGotThisScreen: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+    const { theme, isDark } = useTheme();
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+            Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }),
+        ]).start();
+
+        // Auto-advance after 2.5 seconds
+        const timer = setTimeout(() => {
+            Animated.timing(fadeAnim, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => onNext());
+        }, 2500);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
+
+            <View style={styles.centerContent}>
+                <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
+                    {/* Checkmark icon */}
+                    <View style={[styles.checkCircle, { borderColor: isDark ? '#FFF' : '#1A1A1A' }]}>
+                        <View style={[styles.checkmark, { borderColor: isDark ? '#FFF' : '#1A1A1A' }]} />
+                    </View>
+                    <Text variant="h1" weight="bold" align="center" style={{ marginTop: spacing[5], fontSize: 36 }}>You Got This</Text>
+                    <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[3] }}>
+                        Your journey to digital wellness begins now.
+                    </Text>
+                </Animated.View>
+            </View>
+        </View>
+    );
+};
+
+// ============================================
 // APP USAGE (Legacy export)
 // ============================================
 
@@ -421,4 +465,8 @@ const styles = StyleSheet.create({
     nextButtonWrapper: { flex: 2 },
     fullButtonWrapper: { flex: 1 },
     nextButtonBase: { height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
+
+    // YouGotThis Screen
+    checkCircle: { width: 80, height: 80, borderRadius: 40, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
+    checkmark: { width: 20, height: 35, borderRightWidth: 4, borderBottomWidth: 4, transform: [{ rotate: '45deg' }], marginTop: -8 },
 });
