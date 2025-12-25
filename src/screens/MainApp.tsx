@@ -446,7 +446,7 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 };
 
 // ============================================
-// SETTINGS TAB
+// SETTINGS TAB (Premium Metal Design)
 // ============================================
 
 const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDark, onLogout }) => {
@@ -454,6 +454,39 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
     const user = auth().currentUser;
     const [privacyVisible, setPrivacyVisible] = useState(false);
     const [termsVisible, setTermsVisible] = useState(false);
+    const [userName, setUserName] = useState('');
+    const [editingName, setEditingName] = useState(false);
+    const [tempName, setTempName] = useState('');
+
+    useEffect(() => {
+        loadUserName();
+    }, []);
+
+    const loadUserName = async () => {
+        try {
+            if (user) {
+                const doc = await firestore().collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    setUserName(data?.name || data?.displayName || '');
+                }
+            }
+        } catch (e) {
+            console.log('Load user name error:', e);
+        }
+    };
+
+    const saveName = async () => {
+        try {
+            if (user && tempName.trim()) {
+                await firestore().collection('users').doc(user.uid).set({ name: tempName.trim() }, { merge: true });
+                setUserName(tempName.trim());
+            }
+            setEditingName(false);
+        } catch (e) {
+            console.log('Save name error:', e);
+        }
+    };
 
     const handleLogout = async () => {
         Alert.alert('Logout', 'Are you sure?', [
@@ -469,21 +502,15 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
 Last updated: December 2024
 
 1. Information We Collect
-We collect usage statistics to help you track your screen time. This includes:
-- App usage duration
-- Screen unlock frequency
-- Blocked app attempts
+We collect usage statistics to help you track your screen time.
 
 2. How We Use Your Information
-Your data is used solely to provide app functionality and is stored securely.
+Your data is used solely to provide app functionality.
 
 3. Data Storage
 All data is stored locally on your device and in your Firebase account.
 
-4. Third-Party Services
-We use Firebase for authentication and data sync.
-
-5. Contact
+4. Contact
 For questions, contact support@blockd.app`;
 
     const termsText = `Terms of Service for Blockd
@@ -494,73 +521,133 @@ Last updated: December 2024
 By using Blockd, you agree to these terms.
 
 2. Description of Service
-Blockd helps you manage screen time through app limits and detox challenges.
+Blockd helps you manage screen time through app limits.
 
-3. User Responsibilities
-You are responsible for your own usage of the app.
-
-4. Limitations
+3. Limitations
 Blockd is provided "as is" without warranty.
 
-5. Modifications
-We may update these terms at any time.
-
-6. Contact
+4. Contact
 For questions, contact support@blockd.app`;
 
+    // MetalCard component for settings
+    const SettingsCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+        <View style={{ marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 }}>
+            <LinearGradient
+                colors={isDark ? ['rgba(50,50,55,1)', 'rgba(30,30,35,1)'] : ['rgba(255,255,255,1)', 'rgba(245,245,250,1)']}
+                style={{ borderRadius: 20, padding: 1 }}
+            >
+                <LinearGradient
+                    colors={isDark ? ['rgba(25,25,30,0.98)', 'rgba(18,18,22,0.99)'] : ['rgba(252,252,255,0.99)', 'rgba(248,248,252,0.98)']}
+                    style={{ borderRadius: 19, padding: spacing[4] }}
+                >
+                    {children}
+                </LinearGradient>
+            </LinearGradient>
+        </View>
+    );
+
     return (
-        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner} showsVerticalScrollIndicator={false}>
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={styles.sectionLabel}>ACCOUNT</Text>
-            <GlassCard>
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.dashboardContent} showsVerticalScrollIndicator={false}>
+            {/* Header */}
+            <View style={styles.dashboardHeader}>
+                <Text variant="h1" weight="bold" style={{ fontSize: 34 }}>Settings</Text>
+            </View>
+
+            {/* Profile Section */}
+            <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase', marginBottom: spacing[2] }}>PROFILE</Text>
+            <SettingsCard>
                 <View style={styles.settingRow}>
-                    <Text variant="body">Email</Text>
-                    <Text variant="body" color={theme.colors.textSecondary} numberOfLines={1} style={{ maxWidth: 180 }}>{user?.email || 'Not logged in'}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+                        <Icon name="user" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+                        <Text variant="body" weight="medium">Name</Text>
+                    </View>
+                    {editingName ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
+                            <TextInput
+                                value={tempName}
+                                onChangeText={setTempName}
+                                placeholder="Enter name"
+                                placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
+                                style={{ color: isDark ? '#FFF' : '#000', width: 100, textAlign: 'right' }}
+                                autoFocus
+                            />
+                            <TouchableOpacity onPress={saveName}>
+                                <Icon name="check" size={20} color="#22C55E" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setEditingName(false)}>
+                                <Icon name="x" size={20} color="#EF4444" />
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity onPress={() => { setTempName(userName); setEditingName(true); }} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
+                            <Text variant="body" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'}>{userName || 'Set name'}</Text>
+                            <Icon name="edit-2" size={16} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
+                        </TouchableOpacity>
+                    )}
                 </View>
                 <View style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
-                    <Text variant="body">Member Since</Text>
-                    <Text variant="body" color={theme.colors.textSecondary}>{user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : '-'}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+                        <Icon name="mail" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+                        <Text variant="body" weight="medium">Email</Text>
+                    </View>
+                    <Text variant="body" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} numberOfLines={1} style={{ maxWidth: 160 }}>{user?.email || 'Not logged in'}</Text>
                 </View>
-            </GlassCard>
+            </SettingsCard>
 
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ ...styles.sectionLabel, marginTop: spacing[5] }}>APP</Text>
-            <GlassCard>
-                <View style={styles.settingRow}>
-                    <Text variant="body">Version</Text>
-                    <Text variant="body" color={theme.colors.textSecondary}>1.0.0</Text>
+            {/* App Section */}
+            <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase', marginBottom: spacing[2], marginTop: spacing[3] }}>APP</Text>
+            <SettingsCard>
+                <TouchableOpacity style={styles.settingRow} onPress={openPermissions}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+                        <Icon name="shield" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+                        <Text variant="body" weight="medium">Permissions</Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
+                </TouchableOpacity>
+                <View style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+                        <Icon name="info" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+                        <Text variant="body" weight="medium">Version</Text>
+                    </View>
+                    <Text variant="body" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'}>1.0.0</Text>
                 </View>
-            </GlassCard>
+            </SettingsCard>
 
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ ...styles.sectionLabel, marginTop: spacing[5] }}>LEGAL</Text>
-            <GlassCard>
+            {/* Legal Section */}
+            <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase', marginBottom: spacing[2], marginTop: spacing[3] }}>LEGAL</Text>
+            <SettingsCard>
                 <TouchableOpacity style={styles.settingRow} onPress={() => setPrivacyVisible(true)}>
-                    <Text variant="body">Privacy Policy</Text>
-                    <ChevronIcon size={18} color={theme.colors.textTertiary} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+                        <Icon name="lock" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+                        <Text variant="body" weight="medium">Privacy Policy</Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]} onPress={() => setTermsVisible(true)}>
-                    <Text variant="body">Terms of Service</Text>
-                    <ChevronIcon size={18} color={theme.colors.textTertiary} />
-                </TouchableOpacity>
-            </GlassCard>
-
-            <Text variant="caption" weight="semibold" color={theme.colors.textTertiary} style={{ ...styles.sectionLabel, marginTop: spacing[5] }}>PERMISSIONS</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={openPermissions}>
-                <GlassCard>
-                    <View style={styles.settingRow}>
-                        <Text variant="body">Manage Permissions</Text>
-                        <ChevronIcon size={18} color={theme.colors.textTertiary} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+                        <Icon name="file-text" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+                        <Text variant="body" weight="medium">Terms of Service</Text>
                     </View>
-                </GlassCard>
+                    <Icon name="chevron-right" size={20} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
+                </TouchableOpacity>
+            </SettingsCard>
+
+            {/* Logout Button */}
+            <TouchableOpacity onPress={handleLogout} activeOpacity={0.7} style={{ marginTop: spacing[4], marginBottom: 120 }}>
+                <LinearGradient
+                    colors={['rgba(255,68,68,0.15)', 'rgba(255,68,68,0.08)']}
+                    style={{ height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}
+                >
+                    <Text variant="body" weight="bold" color="#FF4444">Logout</Text>
+                </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleLogout} style={[styles.logoutBtn, { backgroundColor: isDark ? 'rgba(255,68,68,0.12)' : 'rgba(255,68,68,0.08)', marginTop: spacing[6] }]} activeOpacity={0.7}>
-                <Text variant="body" weight="semibold" color="#FF4444">Logout</Text>
-            </TouchableOpacity>
-
+            {/* Modals */}
             <Modal visible={privacyVisible} animationType="slide" transparent>
                 <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
                     <View style={styles.modalHeader}>
                         <Text variant="h3" weight="bold">Privacy Policy</Text>
-                        <TouchableOpacity onPress={() => setPrivacyVisible(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
+                        <TouchableOpacity onPress={() => setPrivacyVisible(false)}><Icon name="x" size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
                     </View>
                     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
                         <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>{privacyText}</Text>
@@ -572,7 +659,7 @@ For questions, contact support@blockd.app`;
                 <View style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)' }]}>
                     <View style={styles.modalHeader}>
                         <Text variant="h3" weight="bold">Terms of Service</Text>
-                        <TouchableOpacity onPress={() => setTermsVisible(false)}><XIcon size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
+                        <TouchableOpacity onPress={() => setTermsVisible(false)}><Icon name="x" size={24} color={isDark ? '#FFF' : '#000'} /></TouchableOpacity>
                     </View>
                     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
                         <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>{termsText}</Text>

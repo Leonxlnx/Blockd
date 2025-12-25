@@ -268,88 +268,167 @@ export const CommitmentScreen: React.FC<{ onNext: () => void; onBack?: () => voi
     const { theme, isDark } = useTheme();
     const [holdProgress, setHoldProgress] = useState(0);
     const [isHolding, setIsHolding] = useState(false);
+    const [isComplete, setIsComplete] = useState(false);
     const holdTimer = useRef<any>(null);
-    const progressAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(1)).current;
+    const glowAnim = useRef(new Animated.Value(0)).current;
     const titleAnim = useEntranceAnimation(0);
-    const cardAnim = useEntranceAnimation(200);
+    const cardAnim = useEntranceAnimation(150);
+    const buttonAnim = useEntranceAnimation(300);
+
+    useEffect(() => {
+        // Subtle breathing glow animation
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: false }),
+                Animated.timing(glowAnim, { toValue: 0, duration: 1500, useNativeDriver: false }),
+            ])
+        ).start();
+    }, []);
 
     const startHold = () => {
         setIsHolding(true);
-        Animated.spring(scaleAnim, { toValue: 0.95, useNativeDriver: true }).start();
+        Animated.spring(scaleAnim, { toValue: 0.96, friction: 8, useNativeDriver: true }).start();
 
         let progress = 0;
         holdTimer.current = setInterval(() => {
-            progress += 2;
-            setHoldProgress(progress);
+            progress += 1.5;
+            setHoldProgress(Math.min(progress, 100));
             if (progress >= 100) {
                 clearInterval(holdTimer.current);
-                onNext();
+                setIsComplete(true);
+                // Haptic-like pulse animation
+                Animated.sequence([
+                    Animated.spring(scaleAnim, { toValue: 1.05, friction: 5, useNativeDriver: true }),
+                    Animated.spring(scaleAnim, { toValue: 1, friction: 8, useNativeDriver: true }),
+                ]).start(() => {
+                    setTimeout(onNext, 300);
+                });
             }
-        }, 60);
+        }, 40);
     };
 
     const endHold = () => {
+        if (isComplete) return;
         setIsHolding(false);
-        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
+        Animated.spring(scaleAnim, { toValue: 1, friction: 8, useNativeDriver: true }).start();
         if (holdTimer.current) {
             clearInterval(holdTimer.current);
-            setHoldProgress(0);
+            // Smooth reset
+            const resetInterval = setInterval(() => {
+                setHoldProgress(prev => {
+                    if (prev <= 0) {
+                        clearInterval(resetInterval);
+                        return 0;
+                    }
+                    return prev - 5;
+                });
+            }, 20);
         }
     };
+
+    const glowOpacity = glowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.3, 0.6]
+    });
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']} locations={[0, 0.25, 0.5, 0.75, 1]} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient
+                colors={isDark ? ['#050508', '#0A0A0F', '#101018', '#0C0C12', '#050508'] : ['#FAFAFA', '#F2F2F5', '#E8E8EC', '#F0F0F4', '#FAFAFA']}
+                locations={[0, 0.25, 0.5, 0.75, 1]}
+                style={StyleSheet.absoluteFillObject}
+            />
             <ProgressBar current={4} total={4} />
 
             <View style={styles.centerContent}>
                 <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
                     <Text variant="h1" weight="bold" align="center" style={styles.title}>Your Commitment</Text>
+                    <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[2] }}>
+                        Hold the button to lock in your promise
+                    </Text>
                 </Animated.View>
 
-                <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }] }}>
-                    <View style={[styles.commitmentCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }]}>
-                        <Text variant="body" weight="semibold" align="center" style={{ lineHeight: 28, fontSize: 18 }}>
+                <Animated.View style={{ opacity: cardAnim.opacity, transform: [{ translateY: cardAnim.translateY }], marginTop: spacing[6] }}>
+                    <LinearGradient
+                        colors={isDark ? ['rgba(40,40,50,0.8)', 'rgba(20,20,25,0.9)'] : ['rgba(255,255,255,0.95)', 'rgba(245,245,250,0.9)']}
+                        style={[styles.commitmentCard, { borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }]}
+                    >
+                        <Text variant="body" weight="semibold" align="center" style={{ lineHeight: 30, fontSize: 18 }}>
                             "I commit to reducing{'\n'}my screen time and{'\n'}taking control of my life."
                         </Text>
-                    </View>
+                    </LinearGradient>
+                </Animated.View>
 
-                    {/* HOLD BUTTON - CENTER */}
-                    <Animated.View style={{ transform: [{ scale: scaleAnim }], marginTop: spacing[8] }}>
-                        <TouchableOpacity
-                            onPressIn={startHold}
-                            onPressOut={endHold}
-                            activeOpacity={0.9}
-                            style={styles.holdButtonOuter}
+                {/* HOLD BUTTON */}
+                <Animated.View style={{
+                    opacity: buttonAnim.opacity,
+                    transform: [{ translateY: buttonAnim.translateY }, { scale: scaleAnim }],
+                    marginTop: spacing[6]
+                }}>
+                    <TouchableOpacity
+                        onPressIn={startHold}
+                        onPressOut={endHold}
+                        activeOpacity={1}
+                        style={styles.holdButtonOuter}
+                    >
+                        {/* Glow effect */}
+                        <Animated.View style={[styles.holdGlow, {
+                            opacity: glowOpacity,
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)'
+                        }]} />
+
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(60,60,70,1)', 'rgba(35,35,40,1)', 'rgba(25,25,30,1)']
+                                : ['rgba(250,250,255,1)', 'rgba(235,235,240,1)', 'rgba(225,225,230,1)']}
+                            style={styles.holdButtonInner}
                         >
-                            <View style={[styles.holdButtonInner, { backgroundColor: isDark ? '#1A1A1A' : '#F5F5F5' }]}>
-                                {/* Progress ring */}
-                                <View style={[styles.holdProgress, {
-                                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                }]}>
-                                    <View style={[styles.holdProgressFill, {
-                                        backgroundColor: isDark ? '#FFF' : '#000',
-                                        height: `${holdProgress}%`
-                                    }]} />
-                                </View>
-                                <View style={styles.holdButtonContent}>
-                                    <Text variant="h2" weight="bold" align="center">{isHolding ? `${holdProgress}%` : 'Hold'}</Text>
-                                    <Text variant="caption" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[1] }}>
-                                        {isHolding ? 'Keep holding...' : 'to Commit'}
-                                    </Text>
-                                </View>
+                            {/* Progress ring overlay */}
+                            <View style={[styles.holdProgressRing, {
+                                borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                            }]}>
+                                <View style={[styles.holdProgressFillRing, {
+                                    backgroundColor: isComplete ? '#22C55E' : (isDark ? '#FFF' : '#000'),
+                                    height: `${holdProgress}%`
+                                }]} />
                             </View>
-                        </TouchableOpacity>
-                    </Animated.View>
+
+                            <View style={styles.holdButtonContent}>
+                                {isComplete ? (
+                                    <>
+                                        <Text variant="h2" weight="bold" color="#22C55E">✓</Text>
+                                        <Text variant="caption" color={theme.colors.textSecondary} style={{ marginTop: 4 }}>Done!</Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text variant="h2" weight="bold" align="center">{isHolding ? `${Math.round(holdProgress)}%` : 'Hold'}</Text>
+                                        <Text variant="caption" color={theme.colors.textSecondary} align="center" style={{ marginTop: 4 }}>
+                                            {isHolding ? 'Keep holding...' : 'to Commit'}
+                                        </Text>
+                                    </>
+                                )}
+                            </View>
+                        </LinearGradient>
+                    </TouchableOpacity>
                 </Animated.View>
             </View>
 
+            {/* PROPER BACK BUTTON AT BOTTOM */}
             {onBack && (
-                <TouchableOpacity onPress={onBack} style={styles.backLinkContainer}>
-                    <Text variant="body" color={theme.colors.textSecondary}>Go back</Text>
-                </TouchableOpacity>
+                <View style={styles.bottomBackContainer}>
+                    <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
+                        <LinearGradient
+                            colors={isDark ? ['#1A1A1A', '#282828', '#1A1A1A'] : ['#F5F5F5', '#FFFFFF', '#F5F5F5']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={[styles.backButtonStyle, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)' }]}
+                        >
+                            <Text variant="body" weight="semibold" color={isDark ? '#FFFFFF' : '#1A1A1A'}>Back</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
             )}
         </View>
     );
@@ -469,4 +548,11 @@ const styles = StyleSheet.create({
     // YouGotThis Screen
     checkCircle: { width: 80, height: 80, borderRadius: 40, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
     checkmark: { width: 20, height: 35, borderRightWidth: 4, borderBottomWidth: 4, transform: [{ rotate: '45deg' }], marginTop: -8 },
+
+    // Commitment Screen additional styles
+    holdGlow: { position: 'absolute', width: 160, height: 160, borderRadius: 80 },
+    holdProgressRing: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', borderRadius: 70 },
+    holdProgressFillRing: { position: 'absolute', bottom: 0, left: 0, right: 0, opacity: 0.25, borderRadius: 70 },
+    bottomBackContainer: { paddingHorizontal: spacing[5], paddingBottom: spacing[6] },
+    backButtonStyle: { height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
 });
