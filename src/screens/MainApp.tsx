@@ -186,7 +186,7 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
             const user = auth().currentUser;
             if (user) {
                 const doc = await firestore().collection('users').doc(user.uid).get();
-                if (doc.exists) {
+                if (doc.exists()) {
                     const data = doc.data();
                     setUserName(data?.name || data?.displayName || 'User');
                 }
@@ -393,16 +393,16 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                                         </View>
                                     )}
                                     <LinearGradient
-                                        colors={isToday
-                                            ? ['#FFFFFF', '#AAAAAA']
+                                        colors={(isSelected || isToday)
+                                            ? ['#FFFFFF', '#CCCCCC']
                                             : isDark ? ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)'] : ['rgba(0,0,0,0.12)', 'rgba(0,0,0,0.06)']}
                                         style={[styles.weeklyBar, { height: `${barHeight}%` }]}
                                     />
                                     <Text
                                         variant="caption"
-                                        weight={isToday ? 'bold' : 'medium'}
-                                        color={isToday ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')}
-                                        style={{ fontSize: 9, marginTop: 8 }}
+                                        weight={(isSelected || isToday) ? 'bold' : 'medium'}
+                                        color={(isSelected || isToday) ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')}
+                                        style={{ fontSize: 9, marginTop: 6 }}
                                     >
                                         {reorderedLabels[i]}
                                     </Text>
@@ -466,7 +466,7 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
         try {
             if (user) {
                 const doc = await firestore().collection('users').doc(user.uid).get();
-                if (doc.exists) {
+                if (doc.exists()) {
                     const data = doc.data();
                     setUserName(data?.name || data?.displayName || '');
                 }
@@ -756,53 +756,93 @@ const LimitsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
         return `${days}d left`;
     };
 
+    // Premium LimitCard component
+    const LimitCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+        <View style={{ marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 6 }}>
+            <LinearGradient
+                colors={isDark ? ['rgba(50,50,55,1)', 'rgba(30,30,35,1)'] : ['rgba(255,255,255,1)', 'rgba(245,245,250,1)']}
+                style={{ borderRadius: 18, padding: 1 }}
+            >
+                <LinearGradient
+                    colors={isDark ? ['rgba(25,25,30,0.98)', 'rgba(18,18,22,0.99)'] : ['rgba(252,252,255,0.99)', 'rgba(248,248,252,0.98)']}
+                    style={{ borderRadius: 17, padding: spacing[3], flexDirection: 'row', alignItems: 'center' }}
+                >
+                    {children}
+                </LinearGradient>
+            </LinearGradient>
+        </View>
+    );
+
     return (
-        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.dashboardContent} showsVerticalScrollIndicator={false}>
+            {/* Header */}
+            <View style={styles.dashboardHeader}>
+                <Text variant="h1" weight="bold" style={{ fontSize: 34 }}>Limits</Text>
+                <Text variant="body" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} style={{ marginTop: spacing[1] }}>
+                    {activeLimits.length} active {activeLimits.length === 1 ? 'limit' : 'limits'}
+                </Text>
+            </View>
+
             {activeLimits.length === 0 ? (
-                <View style={[styles.emptyState, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}>
-                    <LockIcon size={48} color={theme.colors.textTertiary} />
-                    <Text variant="h3" weight="bold" align="center" style={{ marginTop: spacing[4] }}>No Limits Yet</Text>
-                    <Text variant="body" color={theme.colors.textSecondary} align="center" style={{ marginTop: spacing[2] }}>
-                        Add your first limit to start{'\n'}controlling your screen time
-                    </Text>
+                <View style={{ marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 6 }}>
+                    <LinearGradient
+                        colors={isDark ? ['rgba(40,40,45,1)', 'rgba(25,25,30,1)'] : ['rgba(255,255,255,1)', 'rgba(248,248,252,1)']}
+                        style={{ borderRadius: 20, padding: spacing[6], alignItems: 'center' }}
+                    >
+                        <Icon name="lock" size={44} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)'} />
+                        <Text variant="h3" weight="bold" align="center" style={{ marginTop: spacing[3] }}>No Limits Yet</Text>
+                        <Text variant="body" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} align="center" style={{ marginTop: spacing[2] }}>
+                            Add your first limit to start{'\n'}controlling your screen time
+                        </Text>
+                    </LinearGradient>
                 </View>
             ) : (
-                <View style={{ gap: spacing[3] }}>
+                <View style={{ gap: spacing[2] }}>
                     {activeLimits.map((limit, i) => (
                         <TouchableOpacity key={i} activeOpacity={0.7} onPress={() => handleLimitPress(limit)}>
-                            <GlassCard style={{ flexDirection: 'row', alignItems: 'center', padding: spacing[4] }}>
+                            <LimitCard>
                                 {limit.icon ? (
-                                    <Image source={{ uri: `data:image/png;base64,${limit.icon}` }} style={styles.limitIcon} />
+                                    <Image source={{ uri: `data:image/png;base64,${limit.icon}` }} style={{ width: 44, height: 44, borderRadius: 12 }} />
                                 ) : (
-                                    <View style={[styles.limitIconPlaceholder, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
+                                    <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', alignItems: 'center', justifyContent: 'center' }}>
                                         <Text variant="body" weight="bold">{limit.appName.charAt(0)}</Text>
                                     </View>
                                 )}
-                                <View style={{ flex: 1, marginLeft: spacing[4] }}>
+                                <View style={{ flex: 1, marginLeft: spacing[3] }}>
                                     <Text variant="body" weight="semibold">{limit.appName}</Text>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2], marginTop: 4 }}>
-                                        <View style={[styles.modeTag, { backgroundColor: limit.mode === 'detox' ? 'rgba(255,68,68,0.15)' : 'rgba(0,122,255,0.15)' }]}>
-                                            <Text variant="caption" weight="bold" color={limit.mode === 'detox' ? '#FF4444' : '#007AFF'}>{limit.mode === 'detox' ? 'DETOX' : 'LIMIT'}</Text>
+                                        <View style={{ paddingVertical: 2, paddingHorizontal: 6, borderRadius: 4, backgroundColor: limit.mode === 'detox' ? 'rgba(255,68,68,0.15)' : 'rgba(0,122,255,0.15)' }}>
+                                            <Text variant="caption" weight="bold" color={limit.mode === 'detox' ? '#FF4444' : '#007AFF'} style={{ fontSize: 9 }}>
+                                                {limit.mode === 'detox' ? 'DETOX' : 'LIMIT'}
+                                            </Text>
                                         </View>
-                                        <Text variant="caption" color={theme.colors.textSecondary}>{limit.mode === 'detox' ? formatDaysRemaining(limit.detoxEndDate!) : `${limit.dailyLimitMinutes}m/day`}</Text>
+                                        <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'}>
+                                            {limit.mode === 'detox' ? formatDaysRemaining(limit.detoxEndDate!) : `${limit.dailyLimitMinutes}m/day`}
+                                        </Text>
                                     </View>
                                 </View>
                                 {limit.streak > 0 && (
-                                    <View style={{ alignItems: 'center' }}>
+                                    <View style={{ alignItems: 'center', marginRight: spacing[2] }}>
                                         <Text variant="h3" weight="bold" color="#FFD700">{limit.streak}</Text>
-                                        <Text variant="caption" color={theme.colors.textTertiary}>days</Text>
+                                        <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 9 }}>days</Text>
                                     </View>
                                 )}
-                                <ChevronIcon size={20} color={theme.colors.textTertiary} />
-                            </GlassCard>
+                                <Icon name="chevron-right" size={18} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
+                            </LimitCard>
                         </TouchableOpacity>
                     ))}
                 </View>
             )}
 
-            <TouchableOpacity onPress={() => setShowPicker(true)} style={[styles.addButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]} activeOpacity={0.7}>
-                <PlusIcon size={24} color={isDark ? '#FFF' : '#000'} />
-                <Text variant="body" weight="semibold" style={{ marginLeft: spacing[3] }}>Add Limit</Text>
+            {/* Add Limit Button */}
+            <TouchableOpacity onPress={() => setShowPicker(true)} activeOpacity={0.7} style={{ marginTop: spacing[3] }}>
+                <LinearGradient
+                    colors={isDark ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)'] : ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.02)']}
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}
+                >
+                    <Icon name="plus" size={22} color={isDark ? '#FFF' : '#000'} />
+                    <Text variant="body" weight="semibold" style={{ marginLeft: spacing[2] }}>Add Limit</Text>
+                </LinearGradient>
             </TouchableOpacity>
 
             {/* App Picker Modal */}
@@ -1051,12 +1091,12 @@ const styles = StyleSheet.create({
     weeklyTooltip: { position: 'absolute', top: -28, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, zIndex: 10 },
 
     // Premium Cards with Metallic Edge
-    premiumCardOuter: { marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.4, shadowRadius: 25, elevation: 10 },
-    premiumCardBorder: { borderRadius: 24, padding: 1.5 },
-    premiumCardInner: { borderRadius: 22, padding: spacing[4] },
-    premiumCard: { borderRadius: 24, padding: spacing[4], marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.35, shadowRadius: 25, elevation: 8 },
-    cardInnerBorder: { borderWidth: 1, borderRadius: 20, padding: spacing[4], margin: -spacing[4] },
-    statContent: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing[2] },
+    premiumCardOuter: { marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8 },
+    premiumCardBorder: { borderRadius: 20, padding: 1 },
+    premiumCardInner: { borderRadius: 19, padding: spacing[3] },
+    premiumCard: { borderRadius: 20, padding: spacing[3], marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 6 },
+    cardInnerBorder: { borderWidth: 1, borderRadius: 18, padding: spacing[3], margin: -spacing[3] },
+    statContent: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing[1] },
 
     // Floating Nav
     floatingNavContainer: { position: 'absolute', bottom: 24, left: 24, right: 24 },
