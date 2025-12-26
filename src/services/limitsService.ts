@@ -1,6 +1,9 @@
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeModules } from 'react-native';
+
+const { BlockingModule } = NativeModules;
 
 // ============================================
 // LIMIT TYPES
@@ -66,8 +69,31 @@ class LimitsService {
             }
         }
 
+        // CRITICAL: Sync all active limits to native BlockingModule
+        this.syncToNative();
+
         this.notifyListeners();
         return this.limits;
+    }
+
+    // Sync all active limits to native BlockingModule
+    private syncToNative(): void {
+        if (!BlockingModule) return;
+
+        for (const limit of this.limits) {
+            if (limit.isActive) {
+                const detoxEndTime = limit.mode === 'detox' && limit.detoxEndDate
+                    ? new Date(limit.detoxEndDate).getTime()
+                    : 0;
+                BlockingModule.addBlockedApp(
+                    limit.packageName,
+                    limit.mode,
+                    detoxEndTime,
+                    limit.dailyLimitMinutes || 0
+                );
+            }
+        }
+        console.log('Synced', this.limits.filter(l => l.isActive).length, 'limits to native');
     }
 
     // Save a limit
@@ -82,6 +108,20 @@ class LimitsService {
 
         // Save locally
         await AsyncStorage.setItem('blockd_limits', JSON.stringify(this.limits));
+
+        // CRITICAL: Sync to native BlockingModule for real-time blocking
+        if (limit.isActive && BlockingModule) {
+            const detoxEndTime = limit.mode === 'detox' && limit.detoxEndDate
+                ? new Date(limit.detoxEndDate).getTime()
+                : 0;
+            BlockingModule.addBlockedApp(
+                limit.packageName,
+                limit.mode,
+                detoxEndTime,
+                limit.dailyLimitMinutes || 0
+            );
+            console.log('Synced to native:', limit.packageName, limit.mode);
+        }
 
         // Sync to Firestore if logged in
         const uid = this.getUserId();
@@ -106,6 +146,12 @@ class LimitsService {
         this.limits = this.limits.filter(l => l.packageName !== packageName);
 
         await AsyncStorage.setItem('blockd_limits', JSON.stringify(this.limits));
+
+        // CRITICAL: Remove from native BlockingModule
+        if (BlockingModule) {
+            BlockingModule.removeBlockedApp(packageName);
+            console.log('Removed from native:', packageName);
+        }
 
         const uid = this.getUserId();
         if (uid) {

@@ -118,13 +118,55 @@ public class BlockingModule extends ReactContextBaseJavaModule {
         app.lastResetDate = getCurrentDate();
         
         blockedApps.put(packageName, app);
-        Log.d(TAG, "Added blocked app: " + packageName + " mode: " + mode);
+        
+        // CRITICAL: Persist to SharedPreferences for AccessibilityService
+        persistBlockedApps();
+        
+        // Notify AccessibilityService if running
+        if (BlockingAccessibilityService.isRunning()) {
+            BlockingAccessibilityService.getInstance().addBlockedApp(packageName);
+        }
+        
+        Log.d(TAG, "Added blocked app: " + packageName + " mode: " + mode + " (persisted)");
     }
 
     @ReactMethod
     public void removeBlockedApp(String packageName) {
         blockedApps.remove(packageName);
-        Log.d(TAG, "Removed blocked app: " + packageName);
+        
+        // CRITICAL: Persist to SharedPreferences for AccessibilityService
+        persistBlockedApps();
+        
+        // Notify AccessibilityService if running
+        if (BlockingAccessibilityService.isRunning()) {
+            BlockingAccessibilityService.getInstance().removeBlockedApp(packageName);
+        }
+        
+        Log.d(TAG, "Removed blocked app: " + packageName + " (persisted)");
+    }
+    
+    /**
+     * Persist blocked apps to SharedPreferences so AccessibilityService can read them
+     */
+    private void persistBlockedApps() {
+        try {
+            android.content.SharedPreferences prefs = reactContext.getSharedPreferences("BlockdBlockingPrefs", Context.MODE_PRIVATE);
+            org.json.JSONObject json = new org.json.JSONObject();
+            
+            for (Map.Entry<String, BlockedApp> entry : blockedApps.entrySet()) {
+                org.json.JSONObject appData = new org.json.JSONObject();
+                appData.put("mode", entry.getValue().mode);
+                appData.put("detoxEndTime", entry.getValue().detoxEndTime);
+                appData.put("dailyLimitMinutes", entry.getValue().dailyLimitMinutes);
+                appData.put("isActive", true);
+                json.put(entry.getKey(), appData);
+            }
+            
+            prefs.edit().putString("blocked_apps_json", json.toString()).apply();
+            Log.d(TAG, "Persisted " + blockedApps.size() + " apps to SharedPreferences");
+        } catch (Exception e) {
+            Log.e(TAG, "Error persisting blocked apps: " + e.getMessage());
+        }
     }
 
     @ReactMethod
@@ -139,7 +181,6 @@ public class BlockingModule extends ReactContextBaseJavaModule {
             app.usedTodayMinutes = minutesUsed;
         }
     }
-
     @ReactMethod
     public void getBlockedApps(Promise promise) {
         try {
