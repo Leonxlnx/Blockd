@@ -1,332 +1,523 @@
 # Blockd - Design System
 
-> Complete visual language and component reference
+> Complete design guide for UI components, colors, typography, and patterns
+
+**Last Updated:** December 26, 2024
 
 ---
 
-## 🎨 Color Palette
+## 🎨 Design Philosophy
 
-### Primary Colors (Sage Theme)
-```
-Primary 50:   #F0F4F1
-Primary 100:  #D9E5DC
-Primary 200:  #B5CDB9
-Primary 300:  #8FB296
-Primary 400:  #6A9973  ← Main accent
-Primary 500:  #4A7C54
-Primary 600:  #3D6645
-Primary 700:  #305137
-Primary 800:  #243D2A
-Primary 900:  #18291C
-```
+### Premium Liquid Metal (v1.1)
+Blockd uses a sophisticated **2.5D liquid metal aesthetic** that combines:
+- Multi-layered gradient borders for depth
+- Subtle shadows for elevation
+- Smooth animations for premium feel
+- Consistent iconography (Feather icons)
 
-### Neutral Colors
-```
-Neutral 50:   #FAFAFA  ← Light background
-Neutral 100:  #F5F5F5
-Neutral 200:  #E5E5E5
-Neutral 300:  #D4D4D4
-Neutral 400:  #A3A3A3
-Neutral 500:  #737373
-Neutral 600:  #525252
-Neutral 700:  #404040
-Neutral 800:  #262626
-Neutral 900:  #171717
-Neutral 950:  #0A0908  ← OLED dark background
-```
-
-### Semantic Colors
-```
-Success:  #22C55E
-Warning:  #FFB800
-Error:    #FF4444
-Info:     #007AFF
-```
+### Core Principles
+1. **Simplicity First** - Clean, uncluttered interfaces
+2. **Data Visibility** - Important metrics always prominent
+3. **Touch-Optimized** - 48dp minimum touch targets
+4. **Dark Mode Native** - OLED-optimized true black
+5. **Performance** - 60fps animations, instant interactions
 
 ---
 
-## 📐 Spacing System (8-Point Grid)
+## 🌈 Color System
 
+### Light Mode
 ```typescript
-spacing = {
-  0:  0,
-  1:  4,
-  2:  8,
-  3:  12,
-  4:  16,
-  5:  20,
-  6:  24,
-  7:  28,
-  8:  32,
-  9:  36,
-  10: 40,
+colors: {
+  background: '#FCFCFF',      // Near-white base
+  surface1: '#FFFFFF',        // Pure white cards
+  surface2: '#F8F8FC',        // Slightly tinted
+  surface3: '#F0F0F4',        // More prominent
+
+  text: '#1A1A1A',            // Near-black
+  textSecondary: '#666666',   // Medium gray
+  textTertiary: '#999999',    // Light gray
+
+  primary: '#007AFF',         // iOS blue
+  success: '#22C55E',         // Green
+  warning: '#F59E0B',         // Amber
+  error: '#EF4444',           // Red
 }
 ```
 
+### Dark Mode
+```typescript
+colors: {
+  background: '#000000',      // Pure OLED black
+  surface1: '#0A0A0A',        // Slightly elevated
+  surface2: '#121212',        // Card level
+  surface3: '#1A1A1A',        // Prominent cards
+
+  text: '#FFFFFF',            // Pure white
+  textSecondary: '#AAAAAA',   // Light gray
+  textTertiary: '#666666',    // Dim gray
+
+  primary: '#0A84FF',         // Brighter blue for dark
+  success: '#32D74B',         // Brighter green
+  warning: '#FFD60A',         // Brighter amber
+  error: '#FF453A',           // Brighter red
+}
+```
+
+### Metal Gradients
+```typescript
+// Premium card border (outer)
+isDark
+  ? ['rgba(50,50,55,1)', 'rgba(30,30,35,1)']
+  : ['rgba(255,255,255,1)', 'rgba(245,245,250,1)']
+
+// Premium card fill (inner)
+isDark
+  ? ['rgba(25,25,30,0.98)', 'rgba(18,18,22,0.99)']
+  : ['rgba(252,252,255,0.99)', 'rgba(248,248,252,0.98)']
+```
+
+---
+
+## 📏 Spacing System
+
+**8-Point Grid**: All spacing uses multiples of 8px
+
+```typescript
+export const spacing = {
+  1: 8,    // 8px  - Tiny gaps
+  2: 16,   // 16px - Small padding
+  3: 24,   // 24px - Medium padding
+  4: 32,   // 32px - Large padding
+  5: 40,   // 40px - Extra large
+  6: 48,   // 48px - Huge
+  7: 56,   // 56px - Massive
+  8: 64,   // 64px - Maximum
+};
+```
+
 **Usage:**
-- Component padding: `spacing[4]` (16px)
-- Section gaps: `spacing[6]` (24px)
-- Screen margins: `spacing[4]` (16px)
+```typescript
+<View style={{ padding: spacing[4] }}>  // 32px padding
+<View style={{ marginTop: spacing[2] }}> // 16px margin
+```
 
 ---
 
 ## 🔤 Typography
 
-### Font Weights
-```
-Light:     300
-Regular:   400
-Medium:    500
-Semibold:  600
-Bold:      700
-```
-
-### Font Sizes
-```
-xs:   10px
-sm:   12px
-base: 14px
-md:   16px
-lg:   18px
-xl:   20px
-2xl:  24px
-3xl:  30px
-4xl:  36px
-5xl:  48px
-```
+### Font Family
+**System Default** - Uses platform native fonts for best performance:
+- iOS: SF Pro / SF Pro Display
+- Android: Roboto / Roboto Condensed
 
 ### Text Variants
 ```typescript
-h1:      { fontSize: 36, fontWeight: 700, lineHeight: 44 }
-h2:      { fontSize: 30, fontWeight: 700, lineHeight: 38 }
-h3:      { fontSize: 24, fontWeight: 600, lineHeight: 32 }
-body:    { fontSize: 16, fontWeight: 400, lineHeight: 24 }
-caption: { fontSize: 12, fontWeight: 500, lineHeight: 16 }
+// Custom Text component with variants
+<Text variant="h1">         // 32px, bold
+<Text variant="h2">         // 24px, bold
+<Text variant="h3">         // 20px, semibold
+<Text variant="body">       // 16px, regular
+<Text variant="caption">    // 14px, regular
 ```
+
+### Font Weights
+```typescript
+weight="bold"      // 700
+weight="semibold"  // 600
+weight="medium"    // 500
+weight="regular"   // 400
+```
+
+### Line Heights
+- Headers: 1.2x font size
+- Body: 1.5x font size
+- Captions: 1.4x font size
 
 ---
 
-## 🟦 Border Radius
+## 🧩 Component Library
+
+### 1. MetalCard (Premium)
+Multi-layered gradient card with metallic border effect.
 
 ```typescript
-borderRadius = {
-  none: 0,
-  sm:   8,
-  md:   12,
-  lg:   16,
-  xl:   20,
-  full: 9999,
+<View style={styles.premiumCardOuter}>  // Shadow container
+  <LinearGradient                       // Metallic border
+    colors={['rgba(50,50,55,1)', 'rgba(30,30,35,1)']}
+    style={styles.premiumCardBorder}
+  >
+    <LinearGradient                     // Inner fill
+      colors={['rgba(25,25,30,0.98)', 'rgba(18,18,22,0.99)']}
+      style={styles.premiumCardInner}
+    >
+      {children}
+    </LinearGradient>
+  </LinearGradient>
+</View>
+```
+
+**Styles:**
+```typescript
+premiumCardOuter: {
+  marginBottom: spacing[2],
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 12 },
+  shadowOpacity: 0.35,
+  shadowRadius: 20,
+  elevation: 8,
+}
+
+premiumCardBorder: {
+  borderRadius: 20,
+  padding: 1,  // Border thickness
+}
+
+premiumCardInner: {
+  borderRadius: 19,
+  padding: spacing[3],
 }
 ```
 
-**Squircle Effect:**
-Apple-style continuous curvature is achieved via `borderRadius.lg` (16px) on cards.
+### 2. GlassCard (Legacy)
+Semi-transparent card with blur effect.
 
----
-
-## 🌑 Shadows
-
-### Light Mode
 ```typescript
-shadows = {
-  sm: {
-    shadowColor: '#4A7C54',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: '#4A7C54',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  lg: {
-    shadowColor: '#4A7C54',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-}
+<View style={[
+  styles.glassCard,
+  { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }
+]}>
+  {children}
+</View>
 ```
 
-### Dark Mode
-Shadows are reduced or removed to maintain OLED aesthetics.
+### 3. Floating Nav Bar
+Bottom navigation with glass morphism effect.
+
+```typescript
+<View style={styles.floatingNavContainer}>
+  <LinearGradient
+    colors={isDark 
+      ? ['rgba(20,20,20,0.95)', 'rgba(10,10,10,0.98)']
+      : ['rgba(255,255,255,0.95)', 'rgba(250,250,250,0.98)']
+    }
+    style={styles.floatingNavBar}
+  >
+    {tabs.map(tab => (
+      <TouchableOpacity style={styles.floatingNavItem}>
+        <Icon name={tab.icon} />
+      </TouchableOpacity>
+    ))}
+  </LinearGradient>
+</View>
+```
+
+### 4. BottomButtons (Onboarding)
+Consistent back + continue button pattern.
+
+```typescript
+<View style={styles.bottomButtonsContainer}>
+  {/* Back Button */}
+  <TouchableOpacity style={styles.backButtonWrapper}>
+    <LinearGradient
+      colors={isDark ? ['#1A1A1A', '#282828', '#1A1A1A'] : ['#F5F5F5', '#FFFFFF', '#F5F5F5']}
+      style={styles.buttonBase}
+    >
+      <Text>Back</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+
+  {/* Continue Button */}
+  <TouchableOpacity style={styles.nextButtonWrapper}>
+    <LinearGradient
+      colors={isDark ? ['#FFFFFF', '#F0F0F0', '#DFDFDF'] : ['#2A2A2A', '#1A1A1A', '#0A0A0A']}
+      style={styles.nextButtonBase}
+    >
+      <Text>Continue</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+</View>
+```
+
+### 5. Interactive Weekly Chart
+Touch-to-view bar chart with tooltips.
+
+```typescript
+{reorderedData.map((val, i) => {
+  const isSelected = selectedDay === i;
+  const isToday = i === reorderedData.length - 1;
+  
+  return (
+    <TouchableOpacity onPress={() => setSelectedDay(i)}>
+      {isSelected && (
+        <View style={styles.weeklyTooltip}>
+          <Text>{formatTime(val)}</Text>
+        </View>
+      )}
+      <LinearGradient
+        colors={(isSelected || isToday) 
+          ? ['#FFFFFF', '#CCCCCC']
+          : ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)']
+        }
+        style={[styles.weeklyBar, { height: `${barHeight}%` }]}
+      />
+      <Text weight={(isSelected || isToday) ? 'bold' : 'medium'}>
+        {dayLabel}
+      </Text>
+    </TouchableOpacity>
+  );
+})}
+```
 
 ---
 
-## 🧱 Components
+## 🎭 Animations
 
-### Button
-```tsx
-<Button 
-  title="Primary Action"
-  variant="primary"     // primary | secondary | ghost | outline
-  size="md"             // sm | md | lg
-  fullWidth={false}
-  loading={false}
-  disabled={false}
-  gradientIndex={1}     // 1 | 2 | 3
-/>
+### Entrance Animation Hook
+Reusable fade + slide up animation for all screens.
+
+```typescript
+const useEntranceAnimation = (delay: number = 0) => {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(35)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { 
+        toValue: 1, 
+        duration: 400, 
+        delay, 
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true 
+      }),
+      Animated.timing(translateY, { 
+        toValue: 0, 
+        duration: 500, 
+        delay, 
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true 
+      }),
+    ]).start();
+  }, []);
+
+  return { opacity, translateY };
+};
 ```
 
-**Variants:**
-- **Primary**: Sage gradient, white text
-- **Secondary**: Neutral background, dark text
-- **Ghost**: Transparent, colored text
-- **Outline**: Border, colored text
+**Usage:**
+```typescript
+const titleAnim = useEntranceAnimation(0);
+const cardAnim = useEntranceAnimation(150);
+const buttonAnim = useEntranceAnimation(300);
+
+return (
+  <>
+    <Animated.View style={{ opacity: titleAnim.opacity, transform: [{ translateY: titleAnim.translateY }] }}>
+      <Text variant="h1">Title</Text>
+    </Animated.View>
+    {/* ... */}
+  </>
+);
+```
+
+### Hold Button Animation
+Circular progress button for commitment screen.
+
+```typescript
+const scaleAnim = useRef(new Animated.Value(1)).current;
+const glowAnim = useRef(new Animated.Value(0)).current;
+
+// On press in
+Animated.spring(scaleAnim, { 
+  toValue: 0.96, 
+  friction: 8, 
+  useNativeDriver: true 
+}).start();
+
+// On press out
+Animated.spring(scaleAnim, { 
+  toValue: 1, 
+  friction: 8, 
+  useNativeDriver: true 
+}).start();
+
+// Breathing glow
+Animated.loop(
+  Animated.sequence([
+    Animated.timing(glowAnim, { toValue: 1, duration: 1500 }),
+    Animated.timing(glowAnim, { toValue: 0, duration: 1500 }),
+  ])
+).start();
+```
 
 ---
 
-### GlassCard
-```tsx
-<GlassCard style={{ padding: spacing[4] }}>
-  {/* Content */}
-</GlassCard>
+## 🎯 Icons
+
+### Feather Icons
+Using `react-native-vector-icons/Feather` for consistency.
+
+```typescript
+import Icon from 'react-native-vector-icons/Feather';
+
+<Icon name="home" size={24} color={color} />
+<Icon name="shield" size={24} color={color} />
+<Icon name="settings" size={24} color={color} />
+<Icon name="chevron-right" size={18} color={color} />
+<Icon name="edit-2" size={16} color={color} />
 ```
 
-**Properties:**
-- Frosted glass effect
-- Semi-transparent background
-- Subtle blur (where supported)
-- Works in both light/dark modes
+**Common Icons:**
+- `home` - Dashboard
+- `shield` - Limits
+- `settings` - Settings
+- `lock` - Locked/blocked
+- `unlock` - Unlocked
+- `zap` - Focus/energy
+- `chevron-right` - Navigate forward
+- `x` - Close/dismiss
+- `check` - Confirm
+- `edit-2` - Edit
+- `user` - Profile
+- `mail` - Email
+- `file-text` - Documents
 
 ---
 
-### Text
-```tsx
-<Text 
-  variant="body"        // h1 | h2 | h3 | body | caption
-  weight="regular"      // regular | medium | semibold | bold
-  color={theme.colors.text}
-  align="left"          // left | center | right
+## 📐 Layout Patterns
+
+### Dashboard Header
+```typescript
+<View style={styles.dashboardHeader}>
+  <Text variant="h1" weight="bold">Hello, {userName}</Text>
+  <Text variant="body" color={textSecondary}>
+    Good morning
+  </Text>
+</View>
+```
+
+### Settings Row
+```typescript
+<View style={styles.settingRow}>
+  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+    <Icon name="user" size={20} />
+    <Text variant="body" weight="medium">Name</Text>
+  </View>
+  <Text variant="body" color={textSecondary}>{userName}</Text>
+</View>
+```
+
+### Stats Card
+```typescript
+<MetalCard>
+  <View style={styles.statContent}>
+    <Text variant="caption" color={textSecondary}>TODAY</Text>
+    <RNText style={{ fontSize: 48, fontWeight: 'bold' }}>5h</RNText>
+    <RNText style={{ fontSize: 32 }}>23m</RNText>
+    <Text variant="caption" color={textSecondary}>Screen Time</Text>
+  </View>
+</MetalCard>
+```
+
+---
+
+## 🚀 Performance Optimizations
+
+### 1. Use Native Driver
+Always use `useNativeDriver: true` for transform and opacity animations.
+
+### 2. Avoid Inline Functions
+```typescript
+// ❌ Bad
+<TouchableOpacity onPress={() => handlePress(item)}>
+
+// ✅ Good
+const handleItemPress = useCallback(() => handlePress(item), [item]);
+<TouchableOpacity onPress={handleItemPress}>
+```
+
+### 3. Memo Heavy Components
+```typescript
+const WeeklyChart = React.memo(({ data }) => {
+  // ... complex rendering
+});
+```
+
+### 4. Use RNText for Numbers
+Custom Text component can have rendering issues with large numbers.
+
+```typescript
+import { Text as RNText } from 'react-native';
+
+// For screen time numbers
+<RNText style={{ fontSize: 48, fontWeight: 'bold' }}>5h</RNText>
+```
+
+---
+
+## ♿ Accessibility
+
+### Touch Targets
+Minimum 48dp (spacing[6]) for all interactive elements.
+
+### Color Contrast
+- Text on background: Minimum 4.5:1
+- Large text: Minimum 3:1
+- Interactive elements: Minimum 3:1
+
+### Screen Reader Support
+```typescript
+<TouchableOpacity
+  accessible={true}
+  accessibilityLabel="Add new limit"
+  accessibilityRole="button"
 >
-  Content here
-</Text>
+  <Text>Add Limit</Text>
+</TouchableOpacity>
 ```
 
 ---
 
-### NavBar
-```tsx
-<NavBar 
-  activeTab="dashboard"   // dashboard | limits | settings
-  onTabPress={(tab) => {}}
-  isDark={false}
-/>
-```
+## 📱 Responsive Design
 
-**Properties:**
-- Floating rounded design
-- 2.5D raised appearance
-- Animated active state
-- Icon + label for each tab
+### Screen Sizes
+- Small: < 360dp width
+- Medium: 360-420dp
+- Large: > 420dp
 
----
-
-## 🌓 Theme Modes
-
-### Light Mode
-```
-Background:     #FAFAFA
-Surface:        #FFFFFF
-Text Primary:   #1A1A1A
-Text Secondary: #737373
-Accent:         #4A7C54
-```
-
-### Dark Mode (OLED)
-```
-Background:     #0A0908 (true black)
-Surface:        rgba(255,255,255,0.06)
-Text Primary:   #FFFFFF
-Text Secondary: rgba(255,255,255,0.6)
-Accent:         #8FB296 (lighter sage)
-```
-
----
-
-## ✨ Animations
-
-### Micro-interactions
+### Breakpoints
 ```typescript
-// Spring config
-spring: {
-  damping: 15,
-  stiffness: 150,
-  mass: 0.5,
-}
+const { width } = Dimensions.get('window');
+const isSmallScreen = width < 360;
 
-// Fade timing
-fade: {
-  duration: 200,
-  useNativeDriver: true,
-}
-
-// Scale press effect
-scale: {
-  pressIn: 0.97,
-  pressOut: 1.0,
-}
-```
-
-### Screen Transitions
-- **Fade**: For overlapping content
-- **Slide**: For sequential screens
-- **Scale**: For modals and overlays
-
----
-
-## 📦 Icon System
-
-Icons are built as View-based components (no external library):
-
-```tsx
-<HomeIcon size={24} color="#000" filled={true} />
-<ShieldIcon size={24} color="#000" filled={false} />
-<GearIcon size={24} color="#000" filled={true} />
-<PlusIcon size={24} color="#000" />
-<XIcon size={24} color="#000" />
-<ChevronIcon size={24} color="#000" />
-<LockIcon size={24} color="#000" />
-<CheckIcon size={24} color="#22C55E" />
-<WarningIcon size={24} color="#FFB800" />
+// Adjust spacing
+const cardPadding = isSmallScreen ? spacing[2] : spacing[3];
 ```
 
 ---
 
-## 📱 Layout Patterns
+## 🎨 Design Tokens Export
 
-### Bento Grid (Dashboard)
-```
-┌─────────────────────────────────┐
-│         Large Card              │
-└─────────────────────────────────┘
-┌─────────┐ ┌─────────┐ ┌─────────┐
-│ Small 1 │ │ Small 2 │ │ Small 3 │
-└─────────┘ └─────────┘ └─────────┘
+```typescript
+export const theme = {
+  spacing,
+  colors: {
+    light: lightColors,
+    dark: darkColors,
+  },
+  borderRadius: {
+    sm: 8,
+    md: 16,
+    lg: 20,
+    xl: 24,
+    full: 9999,
+  },
+  shadows: {
+    sm: { shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
+    md: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16 },
+    lg: { shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20 },
+  },
+};
 ```
 
-### List with Sections
-```
-SECTION LABEL
-┌─────────────────────────────────┐
-│ Row 1                      →    │
-├─────────────────────────────────┤
-│ Row 2                      →    │
-└─────────────────────────────────┘
-```
-
-### Modal Overlay
-```
-┌─────────────────────────────────┐
-│  Header                    [X]  │
-├─────────────────────────────────┤
-│                                 │
-│         Content                 │
-│                                 │
-└─────────────────────────────────┘
-```
+---

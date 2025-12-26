@@ -1,203 +1,360 @@
 # Blockd - Onboarding Flow
 
-> Complete breakdown of the 20+ screen onboarding experience
+> Complete breakdown of the 25+ screen onboarding experience
+
+**Last Updated:** December 26, 2024
 
 ---
 
 ## 📊 Flow Diagram
 
 ```
-SPLASH → INTRO (6) → HELLO → PERMISSIONS (4) → APP SETUP (4) → PERSONALIZATION (8) → AUTH → MAIN
+SPLASH → INTRO (6) → HELLO → PERMISSIONS (5) → APP SETUP (5) → PERSONALIZATION (9) → AUTH → WELCOME → MAIN
+   1        2-7        8         9-13            14-18               19-27          28      29      30
 ```
 
----
-
-## 🎬 Screen-by-Screen
-
-### 1. Splash Screen
-- **Duration**: 2-3 seconds
-- **Content**: Logo animation, app name
-- **Next**: Auto-transition or tap
+**Total Screens:** 30 (including all sub-screens and transitions)
 
 ---
 
-### 2. Intro Sequence (6 screens)
+## 🎬 Screen-by-Screen Breakdown
 
-#### 2.1 Welcome
+### 1. Splash Screen (`splash`)
+- **Duration**: 2 seconds
+- **Content**: Blockd logo with fade-in animation
+- **Next**: Auto-transition to onboarding-welcome
+
+---
+
+### 2-7. Intro Sequence (6 screens)
+
+#### 2. Welcome (`onboarding-welcome`)
 - **Title**: "Welcome to Blockd"
-- **Illustration**: Zen/calm visual
-- **CTA**: "Get Started"
+- **Subtitle**: "Take control of your digital life"
+- **Visual**: Minimalist illustration
+- **Buttons**: Back (to splash) | Continue
 
-#### 2.2 Problem
+#### 3. Problem (`onboarding-problem`)
 - **Title**: "The Problem"
-- **Content**: "Screen addiction is real..."
-- **Illustration**: Overwhelmed person with phone
+- **Content**: "Screen addiction is real. Average person checks phone 58 times/day"
+- **Visual**: Problem illustration
+- **Buttons**: Back | Continue
 
-#### 2.3 Solution
+#### 4. Solution (`onboarding-solution`)
 - **Title**: "The Solution"
-- **Content**: "Blockd helps you take control..."
-- **Illustration**: Shield/protection visual
+- **Content**: "Blockd helps you take control with real app blocking"
+- **Visual**: Shield/protection visual
+- **Buttons**: Back | Continue
 
-#### 2.4 Benefits
+#### 5. Benefits (`onboarding-benefits`)
 - **Title**: "What You'll Get"
-- **Content**: 5-star review previews
-- **Social Proof**: User testimonials
+- **Features**: Bullet points + 5-star review
+- **Visual**: Benefits list
+- **Buttons**: Back | Continue  
 
-#### 2.5 How Heard
+#### 6. How Heard (`onboarding-howheard`)
 - **Title**: "How did you hear about us?"
-- **Options**: Social, Friend, App Store, Other
+- **Options**: Social Media, Friends, App Store, Other
 - **Purpose**: Marketing attribution
+- **Buttons**: Back | Continue
 
-#### 2.6 Name Input
+#### 7. Name Input (`onboarding-name`)
 - **Title**: "What's your name?"
-- **Input**: Text field with validation
-- **CTA**: "Continue"
+- **Input**: Text field with keyboard
+- **Validation**: 2+ characters required
+- **Buttons**: Back | Continue
 
 ---
 
-### 3. Hello Transition
+### 8. Hello Transition (`hello-name`)
 - **Content**: "Hi, {Name}! 👋"
-- **Animation**: Fade in/out
-- **Duration**: 1.5 seconds
+- **Animation**: Fade in/scale
+- **Duration**: 1.5 seconds auto-transition
+- **Next**: permissions-intro
 
 ---
 
-### 4. Permissions Sequence (4 screens)
+### 9-13. Permissions Sequence (5 screens)
 
-#### 4.1 Usage Stats
-- **Required**: Yes (core functionality)
-- **Opens**: Settings → Usage Access
-- **Explanation**: "To track your screen time..."
+#### 9. Permissions Intro (`permissions-intro`)
+- **Title**: "Restricted Permissions"
+- **Content**: "Blockd needs special permissions to work"
+- **Visual**: Lock/shield icon
+- **Buttons**: Back | Continue
 
-#### 4.2 Overlay
-- **Required**: Yes (for blocking)
-- **Opens**: Settings → Display over other apps
-- **Explanation**: "To show blocking screen..."
+#### 10. Usage Stats (`permissions-usage`)
+- **Title**: "Usage Access"
+- **Content**: "To track your screen time accurately"
+- **Status Badge**: Granted / Required
+- **Action**: Opens Settings.ACTION_USAGE_ACCESS_SETTINGS
+- **Buttons**: Back | Continue / Grant Access
 
-#### 4.3 Battery Optimization
-- **Required**: Recommended
-- **Opens**: Settings → Battery → Unrestricted
-- **Explanation**: "To keep running 24/7..."
+#### 11. Overlay (`permissions-overlay`)
+- **Title**: "Overlay Access"
+- **Content**: "Display a blocking screen when you've reached your limit"
+- **Status Badge**: Granted / Required
+- **Action**: Opens Settings.ACTION_MANAGE_OVERLAY_PERMISSION
+- **Buttons**: Back | Continue / Grant Access
 
-#### 4.4 Accessibility (Android 13+)
-- **Required**: Yes (for real-time blocking)
-- **Special Flow**: Restricted Settings bypass guide
-- **Steps**:
-  1. Open App Info
-  2. Tap ⋮ → "Allow restricted settings"
-  3. Go to Accessibility Settings
-  4. Enable Blockd
+#### 12. Battery (`permissions-battery`)
+- **Title**: "Battery Optimization"
+- **Content**: "Keep Blockd running in the background"
+- **Status Badge**: Granted / Recommended
+- **Action**: Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+- **Buttons**: Back | Continue / Grant Access
 
----
-
-### 5. App Setup Sequence (4 screens)
-
-#### 5.1 App Analysis
-- **Content**: "Scanning your apps..."
-- **Animation**: Loading progress
-- **Native**: Calls `PermissionsModule.getTodayUsage()`
-
-#### 5.2 App Selection
-- **Content**: List of apps with usage time
-- **Interaction**: Checkbox to select apps to block
-- **CTA**: "Continue (X selected)"
-
-#### 5.3 Time Calculation
-- **Content**: "You'll save X hours this week"
-- **Stats**: Based on selected apps usage
-- **Visualization**: Bar chart comparison
-
-#### 5.4 Commitment
-- **Content**: "I commit to reducing my usage"
-- **Interaction**: Hold-to-confirm button (3 sec)
-- **Psychology**: Creates mental commitment
+#### 13. Accessibility (`permissions-accessibility`)
+- **Title**: "Accessibility Service"
+- **Content**: "Detect when blocked apps are opened (Android 13+: Restricted Settings bypass required)"
+- **Status Badge**: Granted / Required
+- **Special**: Multi-step guide for Android 13+
+- **Buttons**: Back | Continue / Enable Service
 
 ---
 
-### 6. Personalization Sequence (8 screens)
+### 14-18. App Setup Sequence (5 screens)
 
-#### 6.1 Let's Personalize
-- **Content**: "Let's tailor your experience"
-- **Transition**: Builds anticipation
+#### 14. App Analysis (`app-analysis`)
+- **Title**: "Analyzing Your Usage..."
+- **Animation**: Loading spinner with progress
+- **Native Call**: `PermissionsModule.getTodayUsage()`
+- **Duration**: 2-3 seconds
+- **Buttons**: Back (if fails)
 
-#### 6.2 Age Selection
-- **Options**: 13-17, 18-24, 25-34, 35-44, 45+
-- **Purpose**: Personalize messaging
+#### 15. App Selection (`app-selection`)
+- **Title**: "Select Apps to Limit"
+- **Content**: Scrollable list of apps with:
+  - App icon
+  - App name
+  - Today's usage time
+  - Checkbox selection
+- **Footer**: "X apps selected"
+- **Buttons**: Back | Continue (disabled if none selected)
 
-#### 6.3 Gender Selection
-- **Options**: Male, Female, Other, Prefer not to say
-- **Purpose**: Analytics/personalization
+#### 16. Time Calculation (`time-calculation`)
+- **Title**: "You'll Reclaim Your Time"
+- **Stats**: 
+  - "X hours saved this week"
+  - "X hours saved this month"
+  - Bar chart comparison
+- **Visual**: Before/After time visualization
+- **Buttons**: Back | Continue
 
-#### 6.4 Concentration Scale
-- **Input**: 1-5 slider
-- **Question**: "How hard is it to stay focused?"
-- **Purpose**: Determine blocking strictness
+#### 17. Commitment (`commitment`)
+- **Title**: "Your Commitment"
+- **Content**: Quote card: "I commit to reducing my screen time and taking control of my life"
+- **Interaction**: Hold-to-confirm circular button
+  - Shows percentage while holding
+  - Requires holding for ~3 seconds
+  - Smooth progress animation
+  - Glow effect when active
+- **Buttons**: Back (proper metal button at bottom)
 
-#### 6.5 Phone Stats
-- **Content**: User's daily usage stats
-- **Visualization**: Hours, unlocks, top apps
-- **Impact**: "That's X days per year"
-
-#### 6.6 Study Screen
-- **Content**: Scientific backing
-- **Source**: Brain studies on phone addiction
-- **Credibility**: Research-backed claims
-
-#### 6.7 Rewire
-- **Content**: "Ready to rewire your brain?"
-- **Motivation**: Scientific hope
-
-#### 6.8 Five Days
-- **Content**: "In 5 days, you'll notice..."
-- **Promise**: Concrete benefits timeline
-
-#### 6.9 Ready
-- **Content**: "You're ready!"
-- **CTA**: "Let's Go"
+#### 18. You Got This (`you-got-this`)
+- **Title**: "You Got This! 💪"
+- **Content**: Motivational message
+- **Visual**: Checkmark in circle
+- **Animation**: Scale-in celebration
+- **Buttons**: Continue (auto-transitions after 2s)
 
 ---
 
-### 7. Authentication
+### 19-27. Personalization Sequence (9 screens)
 
-#### 7.1 Auth Screen
+#### 19. Let's Personalize (`lets-personalize`)
+- **Title**: "Let's Personalize"
+- **Content**: "Answer a few quick questions"
+- **Buttons**: Back | Continue
+
+#### 20. Age Selection (`personalize-age`)
+- **Title**: "How old are you?"
 - **Options**: 
-  - Sign in with Google
-  - Sign in with Email
-  - Continue as Guest (Demo)
-- **Firebase**: Authentication integration
+  - 13-17
+  - 18-24
+  - 25-34
+  - 35-44
+  - 45+
+- **Buttons**: Back | Continue
 
-#### 7.2 Welcome First Time
-- **Content**: "Welcome, {Name}!"
-- **Animation**: Celebration confetti
-- **CTA**: "Start Using Blockd"
+#### 21. Gender Selection (`personalize-gender`)
+- **Title**: "Gender"
+- **Options**: 
+  - Male
+  - Female
+  - Other
+  - Prefer not to say
+- **Buttons**: Back | Continue
+
+#### 22. Concentration Scale (`personalize-concentration`)
+- **Title**: "How hard is it to stay focused?"
+- **Input**: Slider from 1-5
+  - 1: Very easy
+  - 5: Extremely difficult
+- **Buttons**: Back | Continue
+
+#### 23. Phone Stats (`personalize-phonestats`)
+- **Title**: "Your Current Usage"
+- **Stats Display**:
+  - Daily screen time: X hours
+  - Daily unlocks: X times
+  - Top app: AppName
+  - Impact: "That's X days per year"
+- **Buttons**: Back | Continue
+
+#### 24. Study Screen (`personalize-study`)
+- **Title**: "The Science"
+- **Content**: Research-backed claims about phone addiction
+- **Visual**: Brain/science illustration
+- **Buttons**: Back | Continue
+
+#### 25. Rewire (`personalize-rewire`)
+- **Title**: "Ready to Rewire?"
+- **Content**: "Your brain can adapt and break these habits"
+- **Buttons**: Back | Continue
+
+#### 26. Five Days (`personalize-fivedays`)
+- **Title**: "In 5 Days..."
+- **Content**: "You'll notice: Better focus, More free time, Less anxiety"
+- **Buttons**: Back | Continue
+
+#### 27. Ready (`personalize-ready`)
+- **Title**: "You're Ready!"
+- **Content**: "Let's create your account"
+- **Buttons**: Back | Continue
 
 ---
 
-### 8. Main App
-- **Navigation**: Bottom tabs
-- **Tabs**: Overview, Limits, Settings
-- **Content**: Dashboard with stats
+### 28. Authentication (`auth`)
+- **Title**: "Sign In / Sign Up"
+- **Options**:
+  - 🍎 Sign in with Apple (black button)
+  - ⚪ Sign in with Google (white button)
+  - ✉️ Continue with Email (white button)
+- **Firebase**: Handles all auth flows
+- **Buttons**: Back
+
+---
+
+### 29. Welcome First Time (`welcome-first`)
+- **Title**: "Welcome, {Name}!"
+- **Content**: "Your account is ready"
+- **Animation**: Celebration/confetti
+- **Buttons**: Start Using Blockd
+
+---
+
+### 30. Main App (`main`)
+- **Navigation**: Floating bottom tab bar
+- **Tabs**: 
+  - Dashboard (home icon)
+  - Limits (shield icon)
+  - Settings (settings icon)
+- **Content**: Premium metal dashboard
 
 ---
 
 ## ⚙️ Technical Implementation
 
 ### State Management
-All onboarding state is managed in `App.tsx`:
+All onboarding state managed in `App.tsx`:
 ```typescript
 const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
-const [userName, setUserName] = useState('');
-const [selectedApps, setSelectedApps] = useState([]);
-// ... etc
+const [userName, setUserName] = useState<string>('');
+const [heardFrom, setHeardFrom] = useState<string>('');
+const [analyzedApps, setAnalyzedApps] = useState<any[]>([]);
+const [selectedAppPackages, setSelectedAppPackages] = useState<string[]>([]);
+const [userAge, setUserAge] = useState<string>('');
+const [userGender, setUserGender] = useState<string>('');
+const [concentrationLevel, setConcentrationLevel] = useState<number>(0);
 ```
 
 ### Screen Components
 Located in `src/screens/onboarding/`:
-- `OnboardingScreens.tsx` - Intro sequence
-- `OnboardingPermissions.tsx` - Permission screens
-- `AppSetupScreens.tsx` - App analysis & selection
-- `PersonalizationScreens.tsx` - Personalization flow
-- `PermissionSetupScreen.tsx` - Accessibility guide
+- **OnboardingScreens.tsx** - Intro sequence (6 screens)
+- **OnboardingPermissions.tsx** - All 5 permission screens
+- **AppSetupScreens.tsx** - App analysis, selection, commitment (5 screens)
+- **PersonalizationScreens.tsx** - Personalization flow + auth (10 screens)
+
+### Navigation Flow
+```typescript
+// Example: Commitment Screen
+case 'commitment':
+  return <CommitmentScreen 
+    onNext={() => setCurrentScreen('you-got-this')} 
+    onBack={() => setCurrentScreen('time-calculation')} 
+  />;
+```
 
 ### Progress Tracking
-Built-in progress bar at top shows `currentStep / totalSteps`.
+Each section has visual progress bar:
+- Permissions: 1/5, 2/5, 3/5, 4/5, 5/5
+- Personalization: 1/8, 2/8, ... 8/8
+
+---
+
+## 🎨 Design Consistency
+
+### Common Elements
+- **BottomButtons Component**: Consistent Back + Continue buttons
+- **ProgressBar**: Top indicator showing current/total steps
+- **LinearGradient Background**: Matching theme colors
+- **Animations**: useEntranceAnimation hook (fade + slide up)
+- **Premium Metal Style**: Gradient borders on all cards
+
+### Animations
+```typescript
+const titleAnim = useEntranceAnimation(0);      // Delay 0ms
+const cardAnim = useEntranceAnimation(150);     // Delay 150ms
+const buttonAnim = useEntranceAnimation(300);   // Delay 300ms
+```
+
+---
+
+## 🔧 Permission Handling
+
+### Permission Check Flow
+```typescript
+useEffect(() => {
+  checkPermission();
+  const sub = AppState.addEventListener('change', (s) => {
+    if (s === 'active') checkPermission();
+  });
+  return () => sub.remove();
+}, []);
+```
+
+### Status Badge Logic
+- **Granted**: Green dot + "Granted" text
+- **Required**: Gray dot + "Required" text
+- Updates in real-time when user returns from settings
+
+---
+
+## 📱 User Experience
+
+### Skip Prevention
+- No skip button during permissions (all required)
+- Back buttons allow navigation to previous screens
+- Can't proceed to main app without completing all steps
+
+### Data Persistence
+- User name stored to Firebase on auth
+- Selected apps stored in AsyncStorage
+- Limits created and synced to Firebase
+
+### Error Handling
+- Permission denial shows helpful messages
+- Failed analysis allows retry
+- Auth errors display Firebase error messages
+
+---
+
+## 🚀 Future Improvements
+
+- [ ] Add optional tutorial skip for returning users
+- [ ] Implement onboarding analytics tracking
+- [ ] Add A/B testing for conversion optimization
+- [ ] Localization support
+- [ ] Accessibility improvements (screen reader support)
+
+---
