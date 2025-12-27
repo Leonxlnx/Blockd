@@ -104,7 +104,11 @@ const AppContent: React.FC = () => {
     if (!initializing && user && (currentScreen === 'splash' || currentScreen === 'auth')) {
       setCurrentScreen('main');
     }
-  }, [initializing, user]);
+    // Auto-redirect if logged out (Logout fix)
+    if (!initializing && !user && currentScreen === 'main') {
+      setCurrentScreen('auth');
+    }
+  }, [initializing, user, currentScreen]);
 
   // State
   const [userName, setUserName] = useState<string>('');

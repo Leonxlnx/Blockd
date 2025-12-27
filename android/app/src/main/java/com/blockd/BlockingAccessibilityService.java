@@ -53,52 +53,164 @@ public class BlockingAccessibilityService extends AccessibilityService {
         Log.d(TAG, "Accessibility Service connected and configured");
     }
 
+    private android.view.WindowManager windowManager;
+    private android.view.View overlayView;
+    private android.widget.FrameLayout overlayLayout;
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event == null || event.getPackageName() == null) return;
         
         String packageName = event.getPackageName().toString();
         
-        // Don't block ourselves or system UI
+        // Don't block ourselves, system UI, or launcher
         if (packageName.equals("com.blockd") || 
             packageName.equals("com.android.systemui") ||
-            packageName.equals("com.android.launcher3") ||
-            packageName.startsWith("com.google.android.apps.nexuslauncher")) {
+            packageName.contains("launcher") || 
+            packageName.contains("home")) {
+            hideOverlay(); // Hide if we switch to home/blockd
             return;
         }
         
         // Check if this app is blocked
         if (blockedPackages.contains(packageName)) {
-            // Prevent spam - only trigger once per 2 seconds per app
-            long now = System.currentTimeMillis();
-            if (packageName.equals(lastBlockedPackage) && (now - lastBlockTime) < 2000) {
-                return;
-            }
-            
-            lastBlockedPackage = packageName;
-            lastBlockTime = now;
-            
             Log.d(TAG, "BLOCKED APP DETECTED: " + packageName);
+            showOverlay(packageName);
+        } else {
+            // App is not blocked, ensure overlay is hidden
+            if (overlayView != null) {
+                hideOverlay();
+            }
+        }
+    }
+
+    private void showOverlay(String packageName) {
+        if (overlayView != null) return; // Already showing
+        
+        try {
+            windowManager = (android.view.WindowManager) getSystemService(WINDOW_SERVICE);
             
-            // Launch Blockd overlay activity
+            // 1. Create Layout Programmatically
+            overlayLayout = new android.widget.FrameLayout(this);
+            overlayLayout.setBackgroundColor(0xE6101014); // Dark Metal (90% opacity)
+
+            android.widget.LinearLayout content = new android.widget.LinearLayout(this);
+            content.setOrientation(android.widget.LinearLayout.VERTICAL);
+            content.setGravity(android.view.Gravity.CENTER);
+            android.widget.FrameLayout.LayoutParams contentParams = new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, 
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
+            contentParams.gravity = android.view.Gravity.CENTER;
+            overlayLayout.addView(content, contentParams);
+
+            // Icon
+            android.widget.ImageView icon = new android.widget.ImageView(this);
+            // We don't have a drawable resource easily available, so we skip icon or use a system one?
+            // Let's rely on Text for now to be safe.
+            
+            // Title
+            android.widget.TextView title = new android.widget.TextView(this);
+            title.setText("App Locked");
+            title.setTextColor(0xFFFFFFFF);
+            title.setTextSize(32);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            title.setGravity(android.view.Gravity.CENTER);
+            content.addView(title);
+
+            // Subtitle
+            android.widget.TextView subtitle = new android.widget.TextView(this);
+            subtitle.setText("This app is currently blocked by Blockd.");
+            subtitle.setTextColor(0xAAFFFFFF); // 66% opacity
+            subtitle.setTextSize(16);
+            subtitle.setGravity(android.view.Gravity.CENTER);
+            subtitle.setPadding(0, 20, 0, 60);
+            content.addView(subtitle);
+
+            // "Open Blockd" Button
+            android.widget.Button openBtn = new android.widget.Button(this);
+            openBtn.setText("Open Blockd");
+            openBtn.setBackgroundColor(0xFFFFFFFF);
+            openBtn.setTextColor(0xFF000000);
+            openBtn.setPadding(40, 20, 40, 20);
+            openBtn.setOnClickListener(v -> {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                hideOverlay();
+            });
+            android.widget.LinearLayout.LayoutParams btnParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            btnParams.setMargins(0, 0, 0, 30);
+            content.addView(openBtn, btnParams);
+
+            // "Close App" Button (Go Home)
+            android.widget.Button closeBtn = new android.widget.Button(this);
+            closeBtn.setText("Close App");
+            closeBtn.setBackgroundColor(0x33FFFFFF); // Transparent white
+            closeBtn.setTextColor(0xFFFFFFFF);
+            closeBtn.setOnClickListener(v -> {
+                performGlobalAction(GLOBAL_ACTION_HOME);
+                hideOverlay();
+            });
+            content.addView(closeBtn);
+
+            // 2. Window Params
+            int type = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
+                    ? android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    : android.view.WindowManager.LayoutParams.TYPE_PHONE;
+
+            android.view.WindowManager.LayoutParams params = new android.view.WindowManager.LayoutParams(
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                    type,
+                    android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | 
+                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | 
+                    android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN, // Show over status bar?
+                    android.graphics.PixelFormat.TRANSLUCENT);
+            
+            params.gravity = android.view.Gravity.CENTER;
+
+            // 3. Add View
+            windowManager.addView(overlayLayout, params);
+            overlayView = overlayLayout;
+            Log.d(TAG, "Overlay shown");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing overlay: " + e.getMessage());
+            // Fallback to old activity method if overlay fails (e.g. permission missing)
             launchBlockOverlay(packageName);
+        }
+    }
+
+    private void hideOverlay() {
+        if (overlayView != null && windowManager != null) {
+            try {
+                windowManager.removeView(overlayView);
+                Log.d(TAG, "Overlay hidden");
+            } catch (Exception e) {
+                Log.e(TAG, "Error hiding overlay: " + e.getMessage());
+            }
+            overlayView = null;
         }
     }
 
     @Override
     public void onInterrupt() {
         Log.d(TAG, "Accessibility Service interrupted");
+        hideOverlay();
     }
     
     @Override
     public void onDestroy() {
         super.onDestroy();
+        hideOverlay();
         instance = null;
         Log.d(TAG, "Accessibility Service destroyed");
     }
     
     /**
-     * Launch the Blockd app with the block overlay for the specified app
+     * Launch the Blockd app (Fallback)
      */
     private void launchBlockOverlay(String blockedPackage) {
         try {
@@ -150,6 +262,11 @@ public class BlockingAccessibilityService extends AccessibilityService {
      */
     public void removeBlockedApp(String packageName) {
         blockedPackages.remove(packageName);
+        // If we remove the block for the current app, hide overlay immediately
+        if (overlayView != null) {
+             hideOverlay(); 
+             // Ideally we should check if current foreground is this package, but simpler to just hide
+        }
         Log.d(TAG, "Removed blocked app: " + packageName);
     }
     
@@ -160,3 +277,4 @@ public class BlockingAccessibilityService extends AccessibilityService {
         return blockedPackages.contains(packageName);
     }
 }
+

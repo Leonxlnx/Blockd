@@ -274,47 +274,43 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                 <Text variant="h1" weight="bold" style={{ fontSize: 34 }}>Hello, {userName || 'User'}</Text>
             </View>
 
-            {/* Screen Time Card */}
+            {/* Screen Time Card - CENTERED ALIGNMENT FIX */}
             <MetalCard>
-                <View style={styles.screenTimeBadge}>
-                    <View style={[styles.pulsingDot, { backgroundColor: isDark ? '#FFF' : '#000' }]} />
-                    <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase' }}>Screen Time</Text>
-                </View>
-                <View style={styles.screenTimeRow}>
-                    <RNText style={{ fontSize: 64, fontWeight: '700', color: isDark ? '#FFF' : '#000' }}>{hours}</RNText>
-                    <RNText style={{ fontSize: 28, fontWeight: '300', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>h</RNText>
-                    <RNText style={{ fontSize: 64, fontWeight: '700', color: isDark ? '#FFF' : '#000', marginLeft: 12 }}>{minutes.toString().padStart(2, '0')}</RNText>
-                    <RNText style={{ fontSize: 28, fontWeight: '300', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>m</RNText>
+                <View style={{ alignItems: 'center' }}>
+                    <View style={styles.screenTimeBadge}>
+                        <View style={[styles.pulsingDot, { backgroundColor: isDark ? '#FFF' : '#000' }]} />
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase' }}>Screen Time</Text>
+                    </View>
+                    <View style={[styles.screenTimeRow, { justifyContent: 'center' }]}>
+                        <RNText style={{ fontSize: 64, fontWeight: '700', color: isDark ? '#FFF' : '#000' }}>{hours}</RNText>
+                        <RNText style={{ fontSize: 28, fontWeight: '300', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>h</RNText>
+                        <RNText style={{ fontSize: 64, fontWeight: '700', color: isDark ? '#FFF' : '#000', marginLeft: 12 }}>{minutes.toString().padStart(2, '0')}</RNText>
+                        <RNText style={{ fontSize: 28, fontWeight: '300', color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', marginLeft: 2, marginBottom: 8 }}>m</RNText>
+                    </View>
                 </View>
             </MetalCard>
 
-            {/* Stats Row */}
+            {/* Stats Row - CLEANER DESIGN */}
             <View style={styles.statsRow}>
                 <MetalCard style={{ flex: 1, marginRight: spacing[2] }}>
                     <View style={styles.statContent}>
-                        <View style={[styles.statIconCircle, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)' }]}>
-                            <Icon name="unlock" size={18} color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} />
-                        </View>
-                        <Text variant="h2" weight="bold" style={{ marginTop: spacing[2] }}>{unlockCount}</Text>
-                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Unlocks</Text>
+                        <Icon name="unlock" size={24} color={isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)'} style={{ marginBottom: 4 }} />
+                        <Text variant="h2" weight="bold" style={{ fontSize: 28 }}>{unlockCount}</Text>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' }}>Unlocks</Text>
                     </View>
                 </MetalCard>
                 <MetalCard style={{ flex: 1, marginHorizontal: spacing[1] }}>
                     <View style={styles.statContent}>
-                        <View style={[styles.statIconCircle, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)' }]}>
-                            <Icon name="shield" size={18} color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} />
-                        </View>
-                        <Text variant="h2" weight="bold" style={{ marginTop: spacing[2] }}>{activeLimits}</Text>
-                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Limits</Text>
+                        <Icon name="shield" size={24} color={isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)'} style={{ marginBottom: 4 }} />
+                        <Text variant="h2" weight="bold" style={{ fontSize: 28 }}>{activeLimits}</Text>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' }}>Limits</Text>
                     </View>
                 </MetalCard>
                 <MetalCard style={{ flex: 1, marginLeft: spacing[2] }}>
                     <View style={styles.statContent}>
-                        <View style={[styles.statIconCircle, { backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)' }]}>
-                            <Icon name="zap" size={18} color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'} />
-                        </View>
-                        <Text variant="h2" weight="bold" style={{ marginTop: spacing[2] }}>{activeDetox}</Text>
-                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 4 }}>Detox</Text>
+                        <Icon name="zap" size={24} color={isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)'} style={{ marginBottom: 4 }} />
+                        <Text variant="h2" weight="bold" style={{ fontSize: 28 }}>{activeDetox}</Text>
+                        <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase' }}>Detox</Text>
                     </View>
                 </MetalCard>
             </View>
@@ -359,7 +355,7 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                 )}
             </MetalCard>
 
-            {/* Weekly Overview */}
+            {/* Weekly Overview - LOGIC FIX: ONLY WHITE WHEN SELECTED */}
             <MetalCard style={{ marginBottom: 120 }}>
                 <View style={{ marginBottom: spacing[4] }}>
                     <Text variant="body" weight="bold">Weekly Overview</Text>
@@ -376,8 +372,14 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                     <View style={styles.weeklyBars}>
                         {reorderedData.map((val, i) => {
                             const barHeight = Math.max(8, (val / maxWeekly) * 100);
-                            const isToday = i === 6; // Today is always last now
                             const isSelected = selectedDay === i;
+                            const isToday = i === 6;
+
+                            // Highlight: ONLY if selected. If not selected, use standard 'today' highlight or default.
+                            // User request: "alles neutral erst wenn man anklickt weiß"
+                            // So: All neutral. Only SELECTED is white. Today is just marked differently maybe?
+                            // Let's make "Today" have slightly higher opacity but not full white unless selected.
+
                             return (
                                 <TouchableOpacity
                                     key={i}
@@ -393,15 +395,18 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                                         </View>
                                     )}
                                     <LinearGradient
-                                        colors={(isSelected || isToday)
-                                            ? ['#FFFFFF', '#CCCCCC']
-                                            : isDark ? ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)'] : ['rgba(0,0,0,0.12)', 'rgba(0,0,0,0.06)']}
+                                        colors={isSelected
+                                            ? ['#FFFFFF', '#CCCCCC'] // Selected = Bright White
+                                            : isToday
+                                                ? (isDark ? ['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)'] : ['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.15)']) // Today = Slightly brighter
+                                                : (isDark ? ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)'] : ['rgba(0,0,0,0.12)', 'rgba(0,0,0,0.06)']) // Others = Dim
+                                        }
                                         style={[styles.weeklyBar, { height: `${barHeight}%` }]}
                                     />
                                     <Text
                                         variant="caption"
-                                        weight={(isSelected || isToday) ? 'bold' : 'medium'}
-                                        color={(isSelected || isToday) ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')}
+                                        weight={isSelected ? 'bold' : 'medium'}
+                                        color={isSelected ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')}
                                         style={{ fontSize: 9, marginTop: 6 }}
                                     >
                                         {reorderedLabels[i]}
@@ -491,54 +496,82 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
     const handleLogout = async () => {
         Alert.alert('Logout', 'Are you sure?', [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Logout', style: 'destructive', onPress: async () => { await auth().signOut(); onLogout(); } },
+            {
+                text: 'Logout',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await auth().signOut();
+                        onLogout();
+                    } catch (e) {
+                        console.error("Logout failed", e);
+                        // Force logout by calling onLogout anyway
+                        onLogout();
+                    }
+                }
+            },
         ]);
     };
 
     const openPermissions = () => Linking.openSettings();
 
     const privacyText = `Privacy Policy for Blockd
-
+    
 Last updated: December 2024
 
-1. Information We Collect
-We collect usage statistics to help you track your screen time.
+1. INFORMATION WE COLLECT
+We collect minimal data to provide our services:
+- Account Data: Email and name for authentication.
+- Usage Stats: App usage time to track limits (stored locally and synced).
+- Device Info: Model and OS version for debugging.
 
-2. How We Use Your Information
-Your data is used solely to provide app functionality.
+2. HOW WE USE YOUR INFORMATION
+- To block apps when limits are reached.
+- To display your usage statistics.
+- To sync your preferences across devices.
 
-3. Data Storage
-All data is stored locally on your device and in your Firebase account.
+3. DATA STORAGE & SECURITY
+- Your data is encrypted in transit and at rest.
+- We use Google Firebase for secure cloud storage.
+- You can request data deletion at any time.
 
-4. Contact
-For questions, contact support@blockd.app`;
+4. USER RIGHTS
+You have the right to access, correct, or delete your data.
+
+5. CONTACT
+For privacy questions, please contact privacy@blockd.app`;
 
     const termsText = `Terms of Service for Blockd
 
 Last updated: December 2024
 
-1. Acceptance of Terms
-By using Blockd, you agree to these terms.
+1. ACCEPTANCE OF TERMS
+By downloading and using Blockd, you agree to these terms.
 
-2. Description of Service
-Blockd helps you manage screen time through app limits.
+2. SERVICE DESCRIPTION
+Blockd provides tools to manage screen time and block apps. We are not responsible for missed notifications or restricted access during active blocks.
 
-3. Limitations
-Blockd is provided "as is" without warranty.
+3. USAGE RULES
+- You must be 13 years or older.
+- You may not attempt to reverse engineer the app.
+- You are responsible for your account security.
 
-4. Contact
-For questions, contact support@blockd.app`;
+4. DISCLAIMER
+The app is provided "as is". We do not guarantee 100% blocking if system restrictions change.
 
-    // MetalCard component for settings
+5. TERMINATION
+We reserve the right to terminate accounts that violate these terms.`;
+
+    // MetalCard component for settings - REDUCED PADDING
     const SettingsCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-        <View style={{ marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 }}>
+        <View style={{ marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 }}>
             <LinearGradient
                 colors={isDark ? ['rgba(50,50,55,1)', 'rgba(30,30,35,1)'] : ['rgba(255,255,255,1)', 'rgba(245,245,250,1)']}
                 style={{ borderRadius: 20, padding: 1 }}
             >
                 <LinearGradient
                     colors={isDark ? ['rgba(25,25,30,0.98)', 'rgba(18,18,22,0.99)'] : ['rgba(252,252,255,0.99)', 'rgba(248,248,252,0.98)']}
-                    style={{ borderRadius: 19, padding: spacing[4] }}
+                    style={{ borderRadius: 19, padding: spacing[3] }}
                 >
                     {children}
                 </LinearGradient>
@@ -556,7 +589,7 @@ For questions, contact support@blockd.app`;
             {/* Profile Section */}
             <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase', marginBottom: spacing[2] }}>PROFILE</Text>
             <SettingsCard>
-                <View style={styles.settingRow}>
+                <View style={[styles.settingRow, { paddingVertical: spacing[2] }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
                         <Icon name="user" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
                         <Text variant="body" weight="medium">Name</Text>
@@ -568,14 +601,14 @@ For questions, contact support@blockd.app`;
                                 onChangeText={setTempName}
                                 placeholder="Enter name"
                                 placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
-                                style={{ color: isDark ? '#FFF' : '#000', width: 100, textAlign: 'right' }}
+                                style={{ color: isDark ? '#FFF' : '#000', width: 120, textAlign: 'right', paddingVertical: 4 }}
                                 autoFocus
                             />
-                            <TouchableOpacity onPress={saveName}>
-                                <Icon name="check" size={20} color="#22C55E" />
+                            <TouchableOpacity onPress={saveName} style={{ padding: 4 }}>
+                                <Icon name="check" size={18} color="#22C55E" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setEditingName(false)}>
-                                <Icon name="x" size={20} color="#EF4444" />
+                            <TouchableOpacity onPress={() => setEditingName(false)} style={{ padding: 4 }}>
+                                <Icon name="x" size={18} color="#EF4444" />
                             </TouchableOpacity>
                         </View>
                     ) : (
@@ -585,7 +618,7 @@ For questions, contact support@blockd.app`;
                         </TouchableOpacity>
                     )}
                 </View>
-                <View style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+                <View style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', paddingVertical: spacing[2] }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
                         <Icon name="mail" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
                         <Text variant="body" weight="medium">Email</Text>
@@ -597,7 +630,8 @@ For questions, contact support@blockd.app`;
             {/* App Section */}
             <Text variant="caption" weight="bold" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ letterSpacing: 1.5, fontSize: 10, textTransform: 'uppercase', marginBottom: spacing[2], marginTop: spacing[3] }}>APP</Text>
             <SettingsCard>
-                <TouchableOpacity style={styles.settingRow} onPress={openPermissions}>
+                <TouchableOpacity style={[styles.settingRow, { paddingVertical: spacing[2] }]} onPress={openPermissions}>
+
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
                         <Icon name="shield" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
                         <Text variant="body" weight="medium">Permissions</Text>
