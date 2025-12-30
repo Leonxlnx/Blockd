@@ -22,6 +22,7 @@ import { useTheme } from '../theme';
 import { spacing } from '../theme/theme';
 import { Text } from '../components';
 import { limitsService, AppLimit } from '../services/limitsService';
+import { CancelFlow } from './overlays/CancelFlow';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
@@ -164,78 +165,37 @@ const NameInput: React.FC<{
 };
 
 // ============================================
-// FLOATING TAB BAR (Animated & Premium)
+// FLOATING TAB BAR (Simple & Smooth)
 // ============================================
 
 const TabBar: React.FC<{ activeTab: Tab; onTabPress: (tab: Tab) => void; isDark: boolean }> = ({ activeTab, onTabPress, isDark }) => {
-    const slideAnim = React.useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        const targetValue = activeTab === 'dashboard' ? 0 : activeTab === 'limits' ? 1 : 2;
-        Animated.spring(slideAnim, {
-            toValue: targetValue,
-            useNativeDriver: true,
-            damping: 15,
-            stiffness: 100,
-            mass: 0.8,
-        }).start();
-    }, [activeTab]);
-
-    const translateX = slideAnim.interpolate({
-        inputRange: [0, 1, 2],
-        outputRange: [0, 80, 160], // Approximate width steps
-    });
-
     return (
         <View style={styles.floatingNavContainer}>
-            <View style={{ alignItems: 'center' }}>
-                <View style={[styles.floatingNavBar, {
-                    backgroundColor: isDark ? 'rgba(20,20,25,0.95)' : 'rgba(255,255,255,0.98)',
-                    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                    width: 260, // Fixed width for alignment
-                    paddingHorizontal: 10,
-                    justifyContent: 'space-between' // Use space-between with fixed padding
-                }]}>
-                    {/* Animated Pill Background */}
-                    <Animated.View style={{
-                        position: 'absolute',
-                        left: 10, // Match paddingHorizontal
-                        width: 70,
-                        height: 48,
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F5',
-                        borderRadius: 16,
-                        transform: [{ translateX }],
-                        zIndex: -1
-                    }} />
-
-                    <TouchableOpacity
-                        style={[styles.floatingNavItem, { width: 70 }]}
-                        onPress={() => onTabPress('dashboard')}
-                        activeOpacity={0.7}
-                    >
-                        <Animated.View style={{ transform: [{ scale: activeTab === 'dashboard' ? 1.1 : 1 }] }}>
-                            <Icon name="home" size={24} color={activeTab === 'dashboard' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} />
-                        </Animated.View>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.floatingNavItem, { width: 70 }]}
-                        onPress={() => onTabPress('limits')}
-                        activeOpacity={0.7}
-                    >
-                        <Animated.View style={{ transform: [{ scale: activeTab === 'limits' ? 1.1 : 1 }] }}>
-                            <Icon name="shield" size={24} color={activeTab === 'limits' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} />
-                        </Animated.View>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.floatingNavItem, { width: 70 }]}
-                        onPress={() => onTabPress('settings')}
-                        activeOpacity={0.7}
-                    >
-                        <Animated.View style={{ transform: [{ scale: activeTab === 'settings' ? 1.1 : 1 }] }}>
-                            <Icon name="settings" size={24} color={activeTab === 'settings' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} />
-                        </Animated.View>
-                    </TouchableOpacity>
-                </View>
+            <View style={[styles.floatingNavBar, {
+                backgroundColor: isDark ? 'rgba(20,20,25,0.95)' : 'rgba(255,255,255,0.98)',
+                borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+            }]}>
+                <TouchableOpacity
+                    style={[styles.floatingNavItem, activeTab === 'dashboard' && { backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }]}
+                    onPress={() => onTabPress('dashboard')}
+                    activeOpacity={0.7}
+                >
+                    <Icon name="home" size={22} color={activeTab === 'dashboard' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.floatingNavItem, activeTab === 'limits' && { backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }]}
+                    onPress={() => onTabPress('limits')}
+                    activeOpacity={0.7}
+                >
+                    <Icon name="shield" size={22} color={activeTab === 'limits' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.floatingNavItem, activeTab === 'settings' && { backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)' }]}
+                    onPress={() => onTabPress('settings')}
+                    activeOpacity={0.7}
+                >
+                    <Icon name="settings" size={22} color={activeTab === 'settings' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -836,6 +796,7 @@ const LimitsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     const [detoxDays, setDetoxDays] = useState(7);
     const [showDetail, setShowDetail] = useState(false);
     const [detailLimit, setDetailLimit] = useState<AppLimit | null>(null);
+    const [showCancelFlow, setShowCancelFlow] = useState(false);
 
     useEffect(() => {
         limitsService.loadLimits();
@@ -891,10 +852,24 @@ const LimitsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 
     const handleRemoveLimit = async () => {
         if (!detailLimit) return;
-        await limitsService.deleteLimit(detailLimit.packageName);
-        BlockingModule?.removeBlockedApp?.(detailLimit.packageName);
+        // Show CancelFlow instead of directly deleting
+        setShowCancelFlow(true);
+    };
+
+    const handleCancelFlowComplete = async () => {
+        // User completed the annoying flow, actually delete
+        if (detailLimit) {
+            await limitsService.deleteLimit(detailLimit.packageName);
+            BlockingModule?.removeBlockedApp?.(detailLimit.packageName);
+        }
+        setShowCancelFlow(false);
         setShowDetail(false);
         setDetailLimit(null);
+    };
+
+    const handleCancelFlowAbort = () => {
+        // User gave up, keep the limit
+        setShowCancelFlow(false);
     };
 
     const activeLimits = limits.filter(l => l.isActive);
@@ -1160,6 +1135,17 @@ const LimitsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                     )}
                 </View>
             </Modal>
+
+            {/* CancelFlow Modal */}
+            <Modal visible={showCancelFlow} animationType="slide">
+                <CancelFlow
+                    appName={detailLimit?.appName || 'App'}
+                    mode={detailLimit?.mode || 'limit'}
+                    streak={detailLimit?.streak || 0}
+                    onCancel={handleCancelFlowComplete}
+                    onKeep={handleCancelFlowAbort}
+                />
+            </Modal>
         </ScrollView>
     );
 };
@@ -1219,18 +1205,18 @@ const styles = StyleSheet.create({
     timeButton: { paddingVertical: spacing[3], paddingHorizontal: spacing[4], borderRadius: 12 },
     confirmButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 16, marginTop: spacing[4] },
 
-    // ========== NEW LIQUID METAL DASHBOARD STYLES ==========
+    // ========== DASHBOARD STYLES - UNIFORM SPACING ==========
     dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 40, paddingBottom: 120 },
-    dashboardHeader: { marginBottom: spacing[3] },
+    dashboardHeader: { marginBottom: 12 },
     liquidText: { fontSize: 40, letterSpacing: -1 },
-    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
+    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
     screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] },
     pulsingDot: { width: 6, height: 6, borderRadius: 3 },
     screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
     screenTimeNum: { fontSize: 72, fontWeight: '600', letterSpacing: -2 },
     screenTimeUnit: { fontSize: 28, fontWeight: '300', marginLeft: 4 },
-    statsRow: { flexDirection: 'row', gap: 10, marginBottom: spacing[3] },
-    statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
+    statsRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+    statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 130, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
     statIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: spacing[3] },
     viewAllBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: 20, borderWidth: 1 },
     appSlot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[3], borderRadius: 18, marginBottom: 8 },
@@ -1239,7 +1225,7 @@ const styles = StyleSheet.create({
     appSlotRight: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
     appProgressBar: { width: 60, height: 4, borderRadius: 2, overflow: 'hidden' },
     appProgressFill: { height: '100%', borderRadius: 2 },
-    weeklyChart: { flexDirection: 'row', height: 140, marginTop: spacing[3] },
+    weeklyChart: { flexDirection: 'row', height: 140, marginTop: 12 },
     weeklyLabels: { justifyContent: 'space-between', paddingBottom: 24, paddingRight: spacing[2] },
     weeklyBars: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 4 },
     weeklyBarContainer: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
@@ -1247,18 +1233,18 @@ const styles = StyleSheet.create({
     weeklyTooltip: { position: 'absolute', top: -28, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, zIndex: 10 },
 
     // Premium Cards with Metallic Edge
-    premiumCardOuter: { marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8 },
+    premiumCardOuter: { marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8 },
     premiumCardBorder: { borderRadius: 20, padding: 1 },
     premiumCardInner: { borderRadius: 19, padding: spacing[3] },
-    premiumCard: { borderRadius: 20, padding: spacing[3], marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 6 },
+    premiumCard: { borderRadius: 20, padding: spacing[3], marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 6 },
     cardInnerBorder: { borderWidth: 1, borderRadius: 18, padding: spacing[3], margin: -spacing[3] },
     statContent: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing[1] },
 
-    // Floating Nav - Updated
+    // Floating Nav - Simple
     floatingNavContainer: { position: 'absolute', bottom: 30, left: 0, right: 0, alignItems: 'center' },
-    floatingNavBar: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderRadius: 24, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 15 },
-    floatingNavItem: { height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-    floatingNavItemActive: { shadowColor: '#FFF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 10 },
+    floatingNavBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8, borderRadius: 28, borderWidth: 1, gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 15 },
+    floatingNavItem: { width: 56, height: 48, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    floatingNavItemActive: {},
 });
 
 export default MainApp;
