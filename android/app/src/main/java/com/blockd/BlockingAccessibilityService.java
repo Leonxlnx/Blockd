@@ -90,72 +90,135 @@ public class BlockingAccessibilityService extends AccessibilityService {
         try {
             windowManager = (android.view.WindowManager) getSystemService(WINDOW_SERVICE);
             
-            // 1. Create Layout Programmatically
+            // Main container with dark gradient background
             overlayLayout = new android.widget.FrameLayout(this);
-            overlayLayout.setBackgroundColor(0xE6101014); // Dark Metal (90% opacity)
+            
+            // Create gradient drawable for premium look
+            android.graphics.drawable.GradientDrawable gradient = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[] { 0xFF0A0A12, 0xFF12121D, 0xFF0D0D15 }
+            );
+            overlayLayout.setBackground(gradient);
 
+            // Center content container
             android.widget.LinearLayout content = new android.widget.LinearLayout(this);
             content.setOrientation(android.widget.LinearLayout.VERTICAL);
             content.setGravity(android.view.Gravity.CENTER);
+            content.setPadding(60, 0, 60, 0);
             android.widget.FrameLayout.LayoutParams contentParams = new android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT, 
                 android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
             contentParams.gravity = android.view.Gravity.CENTER;
             overlayLayout.addView(content, contentParams);
 
-            // Icon
-            android.widget.ImageView icon = new android.widget.ImageView(this);
-            // We don't have a drawable resource easily available, so we skip icon or use a system one?
-            // Let's rely on Text for now to be safe.
+            // Shield Icon Circle
+            android.widget.FrameLayout iconCircle = new android.widget.FrameLayout(this);
+            android.graphics.drawable.GradientDrawable circleDrawable = new android.graphics.drawable.GradientDrawable();
+            circleDrawable.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            circleDrawable.setColor(0x33FF4444); // Soft red glow
+            iconCircle.setBackground(circleDrawable);
+            android.widget.LinearLayout.LayoutParams circleParams = new android.widget.LinearLayout.LayoutParams(160, 160);
+            circleParams.gravity = android.view.Gravity.CENTER;
+            circleParams.setMargins(0, 0, 0, 60);
             
-            // Title
+            // X Icon inside circle (created with Views)
+            android.widget.TextView xIcon = new android.widget.TextView(this);
+            xIcon.setText("✕");
+            xIcon.setTextColor(0xFFFF4444);
+            xIcon.setTextSize(48);
+            xIcon.setGravity(android.view.Gravity.CENTER);
+            android.widget.FrameLayout.LayoutParams xParams = new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT);
+            iconCircle.addView(xIcon, xParams);
+            content.addView(iconCircle, circleParams);
+
+            // "BLOCKED" Title
+            android.widget.TextView blockedLabel = new android.widget.TextView(this);
+            blockedLabel.setText("BLOCKED");
+            blockedLabel.setTextColor(0xFFFF4444);
+            blockedLabel.setTextSize(14);
+            blockedLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+            blockedLabel.setGravity(android.view.Gravity.CENTER);
+            blockedLabel.setLetterSpacing(0.3f);
+            android.widget.LinearLayout.LayoutParams blockedParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            blockedParams.gravity = android.view.Gravity.CENTER;
+            blockedParams.setMargins(0, 0, 0, 24);
+            content.addView(blockedLabel, blockedParams);
+
+            // Main Title
             android.widget.TextView title = new android.widget.TextView(this);
-            title.setText("App Locked");
+            title.setText("This App is Restricted");
             title.setTextColor(0xFFFFFFFF);
-            title.setTextSize(32);
+            title.setTextSize(26);
             title.setTypeface(null, android.graphics.Typeface.BOLD);
             title.setGravity(android.view.Gravity.CENTER);
-            content.addView(title);
+            android.widget.LinearLayout.LayoutParams titleParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            titleParams.gravity = android.view.Gravity.CENTER;
+            titleParams.setMargins(0, 0, 0, 20);
+            content.addView(title, titleParams);
 
             // Subtitle
             android.widget.TextView subtitle = new android.widget.TextView(this);
-            subtitle.setText("This app is currently blocked by Blockd.");
-            subtitle.setTextColor(0xAAFFFFFF); // 66% opacity
-            subtitle.setTextSize(16);
+            subtitle.setText("Stay focused. You set this limit\nfor a reason. Keep going!");
+            subtitle.setTextColor(0x99FFFFFF); // 60% white
+            subtitle.setTextSize(15);
             subtitle.setGravity(android.view.Gravity.CENTER);
-            subtitle.setPadding(0, 20, 0, 60);
-            content.addView(subtitle);
+            subtitle.setLineSpacing(6, 1);
+            android.widget.LinearLayout.LayoutParams subParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            subParams.gravity = android.view.Gravity.CENTER;
+            subParams.setMargins(0, 0, 0, 80);
+            content.addView(subtitle, subParams);
 
-            // "Open Blockd" Button
-            android.widget.Button openBtn = new android.widget.Button(this);
-            openBtn.setText("Open Blockd");
-            openBtn.setBackgroundColor(0xFFFFFFFF);
-            openBtn.setTextColor(0xFF000000);
-            openBtn.setPadding(40, 20, 40, 20);
-            openBtn.setOnClickListener(v -> {
+            // Exit App Button (Primary - White)
+            android.widget.Button exitBtn = new android.widget.Button(this);
+            exitBtn.setText("Exit App");
+            exitBtn.setTextColor(0xFF000000);
+            exitBtn.setTextSize(16);
+            exitBtn.setTypeface(null, android.graphics.Typeface.BOLD);
+            exitBtn.setAllCaps(false);
+            android.graphics.drawable.GradientDrawable exitBg = new android.graphics.drawable.GradientDrawable();
+            exitBg.setColor(0xFFFFFFFF);
+            exitBg.setCornerRadius(60);
+            exitBtn.setBackground(exitBg);
+            exitBtn.setPadding(80, 40, 80, 40);
+            exitBtn.setOnClickListener(v -> {
+                performGlobalAction(GLOBAL_ACTION_HOME);
+                hideOverlay();
+            });
+            android.widget.LinearLayout.LayoutParams exitParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            exitParams.gravity = android.view.Gravity.CENTER;
+            exitParams.setMargins(0, 0, 0, 24);
+            content.addView(exitBtn, exitParams);
+
+            // Open Blockd Link (Secondary - Subtle)
+            android.widget.TextView openLink = new android.widget.TextView(this);
+            openLink.setText("Open Blockd");
+            openLink.setTextColor(0x66FFFFFF); // 40% white
+            openLink.setTextSize(14);
+            openLink.setGravity(android.view.Gravity.CENTER);
+            openLink.setPadding(40, 20, 40, 20);
+            openLink.setOnClickListener(v -> {
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 hideOverlay();
             });
-            android.widget.LinearLayout.LayoutParams btnParams = new android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams linkParams = new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
-            btnParams.setMargins(0, 0, 0, 30);
-            content.addView(openBtn, btnParams);
+            linkParams.gravity = android.view.Gravity.CENTER;
+            content.addView(openLink, linkParams);
 
-            // "Close App" Button (Go Home)
-            android.widget.Button closeBtn = new android.widget.Button(this);
-            closeBtn.setText("Close App");
-            closeBtn.setBackgroundColor(0x33FFFFFF); // Transparent white
-            closeBtn.setTextColor(0xFFFFFFFF);
-            closeBtn.setOnClickListener(v -> {
-                performGlobalAction(GLOBAL_ACTION_HOME);
-                hideOverlay();
-            });
-            content.addView(closeBtn);
-
-            // 2. Window Params
+            // Window Params
             int type = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
                     ? android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                     : android.view.WindowManager.LayoutParams.TYPE_PHONE;
@@ -164,17 +227,17 @@ public class BlockingAccessibilityService extends AccessibilityService {
                     android.view.WindowManager.LayoutParams.MATCH_PARENT,
                     android.view.WindowManager.LayoutParams.MATCH_PARENT,
                     type,
+                    android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                     android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | 
-                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | 
-                    android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN, // Show over status bar?
+                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                     android.graphics.PixelFormat.TRANSLUCENT);
             
             params.gravity = android.view.Gravity.CENTER;
 
-            // 3. Add View
+            // Add View
             windowManager.addView(overlayLayout, params);
             overlayView = overlayLayout;
-            Log.d(TAG, "Overlay shown");
+            Log.d(TAG, "Premium overlay shown for: " + packageName);
 
         } catch (Exception e) {
             Log.e(TAG, "Error showing overlay: " + e.getMessage());

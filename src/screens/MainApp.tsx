@@ -99,37 +99,98 @@ const GlassCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ ch
 };
 
 // ============================================
-// FLOATING TAB BAR (Premium Glass)
+// FLOATING TAB BAR (Premium Animated Glass)
 // ============================================
+
+const AnimatedTabItem: React.FC<{
+    isActive: boolean;
+    onPress: () => void;
+    iconName: string;
+    isDark: boolean;
+}> = ({ isActive, onPress, iconName, isDark }) => {
+    const scaleAnim = React.useRef(new Animated.Value(isActive ? 1 : 0.9)).current;
+    const opacityAnim = React.useRef(new Animated.Value(isActive ? 1 : 0.4)).current;
+    const bgAnim = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
+
+    React.useEffect(() => {
+        Animated.parallel([
+            Animated.spring(scaleAnim, {
+                toValue: isActive ? 1.05 : 0.95,
+                friction: 8,
+                tension: 100,
+                useNativeDriver: true,
+            }),
+            Animated.timing(opacityAnim, {
+                toValue: isActive ? 1 : 0.4,
+                duration: 200,
+                useNativeDriver: true,
+            }),
+            Animated.timing(bgAnim, {
+                toValue: isActive ? 1 : 0,
+                duration: 200,
+                useNativeDriver: false,
+            }),
+        ]).start();
+    }, [isActive]);
+
+    const backgroundColor = bgAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['transparent', isDark ? '#FFFFFF' : '#000000'],
+    });
+
+    return (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+            <Animated.View
+                style={[
+                    styles.floatingNavItem,
+                    {
+                        transform: [{ scale: scaleAnim }],
+                        backgroundColor,
+                        shadowColor: isActive ? (isDark ? '#FFF' : '#000') : 'transparent',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: isActive ? 0.3 : 0,
+                        shadowRadius: isActive ? 12 : 0,
+                        elevation: isActive ? 8 : 0,
+                    },
+                ]}
+            >
+                <Animated.View style={{ opacity: opacityAnim }}>
+                    <Icon
+                        name={iconName}
+                        size={22}
+                        color={isActive ? (isDark ? '#000' : '#FFF') : (isDark ? '#FFF' : '#000')}
+                    />
+                </Animated.View>
+            </Animated.View>
+        </TouchableOpacity>
+    );
+};
 
 const TabBar: React.FC<{ activeTab: Tab; onTabPress: (tab: Tab) => void; isDark: boolean }> = ({ activeTab, onTabPress, isDark }) => {
     return (
         <View style={styles.floatingNavContainer}>
             <View style={[styles.floatingNavBar, {
-                backgroundColor: isDark ? 'rgba(15,15,20,0.9)' : 'rgba(255,255,255,0.95)',
-                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                backgroundColor: isDark ? 'rgba(12,12,18,0.95)' : 'rgba(255,255,255,0.97)',
+                borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
             }]}>
-                <TouchableOpacity
-                    style={[styles.floatingNavItem, activeTab === 'dashboard' && styles.floatingNavItemActive, activeTab === 'dashboard' && { backgroundColor: isDark ? '#FFF' : '#000' }]}
+                <AnimatedTabItem
+                    isActive={activeTab === 'dashboard'}
                     onPress={() => onTabPress('dashboard')}
-                    activeOpacity={0.7}
-                >
-                    <Icon name="home" size={22} color={activeTab === 'dashboard' ? (isDark ? '#000' : '#FFF') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.floatingNavItem, activeTab === 'limits' && styles.floatingNavItemActive, activeTab === 'limits' && { backgroundColor: isDark ? '#FFF' : '#000' }]}
+                    iconName="home"
+                    isDark={isDark}
+                />
+                <AnimatedTabItem
+                    isActive={activeTab === 'limits'}
                     onPress={() => onTabPress('limits')}
-                    activeOpacity={0.7}
-                >
-                    <Icon name="shield" size={22} color={activeTab === 'limits' ? (isDark ? '#000' : '#FFF') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.floatingNavItem, activeTab === 'settings' && styles.floatingNavItemActive, activeTab === 'settings' && { backgroundColor: isDark ? '#FFF' : '#000' }]}
+                    iconName="shield"
+                    isDark={isDark}
+                />
+                <AnimatedTabItem
+                    isActive={activeTab === 'settings'}
                     onPress={() => onTabPress('settings')}
-                    activeOpacity={0.7}
-                >
-                    <Icon name="settings" size={22} color={activeTab === 'settings' ? (isDark ? '#000' : '#FFF') : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} />
-                </TouchableOpacity>
+                    iconName="settings"
+                    isDark={isDark}
+                />
             </View>
         </View>
     );
@@ -600,18 +661,25 @@ We reserve the right to terminate accounts that violate these terms.`;
                                 placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
                                 style={{
                                     color: isDark ? '#FFF' : '#000',
-                                    minWidth: 100,
-                                    maxWidth: 150,
+                                    minWidth: 120,
+                                    maxWidth: 160,
                                     textAlign: 'right',
-                                    paddingVertical: 8,
-                                    paddingHorizontal: 12,
-                                    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-                                    borderRadius: 8,
-                                    fontSize: 14,
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 14,
+                                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                    borderRadius: 10,
+                                    fontSize: 15,
+                                    fontWeight: '500',
                                 }}
                                 autoFocus
+                                autoCorrect={false}
+                                autoCapitalize="words"
+                                blurOnSubmit={false}
+                                selectTextOnFocus
                                 returnKeyType="done"
-                                onSubmitEditing={saveName}
+                                onSubmitEditing={() => {
+                                    saveName();
+                                }}
                             />
                             <TouchableOpacity onPress={saveName} style={{ padding: 4 }}>
                                 <Icon name="check" size={18} color="#22C55E" />
@@ -1137,13 +1205,13 @@ const styles = StyleSheet.create({
     dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 56, paddingBottom: 100 },
     dashboardHeader: { marginBottom: spacing[5] },
     liquidText: { fontSize: 40, letterSpacing: -1 },
-    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: spacing[4], shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
+    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
     screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[3] },
     pulsingDot: { width: 6, height: 6, borderRadius: 3 },
     screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: spacing[1] },
     screenTimeNum: { fontSize: 72, fontWeight: '600', letterSpacing: -2 },
     screenTimeUnit: { fontSize: 28, fontWeight: '300', marginLeft: 4 },
-    statsRow: { flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] },
+    statsRow: { flexDirection: 'row', gap: spacing[1], marginBottom: spacing[2] },
     statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
     statIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: spacing[3] },
     viewAllBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: 20, borderWidth: 1 },
