@@ -13,6 +13,8 @@ import {
     Alert,
     TextInput,
     Text as RNText,
+    Animated,
+    Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
@@ -99,98 +101,141 @@ const GlassCard: React.FC<{ children: React.ReactNode; style?: object }> = ({ ch
 };
 
 // ============================================
-// FLOATING TAB BAR (Premium Animated Glass)
+// NAME INPUT COMPONENT (Fixes Focus Bug)
 // ============================================
-
-const AnimatedTabItem: React.FC<{
-    isActive: boolean;
-    onPress: () => void;
-    iconName: string;
+const NameInput: React.FC<{
+    initialName: string;
+    onSave: (name: string) => Promise<void>;
     isDark: boolean;
-}> = ({ isActive, onPress, iconName, isDark }) => {
-    const scaleAnim = React.useRef(new Animated.Value(isActive ? 1 : 0.9)).current;
-    const opacityAnim = React.useRef(new Animated.Value(isActive ? 1 : 0.4)).current;
-    const bgAnim = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
+}> = ({ initialName, onSave, isDark }) => {
+    const [name, setName] = useState(initialName);
+    const [editing, setEditing] = useState(false);
 
-    React.useEffect(() => {
-        Animated.parallel([
-            Animated.spring(scaleAnim, {
-                toValue: isActive ? 1.05 : 0.95,
-                friction: 8,
-                tension: 100,
-                useNativeDriver: true,
-            }),
-            Animated.timing(opacityAnim, {
-                toValue: isActive ? 1 : 0.4,
-                duration: 200,
-                useNativeDriver: true,
-            }),
-            Animated.timing(bgAnim, {
-                toValue: isActive ? 1 : 0,
-                duration: 200,
-                useNativeDriver: false,
-            }),
-        ]).start();
-    }, [isActive]);
+    useEffect(() => { setName(initialName); }, [initialName]);
 
-    const backgroundColor = bgAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['transparent', isDark ? '#FFFFFF' : '#000000'],
-    });
+    const handleSave = async () => {
+        if (name.trim()) {
+            await onSave(name);
+        }
+        setEditing(false);
+    };
+
+    if (editing) {
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
+                <TextInput
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Enter name"
+                    placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
+                    style={{
+                        color: isDark ? '#FFF' : '#000',
+                        minWidth: 100,
+                        maxWidth: 160,
+                        textAlign: 'right',
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+                        borderRadius: 8,
+                        fontSize: 14,
+                    }}
+                    autoFocus
+                    returnKeyType="done"
+                    onSubmitEditing={handleSave}
+                />
+                <TouchableOpacity onPress={handleSave} style={{ padding: 6, backgroundColor: 'rgba(34,197,94,0.15)', borderRadius: 8 }}>
+                    <Icon name="check" size={16} color="#22C55E" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { setName(initialName); setEditing(false); }} style={{ padding: 6, backgroundColor: 'rgba(239,68,68,0.15)', borderRadius: 8 }}>
+                    <Icon name="x" size={16} color="#EF4444" />
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-            <Animated.View
-                style={[
-                    styles.floatingNavItem,
-                    {
-                        transform: [{ scale: scaleAnim }],
-                        backgroundColor,
-                        shadowColor: isActive ? (isDark ? '#FFF' : '#000') : 'transparent',
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: isActive ? 0.3 : 0,
-                        shadowRadius: isActive ? 12 : 0,
-                        elevation: isActive ? 8 : 0,
-                    },
-                ]}
-            >
-                <Animated.View style={{ opacity: opacityAnim }}>
-                    <Icon
-                        name={iconName}
-                        size={22}
-                        color={isActive ? (isDark ? '#000' : '#FFF') : (isDark ? '#FFF' : '#000')}
-                    />
-                </Animated.View>
-            </Animated.View>
+        <TouchableOpacity onPress={() => setEditing(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2], paddingVertical: 4 }}>
+            <Text variant="body" color={isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'} weight="semibold">{initialName || 'Set name'}</Text>
+            <View style={{ padding: 4, borderRadius: 6, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' }}>
+                <Icon name="edit-2" size={12} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
+            </View>
         </TouchableOpacity>
     );
 };
 
+// ============================================
+// FLOATING TAB BAR (Animated & Premium)
+// ============================================
+
 const TabBar: React.FC<{ activeTab: Tab; onTabPress: (tab: Tab) => void; isDark: boolean }> = ({ activeTab, onTabPress, isDark }) => {
+    const slideAnim = React.useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const targetValue = activeTab === 'dashboard' ? 0 : activeTab === 'limits' ? 1 : 2;
+        Animated.spring(slideAnim, {
+            toValue: targetValue,
+            useNativeDriver: true,
+            damping: 15,
+            stiffness: 100,
+            mass: 0.8,
+        }).start();
+    }, [activeTab]);
+
+    const translateX = slideAnim.interpolate({
+        inputRange: [0, 1, 2],
+        outputRange: [0, 80, 160], // Approximate width steps
+    });
+
     return (
         <View style={styles.floatingNavContainer}>
-            <View style={[styles.floatingNavBar, {
-                backgroundColor: isDark ? 'rgba(12,12,18,0.95)' : 'rgba(255,255,255,0.97)',
-                borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-            }]}>
-                <AnimatedTabItem
-                    isActive={activeTab === 'dashboard'}
-                    onPress={() => onTabPress('dashboard')}
-                    iconName="home"
-                    isDark={isDark}
-                />
-                <AnimatedTabItem
-                    isActive={activeTab === 'limits'}
-                    onPress={() => onTabPress('limits')}
-                    iconName="shield"
-                    isDark={isDark}
-                />
-                <AnimatedTabItem
-                    isActive={activeTab === 'settings'}
-                    onPress={() => onTabPress('settings')}
-                    iconName="settings"
-                    isDark={isDark}
-                />
+            <View style={{ alignItems: 'center' }}>
+                <View style={[styles.floatingNavBar, {
+                    backgroundColor: isDark ? 'rgba(20,20,25,0.95)' : 'rgba(255,255,255,0.98)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                    width: 260, // Fixed width for alignment
+                    paddingHorizontal: 10,
+                    justifyContent: 'space-between' // Use space-between with fixed padding
+                }]}>
+                    {/* Animated Pill Background */}
+                    <Animated.View style={{
+                        position: 'absolute',
+                        left: 10, // Match paddingHorizontal
+                        width: 70,
+                        height: 48,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F0F0F5',
+                        borderRadius: 16,
+                        transform: [{ translateX }],
+                        zIndex: -1
+                    }} />
+
+                    <TouchableOpacity
+                        style={[styles.floatingNavItem, { width: 70 }]}
+                        onPress={() => onTabPress('dashboard')}
+                        activeOpacity={0.7}
+                    >
+                        <Animated.View style={{ transform: [{ scale: activeTab === 'dashboard' ? 1.1 : 1 }] }}>
+                            <Icon name="home" size={24} color={activeTab === 'dashboard' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} />
+                        </Animated.View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.floatingNavItem, { width: 70 }]}
+                        onPress={() => onTabPress('limits')}
+                        activeOpacity={0.7}
+                    >
+                        <Animated.View style={{ transform: [{ scale: activeTab === 'limits' ? 1.1 : 1 }] }}>
+                            <Icon name="shield" size={24} color={activeTab === 'limits' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} />
+                        </Animated.View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.floatingNavItem, { width: 70 }]}
+                        onPress={() => onTabPress('settings')}
+                        activeOpacity={0.7}
+                    >
+                        <Animated.View style={{ transform: [{ scale: activeTab === 'settings' ? 1.1 : 1 }] }}>
+                            <Icon name="settings" size={24} color={activeTab === 'settings' ? (isDark ? '#FFF' : '#000') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')} />
+                        </Animated.View>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
@@ -652,48 +697,21 @@ We reserve the right to terminate accounts that violate these terms.`;
                         <Icon name="user" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} />
                         <Text variant="body" weight="medium">Name</Text>
                     </View>
-                    {editingName ? (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
-                            <TextInput
-                                value={tempName}
-                                onChangeText={setTempName}
-                                placeholder="Enter name"
-                                placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
-                                style={{
-                                    color: isDark ? '#FFF' : '#000',
-                                    minWidth: 120,
-                                    maxWidth: 160,
-                                    textAlign: 'right',
-                                    paddingVertical: 10,
-                                    paddingHorizontal: 14,
-                                    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                    borderRadius: 10,
-                                    fontSize: 15,
-                                    fontWeight: '500',
-                                }}
-                                autoFocus
-                                autoCorrect={false}
-                                autoCapitalize="words"
-                                blurOnSubmit={false}
-                                selectTextOnFocus
-                                returnKeyType="done"
-                                onSubmitEditing={() => {
-                                    saveName();
-                                }}
-                            />
-                            <TouchableOpacity onPress={saveName} style={{ padding: 4 }}>
-                                <Icon name="check" size={18} color="#22C55E" />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setEditingName(false)} style={{ padding: 4 }}>
-                                <Icon name="x" size={18} color="#EF4444" />
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity onPress={() => { setTempName(userName); setEditingName(true); }} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
-                            <Text variant="body" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'}>{userName || 'Set name'}</Text>
-                            <Icon name="edit-2" size={16} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
-                        </TouchableOpacity>
-                    )}
+                    {/* Name Input Component - Solves Focus Bug */}
+                    <NameInput
+                        initialName={userName}
+                        onSave={async (newName) => {
+                            try {
+                                if (user) {
+                                    await firestore().collection('users').doc(user.uid).set({ name: newName.trim() }, { merge: true });
+                                    setUserName(newName.trim());
+                                }
+                            } catch (e) {
+                                console.log('Save name error:', e);
+                            }
+                        }}
+                        isDark={isDark}
+                    />
                 </View>
                 <View style={[styles.settingRow, styles.settingRowBorder, { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', paddingVertical: spacing[2] }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
@@ -1202,26 +1220,26 @@ const styles = StyleSheet.create({
     confirmButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing[4], borderRadius: 16, marginTop: spacing[4] },
 
     // ========== NEW LIQUID METAL DASHBOARD STYLES ==========
-    dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 56, paddingBottom: 100 },
-    dashboardHeader: { marginBottom: spacing[5] },
+    dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 40, paddingBottom: 120 },
+    dashboardHeader: { marginBottom: spacing[3] },
     liquidText: { fontSize: 40, letterSpacing: -1 },
-    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: spacing[2], shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
-    screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[3] },
+    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: spacing[3], shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
+    screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] },
     pulsingDot: { width: 6, height: 6, borderRadius: 3 },
-    screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: spacing[1] },
+    screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
     screenTimeNum: { fontSize: 72, fontWeight: '600', letterSpacing: -2 },
     screenTimeUnit: { fontSize: 28, fontWeight: '300', marginLeft: 4 },
-    statsRow: { flexDirection: 'row', gap: spacing[1], marginBottom: spacing[2] },
+    statsRow: { flexDirection: 'row', gap: 10, marginBottom: spacing[3] },
     statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
     statIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: spacing[3] },
     viewAllBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: 20, borderWidth: 1 },
-    appSlot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[3], borderRadius: 18, marginBottom: spacing[2] },
+    appSlot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[3], borderRadius: 18, marginBottom: 8 },
     appSlotLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing[3], flex: 1 },
     appSlotIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
     appSlotRight: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
     appProgressBar: { width: 60, height: 4, borderRadius: 2, overflow: 'hidden' },
     appProgressFill: { height: '100%', borderRadius: 2 },
-    weeklyChart: { flexDirection: 'row', height: 140, marginTop: spacing[4] },
+    weeklyChart: { flexDirection: 'row', height: 140, marginTop: spacing[3] },
     weeklyLabels: { justifyContent: 'space-between', paddingBottom: 24, paddingRight: spacing[2] },
     weeklyBars: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 4 },
     weeklyBarContainer: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
@@ -1236,10 +1254,10 @@ const styles = StyleSheet.create({
     cardInnerBorder: { borderWidth: 1, borderRadius: 18, padding: spacing[3], margin: -spacing[3] },
     statContent: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing[1] },
 
-    // Floating Nav
-    floatingNavContainer: { position: 'absolute', bottom: 24, left: 24, right: 24 },
-    floatingNavBar: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 12, borderRadius: 24, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 15 },
-    floatingNavItem: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    // Floating Nav - Updated
+    floatingNavContainer: { position: 'absolute', bottom: 30, left: 0, right: 0, alignItems: 'center' },
+    floatingNavBar: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderRadius: 24, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 15 },
+    floatingNavItem: { height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
     floatingNavItemActive: { shadowColor: '#FFF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 10 },
 });
 

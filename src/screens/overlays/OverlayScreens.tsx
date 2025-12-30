@@ -107,12 +107,18 @@ export const LimitOverlayStart: React.FC<LimitOverlayStartProps> = ({ appName, a
                     </View>
                 )}
 
-                <Text variant="h2" weight="bold" align="center" style={styles.headline}>
-                    ⏱️ Time Check
-                </Text>
+                {/* Time Check Icon */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] }}>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,165,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: '#FFA500' }} />
+                        <View style={{ width: 2, height: 6, backgroundColor: '#FFA500', position: 'absolute', top: 6 }} />
+                        <View style={{ width: 4, height: 2, backgroundColor: '#FFA500', position: 'absolute', top: 11, left: 11, transform: [{ rotate: '45deg' }] }} />
+                    </View>
+                    <Text variant="h2" weight="bold" color="#FFA500">TIME CHECK</Text>
+                </View>
 
-                <Text variant="body" color="rgba(255,255,255,0.7)" align="center">
-                    You have
+                <Text variant="h2" weight="bold" align="center" style={styles.headline}>
+                    You have time remaining
                 </Text>
 
                 <View style={styles.timeContainer}>
@@ -170,9 +176,14 @@ export const LimitOverlayEnd: React.FC<LimitOverlayEndProps> = ({ appName, appIc
                     </View>
                 )}
 
-                <Text variant="h1" weight="bold" color="#FF8C00" align="center" style={styles.blockedText}>
-                    ⏰ TIME'S UP
-                </Text>
+                {/* Time's Up Icon */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] }}>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,140,0,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ width: 14, height: 14, borderRadius: 2, borderWidth: 2, borderColor: '#FF8C00' }} />
+                        <View style={{ width: 18, height: 2, backgroundColor: '#FF8C00', position: 'absolute', top: -4 }} />
+                    </View>
+                    <Text variant="h2" weight="bold" color="#FF8C00">TIME'S UP</Text>
+                </View>
 
                 <Text variant="h2" weight="bold" align="center" style={styles.headline}>
                     Daily limit reached

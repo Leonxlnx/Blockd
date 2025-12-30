@@ -81,6 +81,9 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
         });
     };
 
+    // Track acknowledged sessions to prevent repeated overlays
+    const acknowledgedSessions = React.useRef<Set<string>>(new Set());
+
     const handleBlockEvent = (event: BlockEvent) => {
         // Debounce check - prevent rapid re-triggering that causes flashing
         const now = Date.now();
@@ -101,9 +104,11 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
             setOverlayType('detox');
             setShowOverlay(true);
         } else if (event.blockType === 'limit_active') {
-            // Show start overlay only once per session
-            setOverlayType('limit_start');
-            setShowOverlay(true);
+            // Show start overlay only once per session if not already acknowledged
+            if (!acknowledgedSessions.current.has(event.packageName)) {
+                setOverlayType('limit_start');
+                setShowOverlay(true);
+            }
         } else if (event.blockType === 'limit_exceeded') {
             setOverlayType('limit_end');
             setShowOverlay(true);
@@ -116,7 +121,10 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
     };
 
     const handleContinue = () => {
-        // User chose to continue into the app
+        // User chose to continue into the app, acknowledge this session
+        if (currentBlock?.packageName) {
+            acknowledgedSessions.current.add(currentBlock.packageName);
+        }
         setShowOverlay(false);
     };
 
