@@ -462,6 +462,7 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
     const [userName, setUserName] = useState('');
     const [editingName, setEditingName] = useState(false);
     const [tempName, setTempName] = useState('');
+    const [logoutVisible, setLogoutVisible] = useState(false);
 
     useEffect(() => {
         loadUserName();
@@ -494,30 +495,26 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
     };
 
     const handleLogout = async () => {
-        Alert.alert('Logout', 'Are you sure?', [
-            { text: 'Cancel', style: 'cancel' },
-            {
-                text: 'Logout',
-                style: 'destructive',
-                onPress: async () => {
-                    try {
-                        await auth().signOut();
-                        onLogout();
-                    } catch (e) {
-                        console.error("Logout failed", e);
-                        // Force logout by calling onLogout anyway
-                        onLogout();
-                    }
-                }
-            },
-        ]);
+        setLogoutVisible(true);
+    };
+
+    const confirmLogout = async () => {
+        try {
+            await auth().signOut();
+            setLogoutVisible(false);
+            onLogout();
+        } catch (e) {
+            console.error("Logout failed", e);
+            setLogoutVisible(false);
+            onLogout();
+        }
     };
 
     const openPermissions = () => Linking.openSettings();
 
     const privacyText = `Privacy Policy for Blockd
     
-Last updated: December 2024
+Last updated: December 2025
 
 1. INFORMATION WE COLLECT
 We collect minimal data to provide our services:
@@ -543,7 +540,7 @@ For privacy questions, please contact privacy@blockd.app`;
 
     const termsText = `Terms of Service for Blockd
 
-Last updated: December 2024
+Last updated: December 2025
 
 1. ACCEPTANCE OF TERMS
 By downloading and using Blockd, you agree to these terms.
@@ -601,8 +598,20 @@ We reserve the right to terminate accounts that violate these terms.`;
                                 onChangeText={setTempName}
                                 placeholder="Enter name"
                                 placeholderTextColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}
-                                style={{ color: isDark ? '#FFF' : '#000', width: 120, textAlign: 'right', paddingVertical: 4 }}
+                                style={{
+                                    color: isDark ? '#FFF' : '#000',
+                                    minWidth: 100,
+                                    maxWidth: 150,
+                                    textAlign: 'right',
+                                    paddingVertical: 8,
+                                    paddingHorizontal: 12,
+                                    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+                                    borderRadius: 8,
+                                    fontSize: 14,
+                                }}
                                 autoFocus
+                                returnKeyType="done"
+                                onSubmitEditing={saveName}
                             />
                             <TouchableOpacity onPress={saveName} style={{ padding: 4 }}>
                                 <Icon name="check" size={18} color="#22C55E" />
@@ -698,6 +707,27 @@ We reserve the right to terminate accounts that violate these terms.`;
                     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing[4] }}>
                         <Text variant="body" color={theme.colors.textSecondary} style={{ lineHeight: 24 }}>{termsText}</Text>
                     </ScrollView>
+                </View>
+            </Modal>
+
+            {/* Custom Logout Modal */}
+            <Modal visible={logoutVisible} animationType="fade" transparent>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: spacing[4] }}>
+                    <View style={{ backgroundColor: isDark ? '#1A1A1F' : '#FFFFFF', borderRadius: 24, padding: spacing[5], width: '100%', maxWidth: 320, alignItems: 'center' }}>
+                        <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,68,68,0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: spacing[4] }}>
+                            <Icon name="log-out" size={28} color="#FF4444" />
+                        </View>
+                        <Text variant="h3" weight="bold" align="center" style={{ marginBottom: spacing[2] }}>Logout?</Text>
+                        <Text variant="body" color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} align="center" style={{ marginBottom: spacing[5] }}>Are you sure you want to logout? You'll need to sign in again.</Text>
+                        <View style={{ flexDirection: 'row', gap: spacing[3], width: '100%' }}>
+                            <TouchableOpacity onPress={() => setLogoutVisible(false)} style={{ flex: 1, paddingVertical: spacing[3], backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', borderRadius: 12, alignItems: 'center' }}>
+                                <Text variant="body" weight="semibold">Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={confirmLogout} style={{ flex: 1, paddingVertical: spacing[3], backgroundColor: '#FF4444', borderRadius: 12, alignItems: 'center' }}>
+                                <Text variant="body" weight="bold" color="#FFF">Logout</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
             </Modal>
         </ScrollView>
@@ -1031,8 +1061,14 @@ const LimitsTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
                                 </View>
                             </GlassCard>
 
-                            <TouchableOpacity onPress={handleRemoveLimit} style={[styles.logoutBtn, { backgroundColor: isDark ? 'rgba(255,68,68,0.12)' : 'rgba(255,68,68,0.08)' }]} activeOpacity={0.7}>
-                                <Text variant="body" weight="semibold" color="#FF4444">Remove Limit</Text>
+                            <TouchableOpacity onPress={handleRemoveLimit} activeOpacity={0.7} style={{ marginTop: spacing[2] }}>
+                                <LinearGradient
+                                    colors={['rgba(255,68,68,0.15)', 'rgba(255,68,68,0.08)']}
+                                    style={{ height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing[2] }}
+                                >
+                                    <Icon name="trash-2" size={18} color="#FF4444" />
+                                    <Text variant="body" weight="bold" color="#FF4444">Remove Limit</Text>
+                                </LinearGradient>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -1058,7 +1094,7 @@ const MainApp: React.FC = () => {
     return (
         <View style={styles.container}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-            <LinearGradient colors={isDark ? ['#050508', '#0A0A0F', '#0C0C12'] : ['#FAFAFA', '#F5F5F7', '#F0F0F2']} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={isDark ? ['#050508', '#080810', '#0A0A12', '#080810', '#050508'] : ['#FAFAFA', '#F5F5F7', '#F0F0F2']} locations={isDark ? [0, 0.25, 0.5, 0.75, 1] : undefined} style={StyleSheet.absoluteFillObject} />
             {activeTab === 'dashboard' && <DashboardTab isDark={isDark} />}
             {activeTab === 'limits' && <LimitsTab isDark={isDark} />}
             {activeTab === 'settings' && <SettingsTab isDark={isDark} onLogout={() => setActiveTab('dashboard')} />}
@@ -1104,10 +1140,10 @@ const styles = StyleSheet.create({
     metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: spacing[4], shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
     screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[3] },
     pulsingDot: { width: 6, height: 6, borderRadius: 3 },
-    screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: spacing[2] },
+    screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: spacing[1] },
     screenTimeNum: { fontSize: 72, fontWeight: '600', letterSpacing: -2 },
     screenTimeUnit: { fontSize: 28, fontWeight: '300', marginLeft: 4 },
-    statsRow: { flexDirection: 'row', gap: spacing[3], marginBottom: spacing[4] },
+    statsRow: { flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] },
     statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 140, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
     statIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: spacing[3] },
     viewAllBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: 20, borderWidth: 1 },

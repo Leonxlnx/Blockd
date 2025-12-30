@@ -25,6 +25,10 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
     const [showCancelFlow, setShowCancelFlow] = useState(false);
     const [currentLimit, setCurrentLimit] = useState<AppLimit | null>(null);
 
+    // Debounce to prevent flashing - ignore events within 500ms
+    const lastEventTimeRef = React.useRef<number>(0);
+    const DEBOUNCE_MS = 500;
+
     useEffect(() => {
         // Start monitoring when app becomes active
         const subscription = AppState.addEventListener('change', (state) => {
@@ -78,6 +82,13 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
     };
 
     const handleBlockEvent = (event: BlockEvent) => {
+        // Debounce check - prevent rapid re-triggering that causes flashing
+        const now = Date.now();
+        if (now - lastEventTimeRef.current < DEBOUNCE_MS) {
+            return; // Ignore event if within debounce window
+        }
+        lastEventTimeRef.current = now;
+
         setCurrentBlock(event);
 
         // Get limit details

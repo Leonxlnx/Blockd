@@ -39,10 +39,14 @@ export const DetoxOverlay: React.FC<DetoxOverlayProps> = ({ appName, appIcon, da
                     </View>
                 )}
 
-                {/* Message */}
-                <Text variant="h1" weight="bold" color="#FF4444" align="center" style={styles.blockedText}>
-                    🚫 BLOCKED
-                </Text>
+                {/* Message - Clean Icon Instead of Emoji */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] }}>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#FF4444', justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ width: 14, height: 2, backgroundColor: '#FFF', transform: [{ rotate: '45deg' }] }} />
+                        <View style={{ width: 14, height: 2, backgroundColor: '#FFF', transform: [{ rotate: '-45deg' }], position: 'absolute' }} />
+                    </View>
+                    <Text variant="h2" weight="bold" color="#FF4444">BLOCKED</Text>
+                </View>
 
                 <Text variant="h2" weight="bold" align="center" style={styles.headline}>
                     You're on a Detox Challenge
