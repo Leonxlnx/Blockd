@@ -1228,7 +1228,7 @@ const styles = StyleSheet.create({
     dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 40, paddingBottom: 120 },
     dashboardHeader: { marginBottom: 12 },
     liquidText: { fontSize: 40, letterSpacing: -1 },
-    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
+    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
     screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] },
     pulsingDot: { width: 6, height: 6, borderRadius: 3 },
     screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },

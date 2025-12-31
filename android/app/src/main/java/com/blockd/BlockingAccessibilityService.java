@@ -25,6 +25,7 @@ public class BlockingAccessibilityService extends AccessibilityService {
     private Set<String> blockedPackages = new HashSet<>();
     private String lastBlockedPackage = "";
     private long lastBlockTime = 0;
+    private String currentOverlayPackage = null; // Track which package the overlay is for
     
     // Static reference for React Native bridge
     private static BlockingAccessibilityService instance;
@@ -68,19 +69,21 @@ public class BlockingAccessibilityService extends AccessibilityService {
             packageName.equals("com.android.systemui") ||
             packageName.contains("launcher") || 
             packageName.contains("home")) {
-            hideOverlay(); // Hide if we switch to home/blockd
+            hideOverlay(); // User navigated away - hide overlay
             return;
         }
         
         // Check if this app is blocked
         if (blockedPackages.contains(packageName)) {
+            // If overlay is already showing for THIS package, keep it
+            if (overlayView != null && packageName.equals(currentOverlayPackage)) {
+                return; // Keep overlay visible - don't recreate
+            }
             Log.d(TAG, "BLOCKED APP DETECTED: " + packageName);
             showOverlay(packageName);
         } else {
-            // App is not blocked, ensure overlay is hidden
-            if (overlayView != null) {
-                hideOverlay();
-            }
+            // App is not blocked, hide overlay if showing
+            hideOverlay();
         }
     }
 
@@ -211,6 +214,7 @@ public class BlockingAccessibilityService extends AccessibilityService {
 
             windowManager.addView(overlayLayout, params);
             overlayView = overlayLayout;
+            currentOverlayPackage = packageName; // Track which package this overlay is for
             Log.d(TAG, "Premium overlay shown for: " + packageName);
 
         } catch (Exception e) {
@@ -227,6 +231,7 @@ public class BlockingAccessibilityService extends AccessibilityService {
                 Log.e(TAG, "Error hiding overlay: " + e.getMessage());
             }
             overlayView = null;
+            currentOverlayPackage = null; // Clear tracking
         }
     }
 
