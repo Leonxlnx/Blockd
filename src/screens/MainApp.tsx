@@ -116,7 +116,11 @@ const NameInput: React.FC<{
 
     const handleSave = async () => {
         if (name.trim()) {
-            await onSave(name);
+            try {
+                await onSave(name.trim());
+            } catch (e) {
+                console.log('Save error:', e);
+            }
         }
         setEditing(false);
     };
@@ -422,7 +426,7 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
             </MetalCard>
 
             {/* Weekly Overview - LOGIC FIX: ONLY WHITE WHEN SELECTED */}
-            <MetalCard style={{ marginBottom: 120 }}>
+            <MetalCard style={{ marginBottom: 120, marginTop: 3 }}>
                 <View style={{ marginBottom: spacing[4] }}>
                     <Text variant="body" weight="bold">Weekly Overview</Text>
                     <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ marginTop: 4 }}>
@@ -1209,13 +1213,13 @@ const styles = StyleSheet.create({
     dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 40, paddingBottom: 120 },
     dashboardHeader: { marginBottom: 12 },
     liquidText: { fontSize: 40, letterSpacing: -1 },
-    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
+    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
     screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] },
     pulsingDot: { width: 6, height: 6, borderRadius: 3 },
     screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
     screenTimeNum: { fontSize: 72, fontWeight: '600', letterSpacing: -2 },
     screenTimeUnit: { fontSize: 28, fontWeight: '300', marginLeft: 4 },
-    statsRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+    statsRow: { flexDirection: 'row', gap: 8, marginBottom: 9 },
     statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 130, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
     statIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: spacing[3] },
     viewAllBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: 20, borderWidth: 1 },
@@ -1233,7 +1237,7 @@ const styles = StyleSheet.create({
     weeklyTooltip: { position: 'absolute', top: -28, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, zIndex: 10 },
 
     // Premium Cards with Metallic Edge
-    premiumCardOuter: { marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8 },
+    premiumCardOuter: { marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 8 },
     premiumCardBorder: { borderRadius: 20, padding: 1 },
     premiumCardInner: { borderRadius: 19, padding: spacing[3] },
     premiumCard: { borderRadius: 20, padding: spacing[3], marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 6 },

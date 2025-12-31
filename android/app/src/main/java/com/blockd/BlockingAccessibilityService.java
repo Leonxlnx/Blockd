@@ -85,114 +85,25 @@ public class BlockingAccessibilityService extends AccessibilityService {
     }
 
     private void showOverlay(String packageName) {
-        if (overlayView != null) return; // Already showing
+        // Don't show native overlay - instead, open the Blockd app
+        // which will display the nice React Native overlay
+        long now = System.currentTimeMillis();
         
-        try {
-            windowManager = (android.view.WindowManager) getSystemService(WINDOW_SERVICE);
-            
-            // 1. Create Layout Programmatically
-            overlayLayout = new android.widget.FrameLayout(this);
-            overlayLayout.setBackgroundColor(0xE6101014); // Dark Metal (90% opacity)
-
-            android.widget.LinearLayout content = new android.widget.LinearLayout(this);
-            content.setOrientation(android.widget.LinearLayout.VERTICAL);
-            content.setGravity(android.view.Gravity.CENTER);
-            android.widget.FrameLayout.LayoutParams contentParams = new android.widget.FrameLayout.LayoutParams(
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, 
-                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
-            contentParams.gravity = android.view.Gravity.CENTER;
-            overlayLayout.addView(content, contentParams);
-
-            // Icon
-            android.widget.ImageView icon = new android.widget.ImageView(this);
-            // We don't have a drawable resource easily available, so we skip icon or use a system one?
-            // Let's rely on Text for now to be safe.
-            
-            // Title
-            android.widget.TextView title = new android.widget.TextView(this);
-            title.setText("App Locked");
-            title.setTextColor(0xFFFFFFFF);
-            title.setTextSize(32);
-            title.setTypeface(null, android.graphics.Typeface.BOLD);
-            title.setGravity(android.view.Gravity.CENTER);
-            content.addView(title);
-
-            // Subtitle
-            android.widget.TextView subtitle = new android.widget.TextView(this);
-            subtitle.setText("This app is currently blocked by Blockd.");
-            subtitle.setTextColor(0xAAFFFFFF); // 66% opacity
-            subtitle.setTextSize(16);
-            subtitle.setGravity(android.view.Gravity.CENTER);
-            subtitle.setPadding(0, 20, 0, 60);
-            content.addView(subtitle);
-
-            // "Open Blockd" Button
-            android.widget.Button openBtn = new android.widget.Button(this);
-            openBtn.setText("Open Blockd");
-            openBtn.setBackgroundColor(0xFFFFFFFF);
-            openBtn.setTextColor(0xFF000000);
-            openBtn.setPadding(40, 20, 40, 20);
-            openBtn.setOnClickListener(v -> {
-                Intent intent = new Intent(this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                hideOverlay();
-            });
-            android.widget.LinearLayout.LayoutParams btnParams = new android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
-            btnParams.setMargins(0, 0, 0, 30);
-            content.addView(openBtn, btnParams);
-
-            // "Close App" Button (Go Home)
-            android.widget.Button closeBtn = new android.widget.Button(this);
-            closeBtn.setText("Close App");
-            closeBtn.setBackgroundColor(0x33FFFFFF); // Transparent white
-            closeBtn.setTextColor(0xFFFFFFFF);
-            closeBtn.setOnClickListener(v -> {
-                performGlobalAction(GLOBAL_ACTION_HOME);
-                hideOverlay();
-            });
-            content.addView(closeBtn);
-
-            // 2. Window Params
-            int type = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
-                    ? android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                    : android.view.WindowManager.LayoutParams.TYPE_PHONE;
-
-            android.view.WindowManager.LayoutParams params = new android.view.WindowManager.LayoutParams(
-                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
-                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
-                    type,
-                    android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | 
-                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | 
-                    android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN, // Show over status bar?
-                    android.graphics.PixelFormat.TRANSLUCENT);
-            
-            params.gravity = android.view.Gravity.CENTER;
-
-            // 3. Add View
-            windowManager.addView(overlayLayout, params);
-            overlayView = overlayLayout;
-            Log.d(TAG, "Overlay shown");
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error showing overlay: " + e.getMessage());
-            // Fallback to old activity method if overlay fails (e.g. permission missing)
-            launchBlockOverlay(packageName);
+        // Debounce: Don't re-open if recently blocked (within 2 seconds)
+        if (packageName.equals(lastBlockedPackage) && (now - lastBlockTime) < 2000) {
+            return;
         }
+        
+        lastBlockedPackage = packageName;
+        lastBlockTime = now;
+        
+        // Launch Blockd app which will show the React Native overlay
+        launchBlockOverlay(packageName);
     }
 
     private void hideOverlay() {
-        if (overlayView != null && windowManager != null) {
-            try {
-                windowManager.removeView(overlayView);
-                Log.d(TAG, "Overlay hidden");
-            } catch (Exception e) {
-                Log.e(TAG, "Error hiding overlay: " + e.getMessage());
-            }
-            overlayView = null;
-        }
+        // No-op since we don't use native overlay anymore
+        overlayView = null;
     }
 
     @Override
