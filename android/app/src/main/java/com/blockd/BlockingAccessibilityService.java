@@ -85,25 +85,149 @@ public class BlockingAccessibilityService extends AccessibilityService {
     }
 
     private void showOverlay(String packageName) {
-        // Don't show native overlay - instead, open the Blockd app
-        // which will display the nice React Native overlay
+        if (overlayView != null) return; // Already showing
+        
         long now = System.currentTimeMillis();
         
-        // Debounce: Don't re-open if recently blocked (within 2 seconds)
-        if (packageName.equals(lastBlockedPackage) && (now - lastBlockTime) < 2000) {
+        // Debounce: Don't re-show if recently blocked (within 1 second)
+        if (packageName.equals(lastBlockedPackage) && (now - lastBlockTime) < 1000) {
             return;
         }
         
         lastBlockedPackage = packageName;
         lastBlockTime = now;
         
-        // Launch Blockd app which will show the React Native overlay
-        launchBlockOverlay(packageName);
+        try {
+            windowManager = (android.view.WindowManager) getSystemService(WINDOW_SERVICE);
+            
+            // Create premium overlay layout
+            overlayLayout = new android.widget.FrameLayout(this);
+            overlayLayout.setBackgroundColor(0xFF0A0A12); // Premium dark background (solid, no transparency)
+
+            android.widget.LinearLayout content = new android.widget.LinearLayout(this);
+            content.setOrientation(android.widget.LinearLayout.VERTICAL);
+            content.setGravity(android.view.Gravity.CENTER);
+            content.setPadding(60, 0, 60, 0);
+            android.widget.FrameLayout.LayoutParams contentParams = new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, 
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
+            contentParams.gravity = android.view.Gravity.CENTER;
+            overlayLayout.addView(content, contentParams);
+
+            // App Icon Circle Placeholder
+            android.widget.FrameLayout iconCircle = new android.widget.FrameLayout(this);
+            android.widget.LinearLayout.LayoutParams iconParams = new android.widget.LinearLayout.LayoutParams(120, 120);
+            iconParams.gravity = android.view.Gravity.CENTER;
+            iconCircle.setBackgroundColor(0x33FFFFFF);
+            content.addView(iconCircle, iconParams);
+            
+            // TIME'S UP Label with icon
+            android.widget.LinearLayout labelRow = new android.widget.LinearLayout(this);
+            labelRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+            labelRow.setGravity(android.view.Gravity.CENTER);
+            labelRow.setPadding(0, 40, 0, 10);
+            
+            android.widget.TextView clockIcon = new android.widget.TextView(this);
+            clockIcon.setText("⏰");
+            clockIcon.setTextSize(18);
+            labelRow.addView(clockIcon);
+            
+            android.widget.TextView timeLabel = new android.widget.TextView(this);
+            timeLabel.setText(" TIME'S UP");
+            timeLabel.setTextColor(0xFFFF8C00); // Orange
+            timeLabel.setTextSize(20);
+            timeLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+            labelRow.addView(timeLabel);
+            content.addView(labelRow);
+
+            // Daily Limit Reached Title
+            android.widget.TextView title = new android.widget.TextView(this);
+            title.setText("Daily limit reached");
+            title.setTextColor(0xFFFFFFFF);
+            title.setTextSize(26);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            title.setGravity(android.view.Gravity.CENTER);
+            title.setPadding(0, 0, 0, 30);
+            content.addView(title);
+
+            // Subtitle
+            android.widget.TextView subtitle = new android.widget.TextView(this);
+            subtitle.setText("Great job sticking to your limit!\nCome back tomorrow.");
+            subtitle.setTextColor(0x99FFFFFF);
+            subtitle.setTextSize(15);
+            subtitle.setGravity(android.view.Gravity.CENTER);
+            subtitle.setPadding(0, 0, 0, 80);
+            content.addView(subtitle);
+
+            // "Done for Today" Button
+            android.widget.Button doneBtn = new android.widget.Button(this);
+            doneBtn.setText("Done for Today");
+            doneBtn.setBackgroundColor(0x33FFFFFF);
+            doneBtn.setTextColor(0xFFFFFFFF);
+            doneBtn.setTextSize(16);
+            doneBtn.setPadding(60, 30, 60, 30);
+            doneBtn.setAllCaps(false);
+            doneBtn.setOnClickListener(v -> {
+                performGlobalAction(GLOBAL_ACTION_HOME);
+                hideOverlay();
+            });
+            android.widget.LinearLayout.LayoutParams btnParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            btnParams.setMargins(0, 0, 0, 20);
+            content.addView(doneBtn, btnParams);
+
+            // "Cancel Limit" Link
+            android.widget.TextView cancelLink = new android.widget.TextView(this);
+            cancelLink.setText("Cancel limit");
+            cancelLink.setTextColor(0x66FFFFFF);
+            cancelLink.setTextSize(14);
+            cancelLink.setGravity(android.view.Gravity.CENTER);
+            cancelLink.setPadding(0, 20, 0, 0);
+            cancelLink.setOnClickListener(v -> {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.putExtra("blocked_package", packageName);
+                intent.putExtra("show_cancel_flow", true);
+                startActivity(intent);
+                hideOverlay();
+            });
+            content.addView(cancelLink);
+
+            // Window Params - Fullscreen overlay
+            int type = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
+                    ? android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    : android.view.WindowManager.LayoutParams.TYPE_PHONE;
+
+            android.view.WindowManager.LayoutParams params = new android.view.WindowManager.LayoutParams(
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                    type,
+                    android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    android.graphics.PixelFormat.OPAQUE);
+            
+            params.gravity = android.view.Gravity.CENTER;
+
+            windowManager.addView(overlayLayout, params);
+            overlayView = overlayLayout;
+            Log.d(TAG, "Premium overlay shown for: " + packageName);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing overlay: " + e.getMessage());
+        }
     }
 
     private void hideOverlay() {
-        // No-op since we don't use native overlay anymore
-        overlayView = null;
+        if (overlayView != null && windowManager != null) {
+            try {
+                windowManager.removeView(overlayView);
+                Log.d(TAG, "Overlay hidden");
+            } catch (Exception e) {
+                Log.e(TAG, "Error hiding overlay: " + e.getMessage());
+            }
+            overlayView = null;
+        }
     }
 
     @Override

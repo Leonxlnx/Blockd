@@ -25,6 +25,7 @@ import { limitsService, AppLimit } from '../services/limitsService';
 import { CancelFlow } from './overlays/CancelFlow';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 const { PermissionsModule, BlockingModule } = NativeModules;
@@ -426,7 +427,7 @@ const DashboardTab: React.FC<{ isDark: boolean }> = ({ isDark }) => {
             </MetalCard>
 
             {/* Weekly Overview - LOGIC FIX: ONLY WHITE WHEN SELECTED */}
-            <MetalCard style={{ marginBottom: 120, marginTop: 3 }}>
+            <MetalCard style={{ marginBottom: 120, marginTop: 9 }}>
                 <View style={{ marginBottom: spacing[4] }}>
                     <Text variant="body" weight="bold">Weekly Overview</Text>
                     <Text variant="caption" color={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'} style={{ marginTop: 4 }}>
@@ -540,11 +541,20 @@ const SettingsTab: React.FC<{ isDark: boolean; onLogout: () => void }> = ({ isDa
 
     const loadUserName = async () => {
         try {
+            // Load from AsyncStorage first (instant)
+            const cached = await AsyncStorage.getItem('user_name');
+            if (cached) setUserName(cached);
+
+            // Then sync from Firestore
             if (user) {
                 const doc = await firestore().collection('users').doc(user.uid).get();
                 if (doc.exists()) {
                     const data = doc.data();
-                    setUserName(data?.name || data?.displayName || '');
+                    const name = data?.name || data?.displayName || '';
+                    if (name) {
+                        setUserName(name);
+                        await AsyncStorage.setItem('user_name', name);
+                    }
                 }
             }
         } catch (e) {
@@ -666,9 +676,14 @@ We reserve the right to terminate accounts that violate these terms.`;
                         initialName={userName}
                         onSave={async (newName) => {
                             try {
+                                const trimmed = newName.trim();
+                                // Update local state immediately
+                                setUserName(trimmed);
+                                // Cache in AsyncStorage
+                                await AsyncStorage.setItem('user_name', trimmed);
+                                // Sync to Firestore
                                 if (user) {
-                                    await firestore().collection('users').doc(user.uid).set({ name: newName.trim() }, { merge: true });
-                                    setUserName(newName.trim());
+                                    await firestore().collection('users').doc(user.uid).set({ name: trimmed }, { merge: true });
                                 }
                             } catch (e) {
                                 console.log('Save name error:', e);
@@ -1213,13 +1228,13 @@ const styles = StyleSheet.create({
     dashboardContent: { paddingHorizontal: spacing[4], paddingTop: 40, paddingBottom: 120 },
     dashboardHeader: { marginBottom: 12 },
     liquidText: { fontSize: 40, letterSpacing: -1 },
-    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
+    metalCard: { borderRadius: 28, padding: spacing[5], marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.4, shadowRadius: 30, elevation: 10 },
     screenTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing[2] },
     pulsingDot: { width: 6, height: 6, borderRadius: 3 },
     screenTimeRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
     screenTimeNum: { fontSize: 72, fontWeight: '600', letterSpacing: -2 },
     screenTimeUnit: { fontSize: 28, fontWeight: '300', marginLeft: 4 },
-    statsRow: { flexDirection: 'row', gap: 8, marginBottom: 9 },
+    statsRow: { flexDirection: 'row', gap: 8, marginBottom: 6 },
     statCard: { flex: 1, borderRadius: 24, padding: spacing[4], alignItems: 'center', justifyContent: 'center', height: 130, shadowColor: '#000', shadowOffset: { width: 0, height: 15 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8 },
     statIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: spacing[3] },
     viewAllBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: 20, borderWidth: 1 },
