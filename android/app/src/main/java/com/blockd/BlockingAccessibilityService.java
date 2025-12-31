@@ -51,6 +51,20 @@ public class BlockingAccessibilityService extends AccessibilityService {
         setServiceInfo(info);
         
         loadBlockedApps();
+        
+        // Start ForegroundService to keep alive on MIUI/Xiaomi devices
+        try {
+            Intent serviceIntent = new Intent(this, AppBlockForegroundService.class);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+            Log.d(TAG, "Started ForegroundService for MIUI stability");
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting ForegroundService: " + e.getMessage());
+        }
+        
         Log.d(TAG, "Accessibility Service connected and configured");
     }
 
@@ -88,10 +102,12 @@ public class BlockingAccessibilityService extends AccessibilityService {
     }
 
     private void showOverlay(String packageName) {
+        if (overlayView != null) return; // Already showing
+        
         long now = System.currentTimeMillis();
         
-        // Debounce: Don't re-launch if recently blocked (within 2 seconds)
-        if (packageName.equals(lastBlockedPackage) && (now - lastBlockTime) < 2000) {
+        // Debounce: Don't re-show if recently blocked (within 500ms)
+        if (packageName.equals(lastBlockedPackage) && (now - lastBlockTime) < 500) {
             return;
         }
         
@@ -99,28 +115,109 @@ public class BlockingAccessibilityService extends AccessibilityService {
         lastBlockTime = now;
         currentOverlayPackage = packageName;
         
-        // Bring Blockd app to foreground - React Native OverlayManager will show the nice overlay
         try {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | 
-                           Intent.FLAG_ACTIVITY_CLEAR_TOP | 
-                           Intent.FLAG_ACTIVITY_SINGLE_TOP |
-                           Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            intent.putExtra("blocked_package", packageName);
-            intent.putExtra("show_overlay", true);
-            startActivity(intent);
+            windowManager = (android.view.WindowManager) getSystemService(WINDOW_SERVICE);
             
-            Log.d(TAG, "Launched Blockd overlay for: " + packageName);
+            // Create fullscreen dark overlay
+            overlayLayout = new android.widget.FrameLayout(this);
+            overlayLayout.setBackgroundColor(0xFF0A0A0F); // Solid dark background
+            
+            // Content container
+            android.widget.LinearLayout content = new android.widget.LinearLayout(this);
+            content.setOrientation(android.widget.LinearLayout.VERTICAL);
+            content.setGravity(android.view.Gravity.CENTER);
+            content.setPadding(80, 0, 80, 0);
+            android.widget.FrameLayout.LayoutParams contentParams = new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, 
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
+            contentParams.gravity = android.view.Gravity.CENTER;
+            overlayLayout.addView(content, contentParams);
+
+            // Red X icon
+            android.widget.TextView icon = new android.widget.TextView(this);
+            icon.setText("⛔");
+            icon.setTextSize(48);
+            icon.setGravity(android.view.Gravity.CENTER);
+            content.addView(icon);
+
+            // BLOCKED Label
+            android.widget.TextView blockedLabel = new android.widget.TextView(this);
+            blockedLabel.setText("BLOCKED");
+            blockedLabel.setTextColor(0xFFEF4444); // Red
+            blockedLabel.setTextSize(24);
+            blockedLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+            blockedLabel.setGravity(android.view.Gravity.CENTER);
+            blockedLabel.setPadding(0, 40, 0, 20);
+            content.addView(blockedLabel);
+
+            // Title
+            android.widget.TextView title = new android.widget.TextView(this);
+            title.setText("This app is blocked");
+            title.setTextColor(0xFFFFFFFF);
+            title.setTextSize(22);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            title.setGravity(android.view.Gravity.CENTER);
+            content.addView(title);
+
+            // Subtitle
+            android.widget.TextView subtitle = new android.widget.TextView(this);
+            subtitle.setText("Stay focused! You set this limit.\nPress the button to go home.");
+            subtitle.setTextColor(0x99FFFFFF);
+            subtitle.setTextSize(14);
+            subtitle.setGravity(android.view.Gravity.CENTER);
+            subtitle.setPadding(0, 20, 0, 60);
+            content.addView(subtitle);
+
+            // Exit Button
+            android.widget.Button exitBtn = new android.widget.Button(this);
+            exitBtn.setText("Exit App");
+            exitBtn.setBackgroundColor(0x33FFFFFF);
+            exitBtn.setTextColor(0xFFFFFFFF);
+            exitBtn.setTextSize(16);
+            exitBtn.setPadding(60, 24, 60, 24);
+            exitBtn.setAllCaps(false);
+            exitBtn.setOnClickListener(v -> {
+                performGlobalAction(GLOBAL_ACTION_HOME);
+                hideOverlay();
+            });
+            android.widget.LinearLayout.LayoutParams btnParams = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+            content.addView(exitBtn, btnParams);
+
+            // Window Params - TYPE_ACCESSIBILITY_OVERLAY is stable on MIUI
+            android.view.WindowManager.LayoutParams params = new android.view.WindowManager.LayoutParams(
+                android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                android.view.WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                android.graphics.PixelFormat.OPAQUE);
+            params.gravity = android.view.Gravity.CENTER;
+
+            windowManager.addView(overlayLayout, params);
+            overlayView = overlayLayout;
+            Log.d(TAG, "Native overlay shown for: " + packageName);
+
         } catch (Exception e) {
-            Log.e(TAG, "Error launching Blockd overlay: " + e.getMessage());
+            Log.e(TAG, "Error showing overlay: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     private void hideOverlay() {
-        // React Native overlay handles its own dismissal
-        // Just reset tracking
-        currentOverlayPackage = null;
+        if (overlayView != null && windowManager != null) {
+            try {
+                windowManager.removeView(overlayView);
+                Log.d(TAG, "Overlay hidden");
+            } catch (Exception e) {
+                Log.e(TAG, "Error hiding overlay: " + e.getMessage());
+            }
+        }
         overlayView = null;
+        currentOverlayPackage = null;
     }
 
     @Override
