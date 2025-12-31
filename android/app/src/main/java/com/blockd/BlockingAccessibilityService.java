@@ -81,10 +81,10 @@ public class BlockingAccessibilityService extends AccessibilityService {
             }
             Log.d(TAG, "BLOCKED APP DETECTED: " + packageName);
             showOverlay(packageName);
-        } else {
-            // App is not blocked, hide overlay if showing
-            hideOverlay();
         }
+        // Note: We do NOT hide overlay for non-blocked app events
+        // YouTube and other apps send many internal events from different package names
+        // Overlay only hides when user navigates to home/launcher/Blockd (handled above)
     }
 
     private void showOverlay(String packageName) {
@@ -197,17 +197,17 @@ public class BlockingAccessibilityService extends AccessibilityService {
             });
             content.addView(cancelLink);
 
-            // Window Params - Fullscreen overlay
-            int type = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O
-                    ? android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                    : android.view.WindowManager.LayoutParams.TYPE_PHONE;
+            // Window Params - Fullscreen overlay using TYPE_ACCESSIBILITY_OVERLAY for stability
+            // TYPE_ACCESSIBILITY_OVERLAY is specifically designed for AccessibilityService and is more stable
+            int type = android.view.WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
 
             android.view.WindowManager.LayoutParams params = new android.view.WindowManager.LayoutParams(
                     android.view.WindowManager.LayoutParams.MATCH_PARENT,
                     android.view.WindowManager.LayoutParams.MATCH_PARENT,
                     type,
                     android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     android.graphics.PixelFormat.OPAQUE);
             
             params.gravity = android.view.Gravity.CENTER;
