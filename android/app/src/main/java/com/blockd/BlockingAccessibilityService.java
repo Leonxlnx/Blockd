@@ -78,27 +78,29 @@ public class BlockingAccessibilityService extends AccessibilityService {
         
         String packageName = event.getPackageName().toString();
         
-        // Don't block ourselves, system UI, or launcher
+        // FIX: SystemUI NICHT mehr ausschließen - das verursacht das Flackern!
+        // Nur Blockd selbst und Launcher ignorieren
         if (packageName.equals("com.blockd") || 
-            packageName.equals("com.android.systemui") ||
             packageName.contains("launcher") || 
-            packageName.contains("home")) {
-            hideOverlay(); // User navigated away - hide overlay
+            packageName.contains("home") ||
+            packageName.contains("nexuslauncher") || // Pixel Launcher
+            packageName.contains("pixel.launcher")) { // Pixel Launcher
+            
+            // Overlay nur verstecken wenn wirklich im Home/Launcher
+            hideOverlay(); 
             return;
         }
         
         // Check if this app is blocked
         if (blockedPackages.contains(packageName)) {
-            // If overlay is already showing for THIS package, keep it
-            if (overlayView != null && packageName.equals(currentOverlayPackage)) {
-                return; // Keep overlay visible - don't recreate
-            }
             Log.d(TAG, "BLOCKED APP DETECTED: " + packageName);
+            
+            // Natives Overlay zeigt sofort (millisekundenschnell)
             showOverlay(packageName);
+            
+            // Gleichzeitig Blockd App in den Vordergrund holen für schönen React Screen
+            launchBlockOverlay(packageName);
         }
-        // Note: We do NOT hide overlay for non-blocked app events
-        // YouTube and other apps send many internal events from different package names
-        // Overlay only hides when user navigates to home/launcher/Blockd (handled above)
     }
 
     private void showOverlay(String packageName) {
@@ -235,12 +237,15 @@ public class BlockingAccessibilityService extends AccessibilityService {
     }
     
     /**
-     * Launch the Blockd app (Fallback)
+     * Launch the Blockd app with nice React Native overlay
      */
     private void launchBlockOverlay(String blockedPackage) {
         try {
             Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            // WICHTIG: Diese Flags holen die App nach vorne, auch aus dem Hintergrund
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | 
+                           Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | 
+                           Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra("blocked_package", blockedPackage);
             intent.putExtra("show_overlay", true);
             startActivity(intent);
