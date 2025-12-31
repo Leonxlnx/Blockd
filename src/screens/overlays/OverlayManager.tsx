@@ -48,6 +48,15 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
         // Start monitoring immediately
         BlockingModule?.startMonitoring?.();
 
+        // Check if app was launched due to a block (from AccessibilityService)
+        BlockingModule?.checkInitialLaunch?.()
+            .then((blockedPkg: string | null) => {
+                if (blockedPkg) {
+                    console.log('App launched due to block:', blockedPkg);
+                }
+            })
+            .catch(() => { });
+
         // Load blocked apps from limits service
         loadBlockedApps();
 

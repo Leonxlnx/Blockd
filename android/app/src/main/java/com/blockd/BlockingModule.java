@@ -108,6 +108,37 @@ public class BlockingModule extends ReactContextBaseJavaModule {
         Log.d(TAG, "Stopped app monitoring");
     }
 
+    // Check if app was launched due to a block (from AccessibilityService)
+    @ReactMethod
+    public void checkInitialLaunch(Promise promise) {
+        Activity currentActivity = getCurrentActivity();
+        if (currentActivity != null) {
+            Intent intent = currentActivity.getIntent();
+            if (intent != null && intent.getBooleanExtra("show_overlay", false)) {
+                String blockedPkg = intent.getStringExtra("blocked_package");
+                
+                WritableMap params = Arguments.createMap();
+                params.putString("packageName", blockedPkg);
+                params.putString("blockType", "limit_active");
+                params.putInt("remainingMinutes", 0);
+                params.putInt("remainingDays", 0);
+                params.putInt("dailyLimit", 0);
+                
+                // Send event to React Native
+                sendEvent("onAppBlocked", params);
+                
+                // Clear the intent extras so we don't trigger again
+                intent.removeExtra("show_overlay");
+                intent.removeExtra("blocked_package");
+                
+                Log.d(TAG, "Initial launch detected for blocked app: " + blockedPkg);
+                promise.resolve(blockedPkg);
+                return;
+            }
+        }
+        promise.resolve(null);
+    }
+
     @ReactMethod
     public void addBlockedApp(String packageName, String mode, double detoxEndTime, int dailyLimitMinutes) {
         BlockedApp app = new BlockedApp();

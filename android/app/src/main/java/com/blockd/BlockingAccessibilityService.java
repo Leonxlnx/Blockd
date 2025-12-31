@@ -95,10 +95,8 @@ public class BlockingAccessibilityService extends AccessibilityService {
         if (blockedPackages.contains(packageName)) {
             Log.d(TAG, "BLOCKED APP DETECTED: " + packageName);
             
-            // Natives Overlay zeigt sofort (millisekundenschnell)
-            showOverlay(packageName);
-            
-            // Gleichzeitig Blockd App in den Vordergrund holen für schönen React Screen
+            // NUR launchBlockOverlay - das startet die schöne React App
+            // showOverlay ENTFERNT - das native Overlay verdeckt die React App!
             launchBlockOverlay(packageName);
         }
     }
