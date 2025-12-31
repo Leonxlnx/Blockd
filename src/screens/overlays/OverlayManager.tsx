@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, NativeEventEmitter, NativeModules, AppState, Modal } from 'react-native';
+import { View, StyleSheet, NativeEventEmitter, NativeModules, AppState, Modal, BackHandler } from 'react-native';
 import { DetoxOverlay, LimitOverlayStart, LimitOverlayEnd } from './OverlayScreens';
 import { CancelFlow } from './CancelFlow';
 import { limitsService, AppLimit } from '../../services/limitsService';
@@ -30,14 +30,18 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
     const DEBOUNCE_MS = 500;
 
     useEffect(() => {
-        // Start monitoring when app becomes active
-        const subscription = AppState.addEventListener('change', (state) => {
-            if (state === 'active') {
+        // Check block status on EVERY app focus (critical for onNewIntent)
+        const handleAppStateChange = (nextAppState: string) => {
+            if (nextAppState === 'active') {
                 BlockingModule?.startMonitoring?.();
-            } else if (state === 'background') {
+                // Check for block on every app focus!
+                checkBlockStatus();
+            } else if (nextAppState === 'background') {
                 BlockingModule?.stopMonitoring?.();
             }
-        });
+        };
+
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
 
         // Subscribe to blocking events
         const eventEmitter = new NativeEventEmitter(NativeModules.BlockingModule);
@@ -48,14 +52,8 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
         // Start monitoring immediately
         BlockingModule?.startMonitoring?.();
 
-        // Check if app was launched due to a block (from AccessibilityService)
-        BlockingModule?.checkInitialLaunch?.()
-            .then((blockedPkg: string | null) => {
-                if (blockedPkg) {
-                    console.log('App launched due to block:', blockedPkg);
-                }
-            })
-            .catch(() => { });
+        // Check on initial mount too
+        checkBlockStatus();
 
         // Load blocked apps from limits service
         loadBlockedApps();
@@ -66,6 +64,30 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
             BlockingModule?.stopMonitoring?.();
         };
     }, []);
+
+    // Function to check if app was launched/refocused due to a block
+    const checkBlockStatus = async () => {
+        try {
+            const blockedPkg = await BlockingModule?.checkInitialLaunch?.();
+            if (blockedPkg) {
+                console.log('🔒 BLOCK TRIGGERED for:', blockedPkg);
+            }
+        } catch (e) {
+            console.log('Block check error:', e);
+        }
+    };
+
+    // CRITICAL: Block back button when overlay is shown to prevent escape!
+    useEffect(() => {
+        if (showOverlay) {
+            const backAction = () => {
+                // Return true to block the back button
+                return true;
+            };
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+            return () => backHandler.remove();
+        }
+    }, [showOverlay]);
 
     const loadBlockedApps = async () => {
         const limits = await limitsService.loadLimits();
