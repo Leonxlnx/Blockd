@@ -454,5 +454,18 @@ public class BlockingModule extends ReactContextBaseJavaModule {
     public void removeListeners(int count) {
         // Required for RN event emitter
     }
+
+    @ReactMethod
+    public void launchHome() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            reactContext.startActivity(intent);
+            Log.d(TAG, "Launched Home Screen");
+        } catch (Exception e) {
+            Log.e(TAG, "Error launching home: " + e.getMessage());
+        }
+    }
 }
 
