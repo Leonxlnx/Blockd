@@ -148,7 +148,7 @@ export const OverlayManager: React.FC<OverlayManagerProps> = ({ children }) => {
 
     const handleExit = () => {
         setShowOverlay(false);
-        // TODO: Navigate back to home or launcher
+        BlockingModule?.launchHome?.();
     };
 
     const handleContinue = () => {
